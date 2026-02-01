@@ -5,11 +5,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load env vars
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/civicpulse';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/civicpulse';
+
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI is undefined — dotenv failed");
+}
 
 // Middleware
 app.use(cors());
@@ -17,7 +21,7 @@ app.use(express.json());
 
 // Database Connection
 mongoose
-    .connect(MONGO_URI)
+    .connect(MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
