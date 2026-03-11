@@ -222,3 +222,58 @@ export const assignIssue = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Assignment failed" });
   }
 };
+
+export const getIssueById = async (req: Request, res: Response) => {
+  try {
+    const { role, id, society } = req.user!;
+    const issueId = req.params.id;
+
+    const issue = await Issue.findById(issueId)
+      .populate("reportedBy", "name flatNumber")
+      .populate("assignedTo", "name role");
+
+    if (!issue) {
+      return res.status(404).json({ message: "Issue not found" });
+    }
+
+    if (issue.society.toString() !== society) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (role === "resident") {
+      const isReporter = issue.reporters.some(
+        (r) => r.toString() === id
+      );
+      if (!isReporter) {
+        return res.status(403).json({ message: "Not allowed to view this issue" });
+      }
+    }
+
+    if (role === "staff") {
+      if (!issue.assignedTo || issue.assignedTo.toString() !== id) {
+        return res.status(403).json({ message: "Not assigned to this issue" });
+      }
+    }
+
+    // Format response for frontend
+    const formattedIssue = {
+      _id: issue._id,
+      title: issue.title,
+      description: issue.description,
+      category: issue.category,
+      status: issue.status,
+      priority: issue.priorityScore,   // frontend expects "priority"
+      reportCount: issue.reportCount,
+      slaDeadline: issue.slaDeadline,
+      reportedBy: issue.reportedBy,
+      assignedTo: issue.assignedTo,
+      createdAt: issue.createdAt
+    };
+
+    res.json(formattedIssue);
+
+  } catch (error) {
+    console.error("GET ISSUE BY ID ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch issue" });
+  }
+};
