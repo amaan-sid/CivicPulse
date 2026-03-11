@@ -56,7 +56,7 @@ function Signup() {
 
         <h2 className="text-2xl font-bold text-center mb-6">
           Create Account
-        </h2>
+        </h2>9a60a523ab9a28e0ddae70a
 
         {error && (
           <p className="text-red-500 text-sm mb-4">{error}</p>
