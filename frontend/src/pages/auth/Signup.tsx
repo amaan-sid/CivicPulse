@@ -109,6 +109,17 @@ function Signup() {
           {loading ? "Creating..." : "Signup"}
         </button>
 
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="text-blue-600 hover:underline font-medium"
+          >
+            Login here
+          </button>
+        </p>
+
       </form>
 
     </div>

@@ -85,6 +85,17 @@ function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/signup")}
+            className="text-blue-600 hover:underline font-medium"
+          >
+            Create an account
+          </button>
+        </p>
+
       </form>
 
     </div>
