@@ -56,7 +56,7 @@ function Signup() {
 
         <h2 className="text-2xl font-bold text-center mb-6">
           Create Account
-        </h2>9a60a523ab9a28e0ddae70a
+        </h2>
 
         {error && (
           <p className="text-red-500 text-sm mb-4">{error}</p>
@@ -108,6 +108,17 @@ function Signup() {
         >
           {loading ? "Creating..." : "Signup"}
         </button>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="text-blue-600 hover:underline font-medium"
+          >
+            Login here
+          </button>
+        </p>
 
       </form>
 
