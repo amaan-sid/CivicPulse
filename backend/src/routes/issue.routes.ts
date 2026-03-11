@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   assignIssue,
   createIssue,
+  getIssueById,
   getSocietyIssues,
   updateIssueStatus
 } from "../controllers/issue.controller";
@@ -16,6 +17,8 @@ router.post("/", protect, authorize("resident"), createIssue);
 
 // Get issues of logged-in user's society
 router.get("/", protect, getSocietyIssues);
+
+router.get("/:id", protect, getIssueById);
 
 // Update issue status (staff/admin)
 router.patch("/:id", protect, authorize("staff", "admin"), updateIssueStatus);
