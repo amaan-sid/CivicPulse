@@ -6,6 +6,17 @@ import { AuditLog } from "../models/audit.model";
 import mongoose from "mongoose";
 import { User } from "../models/user.model";
 
+const ensureLinkedSociety = (req: Request, res: Response) => {
+  if (!req.user?.society) {
+    res.status(403).json({
+      message: "Your account is not linked to a society yet. Please contact an admin."
+    });
+    return null;
+  }
+
+  return req.user.society;
+};
+
 // Create Issue (Resident)
 export const createIssue = async (req: Request, res: Response) => {
   try {
@@ -16,15 +27,20 @@ export const createIssue = async (req: Request, res: Response) => {
     }
 
     const user = req.user;
+    const userSociety = ensureLinkedSociety(req, res);
 
-    const society = await Society.findById(user.society);
+    if (!userSociety) {
+      return;
+    }
+
+    const society = await Society.findById(userSociety);
 
     if (!society) {
       return res.status(404).json({ message: "Society not found" });
     }
 
     const existingIssue = await Issue.findOne({
-      society: user.society,
+      society: userSociety,
       category,
       title: { $regex: `^${title}$`, $options: "i" },
       status: { $ne: "resolved" }
@@ -87,7 +103,7 @@ export const createIssue = async (req: Request, res: Response) => {
       priorityScore,
       reporters: [user.id],
       reportedBy: user.id,
-      society: user.society,
+      society: userSociety,
       slaDeadline
     });
 
@@ -103,9 +119,14 @@ export const createIssue = async (req: Request, res: Response) => {
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
     const { role, id, society } = req.user!;
+    const userSociety = ensureLinkedSociety(req, res);
+
+    if (!userSociety) {
+      return;
+    }
 
     const overdueIssues = await Issue.find({
-      society,
+      society: userSociety,
       status: { $ne: "resolved" },
       isEscalated: false,
       slaDeadline: { $lt: new Date() }
@@ -132,7 +153,7 @@ export const getSocietyIssues = async (req: Request, res: Response) => {
       await issue.save();
     }
 
-    let filter: any = { society };
+    let filter: any = { society: userSociety };
 
     if (role === "resident") {
       filter.reporters = id;
@@ -230,7 +251,12 @@ export const assignIssue = async (req: Request, res: Response) => {
 export const getIssueById = async (req: Request, res: Response) => {
   try {
     const { role, id, society } = req.user!;
+    const userSociety = ensureLinkedSociety(req, res);
     const issueId = req.params.id;
+
+    if (!userSociety) {
+      return;
+    }
 
     const issue = await Issue.findById(issueId)
       .populate("reportedBy", "name flatNumber")
@@ -240,7 +266,7 @@ export const getIssueById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Issue not found" });
     }
 
-    if (issue.society.toString() !== society) {
+    if (issue.society.toString() !== userSociety) {
       return res.status(403).json({ message: "Access denied" });
     }
 

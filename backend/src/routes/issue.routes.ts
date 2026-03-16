@@ -3,7 +3,8 @@ import {
   assignIssue,
   createIssue,
   getSocietyIssues,
-  updateIssueStatus
+  updateIssueStatus,
+  getIssueById
 } from "../controllers/issue.controller";
 
 import { protect } from "../middlewares/auth.middleware";
