@@ -1,44 +1,99 @@
-import { Link } from "react-router-dom"
+import { NavLink } from "react-router-dom"
+import { useSelector } from "react-redux"
+import type { RootState } from "../app/store"
 
 function Sidebar() {
 
-  return (
-    <div className="w-60 bg-gray-900 text-white min-h-screen p-4">
+  const user = useSelector((state: RootState) => state.auth.user)
 
-      <h2 className="text-lg font-semibold mb-6">
-        Menu
+
+  return (
+    <div className="w-60 bg-gray-900 text-white min-h-screen p-6">
+
+      <h2 className="text-xl font-bold mb-8">
+        CivicPulse
       </h2>
 
-      <nav className="flex flex-col gap-3">
+      <nav className="flex flex-col gap-2">
 
-        <Link
-          to="/dashboard"
-          className="hover:bg-gray-700 p-2 rounded"
-        >
-          Dashboard
-        </Link>
+        {/* Common menu */}
+        <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-700 text-gray-200"
+              }`
+            }
+          >
+            Dashboard
+          </NavLink>
 
-        <Link
-          to="/issues"
-          className="hover:bg-gray-700 p-2 rounded"
-        >
-          Issues
-        </Link>
+        {/* Admin Only */}
+        {user?.role === "admin" && (
+          <NavLink
+            to="/societies"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-700 text-gray-200"
+              }`
+            }
+          >
+            Societies
+          </NavLink>
+        )}
 
-        <Link
-          to="/create-issue"
-          className="hover:bg-gray-700 p-2 rounded"
-        >
-          Report Issue
-        </Link>
+        {/* Admin Only */}
+        {user?.role === "admin" && (
+          <NavLink
+            to="/create-society"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-700 text-gray-200"
+              }`
+            }
+          >
+            Create Society
+          </NavLink>
+        )}
 
-        <Link
-          to="/audit"
-          className="hover:bg-gray-700 p-2 rounded"
-        >
-          Audit Logs
-        </Link>
+        {/* Resident Only */}
+        {user?.role === "resident" && (
+          <NavLink
+            to="/issue-board"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-700 text-gray-200"
+              }`
+            }
+          >
+            Issue Board
+          </NavLink>
+        )}
 
+        {user?.role === "resident" && (
+          <NavLink
+            to="/create-issue"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-700 text-gray-200"
+              }`
+            }
+          >
+            Report Issue
+          </NavLink>
+        )}
+
+      
       </nav>
 
     </div>

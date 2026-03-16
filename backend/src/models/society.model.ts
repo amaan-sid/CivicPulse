@@ -2,6 +2,7 @@ import mongoose, { Document } from "mongoose";
 
 export interface ISociety extends Document {
   name: string;
+  code?: string;
   address: string;
   city: string;
   state: string;
@@ -25,6 +26,14 @@ const societySchema = new mongoose.Schema<ISociety>(
       type: String,
       required: true,
       trim: true
+    },
+
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      unique: true,
+      sparse: true
     },
 
     address: {

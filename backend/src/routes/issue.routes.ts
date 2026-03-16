@@ -3,7 +3,8 @@ import {
   assignIssue,
   createIssue,
   getSocietyIssues,
-  updateIssueStatus
+  updateIssueStatus,
+  getIssueById
 } from "../controllers/issue.controller";
 
 import { protect } from "../middlewares/auth.middleware";
@@ -16,6 +17,9 @@ router.post("/", protect, authorize("resident"), createIssue);
 
 // Get issues of logged-in user's society
 router.get("/", protect, getSocietyIssues);
+
+// Get issue by id
+router.get("/:id", protect, getIssueById);
 
 // Update issue status (staff/admin)
 router.patch("/:id", protect, authorize("staff", "admin"), updateIssueStatus);
