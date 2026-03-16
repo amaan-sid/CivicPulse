@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { User, type IUser } from "../models/user.model";
 import { Society } from "../models/society.model";
+import { env } from "../config/env";
 
 const JWT_COOKIE_NAME = "token";
 const JWT_EXPIRES_IN = "7d";
@@ -27,14 +28,12 @@ const normalizeEmail = (email: unknown) =>
 const normalizeString = (value: unknown) =>
   typeof value === "string" ? value.trim() : "";
 
-const isProduction = process.env.NODE_ENV === "production";
-
 const getJwtSecret = () => {
-  if (!process.env.JWT_SECRET) {
+  if (!env.jwtSecret) {
     throw new Error("JWT_SECRET is not defined");
   }
 
-  return process.env.JWT_SECRET;
+  return env.jwtSecret;
 };
 
 const toSafeUser = (user: IUser): SafeUser => ({
@@ -61,8 +60,8 @@ const setAuthCookie = (res: Response, user: IUser) => {
 
   res.cookie(JWT_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    secure: env.isProduction,
+    sameSite: env.isProduction ? "none" : "lax",
     maxAge: JWT_MAX_AGE_MS
   });
 };
@@ -240,8 +239,8 @@ export const login = async (req: Request, res: Response) => {
 export const logout = (_req: Request, res: Response) => {
   res.clearCookie(JWT_COOKIE_NAME, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: isProduction
+    sameSite: env.isProduction ? "none" : "lax",
+    secure: env.isProduction
   });
 
   return res.status(200).json({ message: "Logout successful." });

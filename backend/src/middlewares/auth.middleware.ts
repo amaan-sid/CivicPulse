@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../models/user.model";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,11 +11,11 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return res.status(401).json({ message: "Not authorized." });
     }
 
-    if (!process.env.JWT_SECRET) {
+    if (!env.jwtSecret) {
       throw new Error("JWT_SECRET is not defined");
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as {
+    const decoded = jwt.verify(token, env.jwtSecret) as {
       id: string;
       role: string;
       society?: string;

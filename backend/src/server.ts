@@ -1,12 +1,11 @@
 import { db } from "./config/db";
+import { env } from "./config/env";
 import { app } from "./app";
-
-const PORT = process.env.BACKEND_PORT || 4000;
 
 db()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+    app.listen(env.port, () => {
+      console.log(`Server running on http://localhost:${env.port}`);
     });
   })
   .catch((error: Error) => {

@@ -1,70 +1,4 @@
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-
-import { db } from "./config/db";
-import { env } from "./config/env";
-import auditRoutes from "./routes/audit.routes";
-import dashboardRoutes from "./routes/dashboard.routes";
-import authRoutes from "./routes/auth.routes";
-import societyRoutes from "./routes/society.routes";
-import issueRoutes from "./routes/issue.routes";
-import userRoutes from "./routes/user.routes";
-import { protect } from "./middlewares/auth.middleware";
-import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
-
-export const app = express();
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || env.corsOrigins.includes(origin.replace(/\/$/, ""))) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("CORS origin not allowed."));
-    },
-    credentials: true
-  })
-);
-
-app.set("trust proxy", 1);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(async (_req, _res, next) => {
-  try {
-    await db();
-    return next();
-  } catch (error) {
-    return next(error);
-  }
-});
-
-app.use("/api/auth", authRoutes);
-app.use("/api/society", societyRoutes);
-app.use("/api/issues", issueRoutes);
-app.use("/api/issues", auditRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/users", userRoutes);
-
-app.get("/api/profile", protect, (req, res) => {
-  res.json({
-    message: "Protected route accessed",
-    user: req.user
-  });
-});
-
-app.get("/api/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-app.get("/.well-known/appspecific/com.chrome.devtools.json", (_req, res) => {
-  res.status(204).end();
-});
-
-app.get("/", (_req, res) => {
-  res.status(200).type("html").send(`<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -185,16 +119,10 @@ app.get("/", (_req, res) => {
           <span><code>/api/health</code></span>
         </article>
         <article class="card">
-          <strong>Environment</strong>
-          <span>${env.nodeEnv}</span>
+          <strong>Runtime</strong>
+          <span>Vercel filesystem routing</span>
         </article>
       </section>
     </main>
   </body>
-</html>`);
-});
-
-app.use(notFoundMiddleware);
-app.use(errorMiddleware);
-
-export default app;
+</html>
