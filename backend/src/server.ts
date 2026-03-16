@@ -3,10 +3,13 @@ import { app } from "./app";
 
 const PORT = process.env.BACKEND_PORT || 4000;
 
-// Database Connection
-db();
-
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+db()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error: Error) => {
+    console.error("Server startup failed:", error.message);
+    process.exit(1);
+  });
