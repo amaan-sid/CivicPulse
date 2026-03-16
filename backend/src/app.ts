@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import { db } from "./config/db";
 import auditRoutes from "./routes/audit.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import authRoutes from "./routes/auth.routes";
@@ -14,6 +15,10 @@ import userRoutes from "./routes/user.routes";
 import { protect } from "./middlewares/auth.middleware";
 
 export const app = express();
+
+void db().catch((error: Error) => {
+  console.error("Initial database bootstrap failed:", error.message);
+});
 
 app.use(
   cors({
@@ -38,3 +43,9 @@ app.get("/api/profile", protect, (req, res) => {
     user: req.user
   });
 });
+
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+export default app;
