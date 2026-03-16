@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
   assignIssue,
   createIssue,
-  getIssueById,
   getSocietyIssues,
   updateIssueStatus
 } from "../controllers/issue.controller";
