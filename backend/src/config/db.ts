@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { env } from "./env";
 
 let connectionPromise: Promise<typeof mongoose> | null = null;
 
@@ -11,12 +12,8 @@ export const db = async () => {
     return connectionPromise;
   }
 
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is not defined.");
-  }
-
   connectionPromise = mongoose
-    .connect(process.env.MONGODB_URI)
+    .connect(env.mongoUri)
     .then((connection) => {
       console.log("MongoDB connected successfully");
       return connection;

@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import { db } from "./config/db";
-import { env } from "./config/env";
+import { env, validateEnv } from "./config/env";
 import auditRoutes from "./routes/audit.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import authRoutes from "./routes/auth.routes";
@@ -14,6 +14,10 @@ import { protect } from "./middlewares/auth.middleware";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
 
 export const app = express();
+
+validateEnv();
+
+app.disable("x-powered-by");
 
 app.use(
   cors({
@@ -29,7 +33,14 @@ app.use(
 );
 
 app.set("trust proxy", 1);
-app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  return next();
+});
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(async (_req, _res, next) => {
@@ -56,7 +67,11 @@ app.get("/api/profile", protect, (req, res) => {
 });
 
 app.get("/api/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
+  res.status(200).json({
+    status: "ok",
+    environment: env.nodeEnv,
+    uptimeSeconds: Math.round(process.uptime())
+  });
 });
 
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (_req, res) => {
