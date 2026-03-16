@@ -14,7 +14,7 @@ export const signup = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const existingUser = await User.findOne({ email, society });
+    const existingUser = await User.findOne({ email});
     if (existingUser) {
       return res.status(400).json({ message: "User already exists in this society" });
     }
@@ -50,13 +50,13 @@ export const signup = async (req: Request, res: Response) => {
 // LOGIN
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password, society } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password ) {
       return res.status(400).json({ message: "Missing credentials" });
     }
 
-    const user = await User.findOne({ email, society }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });

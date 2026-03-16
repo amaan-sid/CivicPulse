@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSociety, getSocieties } from "../controllers/society.controller";
+import { createSociety, getSocieties, getSocietyById, getSocietyIssues } from "../controllers/society.controller";
 import { protect } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
 
@@ -10,5 +10,10 @@ router.post("/", protect, authorize("admin"), createSociety);
 
 // Get all societies (admin only)
 router.get("/", protect, authorize("admin"), getSocieties);
+
+// Get a specific Society
+router.get("/:id", protect, authorize("admin"), getSocietyById)
+
+router.get("/:id/issues", protect, getSocietyIssues)
 
 export default router;
