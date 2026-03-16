@@ -4,6 +4,7 @@ import { Society } from "../models/society.model";
 import { calculatePriority } from "../utils/priority";
 import { AuditLog } from "../models/audit.model";
 import mongoose from "mongoose";
+import { User } from "../models/user.model";
 
 // Create Issue (Resident)
 export const createIssue = async (req: Request, res: Response) => {
@@ -16,7 +17,6 @@ export const createIssue = async (req: Request, res: Response) => {
 
     const user = req.user;
 
-    // Fetch society to get SLA settings
     const society = await Society.findById(user.society);
 
     if (!society) {
@@ -26,7 +26,7 @@ export const createIssue = async (req: Request, res: Response) => {
     const existingIssue = await Issue.findOne({
       society: user.society,
       category,
-      title: { $regex: `^${title}$`, $options: "i" },   
+      title: { $regex: `^${title}$`, $options: "i" },
       status: { $ne: "resolved" }
     });
 
@@ -66,7 +66,7 @@ export const createIssue = async (req: Request, res: Response) => {
         issue: existingIssue
       });
     }
-    // Calculate SLA deadline
+
     const slaHours = society.defaultSLAs[category as keyof typeof society.defaultSLAs] || 24;
 
     const slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);
@@ -100,12 +100,10 @@ export const createIssue = async (req: Request, res: Response) => {
 };
 
 
-// Get Issues for Society
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
     const { role, id, society } = req.user!;
 
-    // Escalate issues whose SLA deadline has passed
     const overdueIssues = await Issue.find({
       society,
       status: { $ne: "resolved" },
@@ -195,15 +193,21 @@ export const assignIssue = async (req: Request, res: Response) => {
     const { staffId } = req.body;
 
     const issue = await Issue.findById(req.params.id);
-
     if (!issue) {
       return res.status(404).json({ message: "Issue not found" });
     }
-    const oldAssigned = issue.assignedTo;
+
+    const staff = await User.findById(staffId);
+    if (!staff) {
+      return res.status(404).json({ message: "Staff user not found" });
+    }
+
+    const oldAssignedId = issue.assignedTo;
+    const staffOld = await User.findById(oldAssignedId);
 
     issue.assignedTo = new mongoose.Types.ObjectId(staffId);
     issue.assignedAt = new Date();
-    issue.assignedBy = new mongoose.Types.ObjectId(req.user.id)
+    issue.assignedBy = new mongoose.Types.ObjectId(req.user!.id);
 
     await issue.save();
 
@@ -211,8 +215,8 @@ export const assignIssue = async (req: Request, res: Response) => {
       issue: issue._id,
       action: "assignment",
       performedBy: req.user!.id,
-      oldValue: oldAssigned?.toString(),
-      newValue: staffId
+      oldValue: staffOld.name,
+      newValue: staff.name  
     });
 
     res.json({ message: "Issue assigned successfully", issue });
@@ -250,10 +254,17 @@ export const getIssueById = async (req: Request, res: Response) => {
     }
 
     if (role === "staff") {
-      if (!issue.assignedTo || issue.assignedTo.toString() !== id) {
-        return res.status(403).json({ message: "Not assigned to this issue" });
-      }
-    }
+   const b = issue.assignedTo.toString();
+  const assignedId =
+    typeof issue.assignedTo === "object"
+      ? issue.assignedTo._id.toString()
+      : b;
+
+  if (assignedId !== id) {
+    return res.status(403).json({ message: "Not assigned to this issue" });
+  }
+
+}
 
     // Format response for frontend
     const formattedIssue = {
@@ -262,11 +273,9 @@ export const getIssueById = async (req: Request, res: Response) => {
       description: issue.description,
       category: issue.category,
       status: issue.status,
-      priority: issue.priorityScore,   // frontend expects "priority"
+      priority: issue.priorityScore,
       reportCount: issue.reportCount,
       slaDeadline: issue.slaDeadline,
-      reportedBy: issue.reportedBy,
-      assignedTo: issue.assignedTo,
       createdAt: issue.createdAt
     };
 

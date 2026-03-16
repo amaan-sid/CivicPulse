@@ -7,10 +7,6 @@ import Card from "../../components/ui/Card"
 import Badge from "../../components/ui/Badge"
 import TimelineItem from "../../components/ui/TimeLineItem"
 
-interface Staff {
-  _id: string
-  name: string
-}
 
 interface AuditLog {
   _id: string
@@ -23,12 +19,11 @@ interface AuditLog {
   createdAt: string
 }
 
-function IssueDetails() {
+function IssueAssign() {
 
   const { id } = useParams()
 
   const [issue, setIssue] = useState<Issue | null>(null)
-  const [staff, setStaff] = useState<Staff[]>([])
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -42,8 +37,6 @@ function IssueDetails() {
         const issueRes = await API.get(`/issues/${id}`)
         setIssue(issueRes.data)
 
-        const staffRes = await API.get("/users?role=staff")
-        setStaff(staffRes.data)
 
         const logRes = await API.get(`/issues/${id}/logs`)
         setLogs(logRes.data)
@@ -77,22 +70,6 @@ function IssueDetails() {
 
   }
 
-
-  const assignIssue = async (staffId: string) => {
-
-    try {
-
-      const res = await API.patch(`/issues/${id}/assign`, {
-        staffId
-      })
-
-      setIssue(res.data)
-
-    } catch (err) {
-      console.error(err)
-    }
-
-  }
 
 
   if (loading) {
@@ -170,29 +147,6 @@ function IssueDetails() {
 
         </div>
 
-        {/* ASSIGN STAFF */}
-        <div className="mb-10">
-
-          <h3 className="font-semibold mb-2">
-            Assign Staff
-          </h3>
-
-          <select
-            className="border p-2 rounded w-60"
-            onChange={(e)=>assignIssue(e.target.value)}
-          >
-
-            <option>Select staff</option>
-
-            {staff.map((s)=>(
-              <option key={s._id} value={s._id}>
-                {s.name}
-              </option>
-            ))}
-
-          </select>
-
-        </div>
 
         {/* AUDIT TIMELINE */}
 
@@ -227,4 +181,4 @@ function IssueDetails() {
 
 }
 
-export default IssueDetails
+export default IssueAssign

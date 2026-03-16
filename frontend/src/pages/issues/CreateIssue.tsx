@@ -5,8 +5,9 @@ import DashboardLayout from "../../layouts/DashboardLayout"
 function CreateIssue() {
 
   const [title,setTitle] = useState("")
+  const [category,setCategory] = useState("plumbing")
   const [description,setDescription] = useState("")
-  const [priority,setPriority] = useState("medium")
+  const [severity,setSeverity] = useState("low")
 
   const handleSubmit = async (e:React.FormEvent) => {
 
@@ -15,7 +16,8 @@ function CreateIssue() {
     await API.post("/issues",{
       title,
       description,
-      priority
+      category,
+      severity
     })
 
     alert("Issue created")
@@ -47,7 +49,19 @@ function CreateIssue() {
 
           <select
             className="w-full border p-2 mb-4 rounded"
-            onChange={(e)=>setPriority(e.target.value)}
+            onChange={(e)=>setCategory(e.target.value)}
+          >
+            <option value="plumbing">Plumbing</option>
+            <option value="electricity">Electricity</option>
+            <option value="lift">Lift</option>
+            <option value="security">Security</option>
+            <option value="cleanliness">Cleanliness</option>
+            <option value="water">Water</option>
+          </select>
+
+          <select
+            className="w-full border p-2 mb-4 rounded"
+            onChange={(e)=>setSeverity(e.target.value)}
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>

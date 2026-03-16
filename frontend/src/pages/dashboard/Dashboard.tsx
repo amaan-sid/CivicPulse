@@ -1,26 +1,24 @@
-import DashboardLayout from "../../layouts/DashboardLayout"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../app/store"
 
-function Dashboard() {
+import ResidentDashboard from "./ResidentDashboard"
+import StaffDashboard from "./StaffDashboard"
+import AdminDashboard from "./AdminDashboard"
+
+function Dashboard(){
 
   const user = useSelector((state:RootState)=>state.auth.user)
 
-  return (
+  if(user?.role === "admin"){
+    return <AdminDashboard/>
+  }
 
-    <DashboardLayout>
+  if(user?.role === "staff"){
+    return <StaffDashboard/>
+  }
 
-      <h1 className="text-3xl font-bold mb-4">
-        Welcome {user?.name}
-      </h1>
+  return <ResidentDashboard/>
 
-      <p className="text-gray-600">
-        CivicPulse Issue Dashboard
-      </p>
-
-    </DashboardLayout>
-
-  )
 }
 
 export default Dashboard

@@ -5,7 +5,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const { society } = req.user!;
 
-    // Total number of issues belonging to the society
     const totalIssues = await Issue.countDocuments({ society });
 
     const openIssues = await Issue.countDocuments({
@@ -28,7 +27,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       priorityScore: { $gte: 20 }
     });
 
-    // Aggregate issue counts grouped by category
     const categoryStats = await Issue.aggregate([
       { $match: { society } },
       {

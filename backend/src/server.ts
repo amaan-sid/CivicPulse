@@ -10,7 +10,7 @@ import dashboardRoutes from "./routes/dashboard.routes";
 import authRoutes from "./routes/auth.routes";
 import societyRoutes from "./routes/society.routes";
 import issueRoutes from "./routes/issue.routes";
-
+import userRoutes from "./routes/user.routes";
 import { protect } from "./middlewares/auth.middleware";
 
 const app = express();
@@ -32,6 +32,7 @@ app.use("/api/society", societyRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/issues", auditRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/users", userRoutes);
 
 // Test Protected Route
 app.get("/api/profile", protect, (req, res) => {

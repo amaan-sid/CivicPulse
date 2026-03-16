@@ -11,7 +11,6 @@ function Login() {
 
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
-  const [society,setSociety] = useState("")
   const [error,setError] = useState("")
   const [loading,setLoading] = useState(false)
 
@@ -25,8 +24,7 @@ function Login() {
 
       const res = await API.post("/auth/login",{
         email,
-        password,
-        society
+        password
       })
 
       dispatch(setUser(res.data.user))
@@ -70,12 +68,6 @@ function Login() {
           placeholder="Password"
           className="w-full border rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onChange={(e)=>setPassword(e.target.value)}
-        />
-
-        <input
-          placeholder="Society ID"
-          className="w-full border rounded-lg p-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onChange={(e)=>setSociety(e.target.value)}
         />
 
         <button

@@ -3,29 +3,33 @@ import API from "../../services/api"
 import DashboardLayout from "../../layouts/DashboardLayout"
 import { Link } from "react-router-dom"
 import type { Issue } from "../../types/issue"
+
+import Card from "../../components/ui/Card"
+import Badge from "../../components/ui/Badge"
 import SLATimer from "../../components/SLATimer"
+
 
 function IssueList() {
 
-  const [issues,setIssues] = useState<Issue[]>([])
-  const [loading,setLoading] = useState(true)
-  const [error,setError] = useState("")
+  const [issues, setIssues] = useState<Issue[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  useEffect(()=>{
+  useEffect(() => {
 
     const fetchIssues = async () => {
 
-      try{
+      try {
 
         const res = await API.get("/issues")
 
         setIssues(res.data)
 
-      }catch(err:any){
+      } catch (err: any) {
 
         setError(err.response?.data?.message || "Failed to fetch issues")
 
-      }finally{
+      } finally {
         setLoading(false)
       }
 
@@ -33,25 +37,18 @@ function IssueList() {
 
     fetchIssues()
 
-  },[])
+  }, [])
 
-  const getPriorityColor = (priority:string) => {
+  const getPriorityBorder = (priority: string) => {
 
-    if(priority === "high") return "bg-red-100 text-red-600"
-    if(priority === "medium") return "bg-yellow-100 text-yellow-600"
-    return "bg-green-100 text-green-600"
+    if (priority === "high") return "border-l-4 border-red-500"
+    if (priority === "medium") return "border-l-4 border-yellow-500"
 
-  }
-
-  const getStatusColor = (status:string) => {
-
-    if(status === "resolved") return "bg-green-100 text-green-600"
-    if(status === "in-progress") return "bg-blue-100 text-blue-600"
-    return "bg-gray-100 text-gray-600"
+    return "border-l-4 border-green-500"
 
   }
 
-  if(loading){
+  if (loading) {
     return (
       <DashboardLayout>
         <p className="text-gray-500">Loading issues...</p>
@@ -59,7 +56,7 @@ function IssueList() {
     )
   }
 
-  if(error){
+  if (error) {
     return (
       <DashboardLayout>
         <p className="text-red-500">{error}</p>
@@ -67,17 +64,26 @@ function IssueList() {
     )
   }
 
+
   return (
 
     <DashboardLayout>
 
-      <h2 className="text-2xl font-bold mb-6">
-        Community Issues
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+
+        <h2 className="text-2xl font-bold">
+          Community Issues
+        </h2>
+
+      </div>
+
 
       {issues.length === 0 && (
-        <p className="text-gray-500">No issues reported yet.</p>
+        <p className="text-gray-500">
+          No issues reported yet.
+        </p>
       )}
+
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
@@ -86,37 +92,46 @@ function IssueList() {
           <Link
             key={issue._id}
             to={`/issues/${issue._id}`}
-            className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
           >
 
-            <h3 className="font-semibold text-lg mb-2">
-              {issue.title}
-            </h3>
+            <Card>
 
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-              {issue.description}
-            </p>
+              <h3 className="font-semibold text-lg mb-2">
+                {issue.title}
+              </h3>
 
-            <div className="flex justify-between items-center">
+              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                {issue.description}
+              </p>
 
-              <div className="flex gap-2">
+              <p className="text-sm text-gray-500 mb-3">
+                Reported by <span className="font-semibold text-gray-800">{issue.reportCount}</span> residents
+              </p>
 
-                <span className={`text-xs px-2 py-1 rounded ${getPriorityColor(issue.priority)}`}>
-                  {issue.priority}
-                </span>
+              <div className="flex justify-between items-center">
 
-                <span className={`text-xs px-2 py-1 rounded ${getStatusColor(issue.status)}`}>
-                  {issue.status}
-                </span>
+                <div className="flex gap-2">
+
+                  <Badge
+                    text={issue.priority}
+                    variant={issue.priority}
+                  />
+
+                  <Badge
+                    text={issue.status}
+                    variant={issue.status}
+                  />
+
+                </div>
+
+                <SLATimer
+                  createdAt={issue.createdAt}
+                  priority={issue.priority}
+                />
 
               </div>
 
-              <SLATimer
-                createdAt={issue.createdAt}
-                priority={issue.priority}
-              />
-
-            </div>
+            </Card>
 
           </Link>
 
