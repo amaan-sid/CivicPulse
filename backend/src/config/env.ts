@@ -10,18 +10,17 @@ const defaultCorsOrigins = [
   "http://127.0.0.1:5173"
 ];
 
-const parseOrigins = (value: string | undefined) => {
+const parseOrigins = (...values: Array<string | undefined>) => {
   const mergedOrigins = new Set(defaultCorsOrigins.map(normalizeOrigin));
 
-  if (!value) {
-    return Array.from(mergedOrigins);
-  }
-
-  value
-    .split(",")
+  values
+    .filter(Boolean)
+    .flatMap((value) => value!.split(","))
     .map(normalizeOrigin)
     .filter(Boolean)
-    .forEach((origin) => mergedOrigins.add(origin));
+    .forEach((origin) => {
+      mergedOrigins.add(origin);
+    });
 
   return Array.from(mergedOrigins);
 };
@@ -41,7 +40,7 @@ export const env = {
   port: parsePort(process.env.BACKEND_PORT),
   mongoUri: process.env.MONGODB_URI || "",
   jwtSecret: process.env.JWT_SECRET || "",
-  corsOrigins: parseOrigins(process.env.CORS_ORIGINS || process.env.FRONTEND_URL),
+  corsOrigins: parseOrigins(process.env.CORS_ORIGINS, process.env.FRONTEND_URL),
   isProduction: process.env.NODE_ENV === "production"
 };
 

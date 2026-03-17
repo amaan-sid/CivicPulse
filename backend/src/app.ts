@@ -19,18 +19,20 @@ validateEnv();
 
 app.disable("x-powered-by");
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || env.corsOrigins.includes(origin.replace(/\/$/, ""))) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+    if (!origin || env.corsOrigins.includes(origin.replace(/\/$/, ""))) {
+      return callback(null, true);
+    }
 
-      return callback(new Error("CORS origin not allowed."));
-    },
-    credentials: true
-  })
-);
+    return callback(new Error("CORS origin not allowed."));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
 
 app.set("trust proxy", 1);
 app.use((req, res, next) => {
