@@ -1,34 +1,18 @@
 # Contributing to CivicPulse
 
-## Table of Contents
+## Stack
 
-- [Prerequisites](#prerequisites)
-- [Development Setup](#development-setup)
-- [Project Structure](#project-structure)
-- [Development Workflow](#development-workflow)
-- [Coding Standards](#coding-standards)
-- [Commit Guidelines](#commit-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Reporting Issues](#reporting-issues)
+- `backend/`: Express, Mongoose, TypeScript
+- `frontend/`: React, Vite, Redux Toolkit, Tailwind CSS
 
-## Prerequisites
+## Requirements
 
-- Node.js 18.x or higher
-- npm 9.x or higher
-- MongoDB 6.x or higher
-- Redis 7.x or higher
+- Node.js 18+
+- npm 9+
+- MongoDB connection string
 - Git
 
-## Getting Started
-
-1. Fork the repository and clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/CivicPulse.git
-   cd CivicPulse
-   git remote add upstream https://github.com/codxbrexx/CivicPulse.git
-   ```
-
-## Development Setup
+## Local Setup
 
 ### Backend
 
@@ -37,20 +21,32 @@ cd backend
 npm install
 ```
 
-Create `.env` file:
+Create `backend/.env` from `backend/.env.example`:
+
 ```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/civicpulse
+PORT=4000
+JWT_SECRET=replace-with-a-long-random-secret
 NODE_ENV=development
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/civicpulse
-REDIS_HOST=localhost
-REDIS_PORT=6379
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=7d
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
 
-Start server:
+Run:
+
 ```bash
 npm run dev
+```
+
+Backend:
+
+```text
+http://localhost:4000
+```
+
+Health check:
+
+```text
+http://localhost:4000/api/health
 ```
 
 ### Frontend
@@ -60,170 +56,119 @@ cd frontend
 npm install
 ```
 
-Create `.env` file:
+Create or update `frontend/.env.development`:
+
 ```env
-VITE_API_URL=http://localhost:5000/api
-VITE_SOCKET_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:4000/api
 ```
 
-Start server:
+Run:
+
 ```bash
 npm run dev
 ```
 
-## Project Structure
+Frontend:
 
-### Backend
-- `src/config/` - Configuration files
-- `src/middlewares/` - Express middlewares
-- `src/modules/` - Feature modules (auth, issues, reports, etc.)
-- `src/sockets/` - WebSocket handlers
-- `src/utils/` - Utility functions
-
-### Frontend
-- `src/app/` - Redux store configuration
-- `src/components/` - Reusable components
-- `src/features/` - Redux slices and API integration
-- `src/pages/` - Page components
-- `src/services/` - API clients
-
-## Development Workflow
-
-### Branch Naming
-
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation changes
-- `refactor/` - Code refactoring
-
-Create a branch:
-```bash
-git checkout -b feature/your-feature-name
+```text
+http://localhost:5173
 ```
 
-Keep your branch updated:
+## Useful Commands
+
+### Backend
+
+```bash
+cd backend
+npm run dev
+npm run build
+npm run start
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run dev
+npm run build
+npm run lint
+```
+
+## Deployment
+
+### Backend
+
+- Vercel project root: `backend`
+- serverless entrypoints live in `backend/api/`
+
+Required production env:
+
+```env
+MONGODB_URI=...
+JWT_SECRET=...
+NODE_ENV=production
+CORS_ORIGINS=https://your-frontend-domain.vercel.app
+```
+
+### Frontend
+
+Set:
+
+```env
+VITE_API_BASE_URL=https://your-backend-domain.vercel.app/api
+```
+
+## Workflow
+
+- Create a focused branch:
+
+```bash
+git checkout -b feat/short-description
+```
+
+- Keep it updated:
+
 ```bash
 git fetch upstream
 git rebase upstream/main
 ```
 
-## Coding Standards
+Preferred branch prefixes:
 
-### General
-- Use TypeScript for all code
-- Define proper types and interfaces
-- Use meaningful names
-- Follow existing code patterns
-- Run `npm run lint` before committing
+- `feat/`
+- `fix/`
+- `docs/`
+- `refactor/`
+- `chore/`
 
-### Backend
-- Follow RESTful conventions
-- Use async/await
-- Implement error handling
-- Validate all inputs
-- Keep controllers thin, logic in services
+## Quality Bar
 
-### Frontend
-- Use functional components with hooks
-- Implement prop types
-- Keep components focused
-- Use Redux for state management
-- Follow accessibility best practices
-- Use Tailwind CSS for styling
+- Use TypeScript consistently
+- Keep changes scoped and readable
+- Do not hardcode secrets, ports, or deployment URLs
+- Use env variables for configuration
+- Reuse the shared frontend API client in `frontend/src/services/api.ts`
 
-## Commit Guidelines
+Before opening a PR, run:
 
-Follow Conventional Commits format:
-
-```
-<type>(<scope>): <subject>
+```bash
+cd backend && npm run build
+cd frontend && npm run build
+cd frontend && npm run lint
 ```
 
-**Types:**
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation
-- `style` - Formatting
-- `refactor` - Code refactoring
-- `test` - Tests
-- `chore` - Maintenance
-
-**Examples:**
-```
-feat(issues): add severity calculation algorithm
-fix(auth): resolve token expiration handling
-docs: update setup instructions
-```
-
-## Pull Request Process
-
-### Before Submitting
-
-1. Ensure code follows coding standards
-2. Run tests and linting
-3. Rebase on latest main branch
-4. Test changes thoroughly
-
-### Submitting
-
-1. Push your branch:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-2. Create a pull request with:
-   - Clear description of changes
-   - Related issue numbers
-   - Screenshots (if UI changes)
-   - Testing instructions
-
-### PR Template
-
-```markdown
-## Description
-Brief description of changes
-
-## Related Issues
-Fixes #issue_number
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation
-
-## Testing
-How to test these changes
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] Tests passing
-```
-
-## Reporting Issues
-
-### Bug Reports
+## Pull Requests
 
 Include:
-- Clear, descriptive title
-- Steps to reproduce
-- Expected vs actual behavior
-- Screenshots or error messages
-- Environment details (OS, browser, Node version)
 
-### Feature Requests
+- what changed
+- why it changed
+- how it was tested
+- screenshots for UI changes
+- env or deployment notes if relevant
 
-Include:
-- Clear description
-- Use case and benefits
-- Possible implementation approach
+## Security
 
-### Security Issues
-
-For security vulnerabilities, email maintainers directly rather than opening a public issue.
-
-## License
-
-By contributing to CivicPulse, you agree that your contributions will be licensed under the same license as the project.
+- Never commit `.env` files or real secrets
+- Rotate any exposed credential immediately
+- Report security issues privately
