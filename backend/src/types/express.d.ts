@@ -7,6 +7,7 @@ declare global {
         id: string;
         role: string;
         society: string;
+        societyLabel?: string;
       };
     }
   }

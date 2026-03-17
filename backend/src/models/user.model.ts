@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password: string;
   role: "resident" | "staff" | "admin";
   flatNumber?: string;
+  societyLabel?: string;
   society?: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
@@ -43,12 +44,18 @@ const userSchema = new mongoose.Schema<IUser>(
       }
     },
 
-    society: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Society",
+    societyLabel: {
+      type: String,
+      trim: true,
       required: function () {
         return ["resident", "staff"].includes(this.role);
       }
+    },
+
+    society: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Society",
+      required: false
     },
 
     isActive: {

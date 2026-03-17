@@ -1,9 +1,17 @@
 import { Router } from "express";
-import { createSociety, getSocieties, getSocietyById, getSocietyIssues } from "../controllers/society.controller";
+import {
+  createSociety,
+  getSocieties,
+  getSocietyById,
+  getSocietyIssues,
+  listPublicSocieties
+} from "../controllers/society.controller";
 import { protect } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
 
 const router = Router();
+
+router.get("/public", listPublicSocieties);
 
 // Create society (admin only)
 router.post("/", protect, authorize("admin"), createSociety);
