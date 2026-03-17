@@ -81,6 +81,16 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.get("/api/cors-config", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    environment: env.nodeEnv,
+    corsOrigins: env.corsOrigins,
+    corsOriginsEnvar: process.env.CORS_ORIGINS || "NOT SET",
+    frontendUrl: process.env.FRONTEND_URL || "NOT SET"
+  });
+});
+
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (_req, res) => {
   res.status(204).end();
 });
