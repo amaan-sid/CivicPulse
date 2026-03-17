@@ -21,15 +21,20 @@ app.disable("x-powered-by");
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
-    if (!origin || env.corsOrigins.includes(origin.replace(/\/$/, ""))) {
+    const normalizedOrigin = origin ? origin.replace(/\/$/, "") : "";
+    const isAllowed = !origin || env.corsOrigins.includes(normalizedOrigin);
+    
+    if (isAllowed) {
       return callback(null, true);
     }
 
-    return callback(new Error("CORS origin not allowed."));
+    console.warn(`CORS blocked origin: ${origin}, Allowed: ${env.corsOrigins.join(", ")}`);
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));

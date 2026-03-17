@@ -22,7 +22,9 @@ const parseOrigins = (...values: Array<string | undefined>) => {
       mergedOrigins.add(origin);
     });
 
-  return Array.from(mergedOrigins);
+  const result = Array.from(mergedOrigins);
+  console.log("CORS Origins loaded:", result);
+  return result;
 };
 
 const parsePort = (value: string | undefined) => {
