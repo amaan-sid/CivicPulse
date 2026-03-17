@@ -19,11 +19,62 @@ validateEnv();
 
 app.disable("x-powered-by");
 
+const parseOrigin = (value: string) => {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+};
+
+const isAllowedOrigin = (origin: string | undefined) => {
+  if (!origin) {
+    return true;
+  }
+
+  const normalizedOrigin = origin.replace(/\/$/, "");
+
+  if (env.corsOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  const requestUrl = parseOrigin(normalizedOrigin);
+
+  if (!requestUrl) {
+    return false;
+  }
+
+  return env.corsOrigins.some((allowedOrigin) => {
+    const allowedUrl = parseOrigin(allowedOrigin);
+
+    if (!allowedUrl) {
+      return false;
+    }
+
+    const requestIsVercel = requestUrl.hostname.endsWith(".vercel.app");
+    const allowedIsVercel = allowedUrl.hostname.endsWith(".vercel.app");
+
+    if (!requestIsVercel || !allowedIsVercel) {
+      return false;
+    }
+
+    const allowedProject = allowedUrl.hostname.replace(/\.vercel\.app$/, "");
+    const requestProject = requestUrl.hostname.replace(/\.vercel\.app$/, "");
+
+    return (
+      requestUrl.protocol === allowedUrl.protocol &&
+      (
+        requestProject === allowedProject ||
+        requestProject.startsWith(`${allowedProject}-`)
+      )
+    );
+  });
+};
+
 const corsOptions = {
   origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
-    const normalizedOrigin = origin ? origin.replace(/\/$/, "") : "";
-    const isAllowed = !origin || env.corsOrigins.includes(normalizedOrigin);
-    
+    const isAllowed = isAllowedOrigin(origin);
+
     if (isAllowed) {
       return callback(null, true);
     }
@@ -38,6 +89,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.set("trust proxy", 1);
 app.use((req, res, next) => {

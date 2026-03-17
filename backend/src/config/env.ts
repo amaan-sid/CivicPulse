@@ -3,6 +3,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const normalizeOrigin = (value: string) => value.trim().replace(/\/$/, "");
+const isHttpOrigin = (value: string) => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const defaultCorsOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -19,6 +28,11 @@ const parseOrigins = (...values: Array<string | undefined>) => {
     .map(normalizeOrigin)
     .filter(Boolean)
     .forEach((origin) => {
+      if (!isHttpOrigin(origin)) {
+        console.warn(`Ignoring invalid CORS origin: ${origin}`);
+        return;
+      }
+
       mergedOrigins.add(origin);
     });
 
