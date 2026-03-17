@@ -3,16 +3,27 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const normalizeOrigin = (value: string) => value.trim().replace(/\/$/, "");
+const defaultCorsOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5173"
+];
 
 const parseOrigins = (value: string | undefined) => {
+  const mergedOrigins = new Set(defaultCorsOrigins.map(normalizeOrigin));
+
   if (!value) {
-    return ["http://localhost:3000", "http://localhost:5173"];
+    return Array.from(mergedOrigins);
   }
 
-  return value
+  value
     .split(",")
     .map(normalizeOrigin)
-    .filter(Boolean);
+    .filter(Boolean)
+    .forEach((origin) => mergedOrigins.add(origin));
+
+  return Array.from(mergedOrigins);
 };
 
 const parsePort = (value: string | undefined) => {
