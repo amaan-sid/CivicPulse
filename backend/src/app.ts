@@ -19,14 +19,13 @@ validateEnv();
 
 app.disable("x-powered-by");
 
-app.use(
-  cors({
-    origin: [
-      "https://civic-pulse-ui.vercel.app"
-    ],
-    credentials: true
-  })
-);
+const corsOptions = {
+  origin: ["https://civic-pulse-ui.vercel.app"],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 // const parseOrigin = (value: string) => {
 //   try {
 //     return new URL(value);
