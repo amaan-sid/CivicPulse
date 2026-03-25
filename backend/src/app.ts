@@ -19,77 +19,85 @@ validateEnv();
 
 app.disable("x-powered-by");
 
-const parseOrigin = (value: string) => {
-  try {
-    return new URL(value);
-  } catch {
-    return null;
-  }
-};
+app.use(
+  cors({
+    origin: [
+      "https://civic-pulse-ui.vercel.app"
+    ],
+    credentials: true
+  })
+);
+// const parseOrigin = (value: string) => {
+//   try {
+//     return new URL(value);
+//   } catch {
+//     return null;
+//   }
+// };
 
-const isAllowedOrigin = (origin: string | undefined) => {
-  if (!origin) {
-    return true;
-  }
+// const isAllowedOrigin = (origin: string | undefined) => {
+//   if (!origin) {
+//     return true;
+//   }
 
-  const normalizedOrigin = origin.replace(/\/$/, "");
+//   const normalizedOrigin = origin.replace(/\/$/, "");
 
-  if (env.corsOrigins.includes(normalizedOrigin)) {
-    return true;
-  }
+//   if (env.corsOrigins.includes(normalizedOrigin)) {
+//     return true;
+//   }
 
-  const requestUrl = parseOrigin(normalizedOrigin);
+//   const requestUrl = parseOrigin(normalizedOrigin);
 
-  if (!requestUrl) {
-    return false;
-  }
+//   if (!requestUrl) {
+//     return false;
+//   }
 
-  return env.corsOrigins.some((allowedOrigin) => {
-    const allowedUrl = parseOrigin(allowedOrigin);
+//   return env.corsOrigins.some((allowedOrigin) => {
+//     const allowedUrl = parseOrigin(allowedOrigin);
 
-    if (!allowedUrl) {
-      return false;
-    }
+//     if (!allowedUrl) {
+//       return false;
+//     }
 
-    const requestIsVercel = requestUrl.hostname.endsWith(".vercel.app");
-    const allowedIsVercel = allowedUrl.hostname.endsWith(".vercel.app");
+//     const requestIsVercel = requestUrl.hostname.endsWith(".vercel.app");
+//     const allowedIsVercel = allowedUrl.hostname.endsWith(".vercel.app");
 
-    if (!requestIsVercel || !allowedIsVercel) {
-      return false;
-    }
+//     if (!requestIsVercel || !allowedIsVercel) {
+//       return false;
+//     }
 
-    const allowedProject = allowedUrl.hostname.replace(/\.vercel\.app$/, "");
-    const requestProject = requestUrl.hostname.replace(/\.vercel\.app$/, "");
+//     const allowedProject = allowedUrl.hostname.replace(/\.vercel\.app$/, "");
+//     const requestProject = requestUrl.hostname.replace(/\.vercel\.app$/, "");
 
-    return (
-      requestUrl.protocol === allowedUrl.protocol &&
-      (
-        requestProject === allowedProject ||
-        requestProject.startsWith(`${allowedProject}-`)
-      )
-    );
-  });
-};
+//     return (
+//       requestUrl.protocol === allowedUrl.protocol &&
+//       (
+//         requestProject === allowedProject ||
+//         requestProject.startsWith(`${allowedProject}-`)
+//       )
+//     );
+//   });
+// };
 
-const corsOptions = {
-  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
-    const isAllowed = isAllowedOrigin(origin);
+// const corsOptions = {
+//   origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+//     const isAllowed = isAllowedOrigin(origin);
 
-    if (isAllowed) {
-      return callback(null, true);
-    }
+//     if (isAllowed) {
+//       return callback(null, true);
+//     }
 
-    console.warn(`CORS blocked origin: ${origin}, Allowed: ${env.corsOrigins.join(", ")}`);
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200
-};
+//     console.warn(`CORS blocked origin: ${origin}, Allowed: ${env.corsOrigins.join(", ")}`);
+//     return callback(null, false);
+//   },
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+//   optionsSuccessStatus: 200
+// };
 
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+// app.use(cors(corsOptions));
+// app.options(/.*/, cors(corsOptions));
 
 app.set("trust proxy", 1);
 app.use((req, res, next) => {
