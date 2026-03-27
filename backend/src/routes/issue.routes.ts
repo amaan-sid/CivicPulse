@@ -2,9 +2,9 @@ import { Router } from "express";
 import {
   assignIssue,
   createIssue,
-  getIssueById,
   getSocietyIssues,
-  updateIssueStatus
+  updateIssueStatus,
+  getIssueById
 } from "../controllers/issue.controller";
 
 import { protect } from "../middlewares/auth.middleware";

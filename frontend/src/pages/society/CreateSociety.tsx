@@ -5,6 +5,7 @@ import DashboardLayout from "../../layouts/DashboardLayout"
 function CreateSociety(){
 
   const [name,setName] = useState("")
+  const [code,setCode] = useState("")
   const [address,setAddress] = useState("")
   const [city,setCity] = useState("")
   const [state,setState] = useState("")
@@ -13,7 +14,7 @@ function CreateSociety(){
   const handleSubmit = async (e:React.FormEvent)=>{
     e.preventDefault()
 
-    await API.post("/society",{ name,address, city, state, totalFlats })
+    await API.post("/society",{ name, code, address, city, state, totalFlats })
 
     alert("Society created successfully")
   }
@@ -35,6 +36,12 @@ function CreateSociety(){
           placeholder="Society Name"
           className="border p-2 w-full"
           onChange={(e)=>setName(e.target.value)}
+        />
+
+        <input
+          placeholder="Society Code (optional, e.g. A101)"
+          className="border p-2 w-full"
+          onChange={(e)=>setCode(e.target.value)}
         />
 
         <input

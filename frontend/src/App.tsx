@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom"
 import type { RootState } from "./app/store"
 import Login from "./pages/auth/Login"
 import Signup from "./pages/auth/Signup"
+import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import IssueList from "./pages/issues/IssueList"
 import CreateIssue from "./pages/issues/CreateIssue"
@@ -18,14 +19,14 @@ function App() {
   const user = useSelector((state : RootState) => state.auth.user)
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
 
         {/* DEFAULT ROUTE */}
         <Route
           path="/"
           element={
-            user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            user ? <Navigate to="/dashboard" /> : <LandingPage />
           }
         />
         <Route path="/login" element={<Login />} />
@@ -47,7 +48,7 @@ function App() {
         />
 
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
