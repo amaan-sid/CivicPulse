@@ -39,14 +39,14 @@ function IssueList() {
 
   }, [])
 
-  const getPriorityBorder = (priority: string) => {
+  // const getPriorityBorder = (priority: string) => {
 
-    if (priority === "high") return "border-l-4 border-red-500"
-    if (priority === "medium") return "border-l-4 border-yellow-500"
+  //   if (priority === "high") return "border-l-4 border-red-500"
+  //   if (priority === "medium") return "border-l-4 border-yellow-500"
 
-    return "border-l-4 border-green-500"
+  //   return "border-l-4 border-green-500"
 
-  }
+  // }
 
   if (loading) {
     return (

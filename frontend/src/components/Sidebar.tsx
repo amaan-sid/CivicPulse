@@ -6,11 +6,11 @@ function Sidebar() {
 
   const user = useSelector((state: RootState) => state.auth.user)
 
-  const menuItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    // { label: "Issues", path: "/issues" },
-    // { label: "Issue Board", path: "/issue-board" }
-  ]
+  // const menuItems = [
+  //   { label: "Dashboard", path: "/dashboard" },
+  //   // { label: "Issues", path: "/issues" },
+  //   // { label: "Issue Board", path: "/issue-board" }
+  // ]
 
   return (
     <div className="w-60 bg-gray-900 text-white min-h-screen p-6">
