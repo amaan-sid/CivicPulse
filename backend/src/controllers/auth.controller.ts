@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
+import { Society } from "../models/society.model";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
+const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS);
 
 // SIGNUP
 export const signup = async (req: Request, res: Response) => {
@@ -19,7 +21,12 @@ export const signup = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User already exists in this society" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    //if the provided name for society matches that of any society in the database then we can assign that society's object Id to the current user
+    const societyDoc = await Society.findOne({ name: society }, '_id');
+
+    const societyId = societyDoc?._id;
 
     const newUser = await User.create({
       name,
@@ -27,7 +34,28 @@ export const signup = async (req: Request, res: Response) => {
       password: hashedPassword,
       role: role || "resident",
       flatNumber,
-      society
+      society: societyId
+    });
+
+    if (!JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
+    const token = jwt.sign(
+      {
+        id: newUser._id,
+        role: newUser.role,
+        society: newUser.society
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.status(201).json({
@@ -83,8 +111,8 @@ export const login = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -108,8 +136,8 @@ export const login = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production"
+    sameSite: "none",
+    secure: true
   });
 
   res.json({ message: "Logout successful" });

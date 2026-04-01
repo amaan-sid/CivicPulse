@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -18,7 +19,7 @@ const PORT = process.env.BACKEND_PORT || 4000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true
   })
 );
@@ -41,11 +42,16 @@ app.get("/api/profile", protect, (req, res) => {
     user: req.user
   });
 });
+app.get("/api/test",(req,res)=>{
+  res.json({
+    message: "Backend is working"
+  })
+})
 
 // Database Connection
 db();
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running at Port:${PORT}`);
 });

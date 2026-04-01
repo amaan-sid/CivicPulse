@@ -1,9 +1,12 @@
 import { useState } from "react"
 import API from "../../services/api"
 import { useNavigate } from "react-router-dom"
+import { useDispatch } from "react-redux"
+import { setUser } from "../../features/auth/authSlice"
 
 function Signup() {
 
+  const dispatch = useDispatch()
   const navigate = useNavigate()
 
   const [name,setName] = useState("")
@@ -24,7 +27,7 @@ function Signup() {
 
     try {
 
-      await API.post("/auth/signup",{
+      const res=await API.post("/auth/signup",{
         name,
         email,
         password,
@@ -35,7 +38,8 @@ function Signup() {
 
       alert("Signup successful")
 
-      navigate("/login")
+      dispatch(setUser(res.data.user))
+      navigate("/dashboard")
 
     } catch (err:any) {
 

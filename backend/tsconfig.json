@@ -5,7 +5,14 @@
     "rootDir": "src",
     "outDir": "dist",
     "esModuleInterop": true,
-    "strict": false
+    "strict": false,
+
+    "typeRoots": ["./node_modules/@types"],
+
+    "types": ["node"],
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
