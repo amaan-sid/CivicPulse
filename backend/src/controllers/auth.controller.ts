@@ -2,15 +2,15 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
-import { Society } from "../models/society.model";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS);
+const isProd = process.env.NODE_ENV === "production";
 
 // SIGNUP
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, flatNumber, society } = req.body;
+    const { name, email, password} = req.body;
 
     if (!name || !email || !password ) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -18,23 +18,15 @@ export const signup = async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({ email});
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists in this society" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-    //if the provided name for society matches that of any society in the database then we can assign that society's object Id to the current user
-    const societyDoc = await Society.findOne({ name: society }, '_id');
-
-    const societyId = societyDoc?._id;
-
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
-      role: role || "resident",
-      flatNumber,
-      society: societyId
+      password: hashedPassword
     });
 
     if (!JWT_SECRET) {
@@ -44,8 +36,6 @@ export const signup = async (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         id: newUser._id,
-        role: newUser.role,
-        society: newUser.society
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -53,8 +43,8 @@ export const signup = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -63,8 +53,7 @@ export const signup = async (req: Request, res: Response) => {
       user: {
         id: newUser._id,
         name: newUser.name,
-        email: newUser.email,
-        role: newUser.role
+        email: newUser.email
       }
     });
 
@@ -102,8 +91,6 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         id: user._id,
-        role: user.role,
-        society: user.society
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -111,8 +98,8 @@ export const login = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -120,8 +107,7 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       user: {
         id: user._id,
-        name: user.name,
-        role: user.role
+        name: user.name
       }
     });
 
@@ -136,8 +122,8 @@ export const login = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
-    sameSite: "none",
-    secure: true
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax"
   });
 
   res.json({ message: "Logout successful" });

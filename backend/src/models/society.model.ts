@@ -6,7 +6,7 @@ export interface ISociety extends Document {
   city: string;
   state: string;
   totalFlats: number;
-  admin: mongoose.Types.ObjectId;
+  code: string;
   defaultSLAs: {
     plumbing: number;
     electricity: number;
@@ -47,11 +47,11 @@ const societySchema = new mongoose.Schema<ISociety>(
       required: true
     },
 
-    admin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
+    code: {
+      type: String,
+      required: true,
+      unique: true
+    },    
 
     // SLA in hours for each category
     defaultSLAs: {

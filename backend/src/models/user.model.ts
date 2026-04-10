@@ -4,9 +4,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: "resident" | "staff" | "admin";
-  flatNumber?: string;
-  society?: mongoose.Types.ObjectId;
+  currentSocietyId?: mongoose.Schema.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -30,25 +28,9 @@ const userSchema = new mongoose.Schema<IUser>(
       select: false
     },
 
-    role: {
-      type: String,
-      enum: ["resident", "staff", "admin"],
-      default: "resident"
-    },
-
-    flatNumber: {
-      type: String,
-      required: function () {
-        return this.role === "resident";
-      }
-    },
-
-    society: {
+    currentSocietyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Society",
-      required: function () {
-        return ["resident", "staff"].includes(this.role);
-      }
     },
 
     isActive: {
