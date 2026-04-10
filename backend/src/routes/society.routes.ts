@@ -1,19 +1,21 @@
 import { Router } from "express";
-import { createSociety, getSocieties, getSocietyById, getSocietyIssues } from "../controllers/society.controller";
-import { protect } from "../middlewares/auth.middleware";
+import { createSociety, getSocieties, getSocietyById, getSocietyIssues, joinSociety } from "../controllers/society.controller";
 import { authorize } from "../middlewares/authorize.middleware";
 
 const router = Router();
 
-// Create society (admin only)
-router.post("/", protect, authorize("admin"), createSociety);
+// Create society 
+router.post("/create", createSociety);
 
-// Get all societies (admin only)
-router.get("/", protect, authorize("admin"), getSocieties);
+// Join society
+router.post("/join", joinSociety);
+
+// Get all societies
+router.get("/", getSocieties);
 
 // Get a specific Society
-router.get("/:id", protect, authorize("admin"), getSocietyById)
+router.get("/:id", getSocietyById)
 
-router.get("/:id/issues", protect, getSocietyIssues)
+router.get("/:id/issues", getSocietyIssues)
 
 export default router;
