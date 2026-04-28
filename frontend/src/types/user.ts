@@ -1,4 +1,4 @@
-export type Role="admin"|"staff"|"resident"
+export type Role="admin"|"member"|"resident"
 
 export interface Membership{
   societyId:string | {

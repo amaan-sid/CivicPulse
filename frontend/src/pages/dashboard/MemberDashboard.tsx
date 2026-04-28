@@ -1,7 +1,7 @@
 import DashboardLayout from "../../layouts/DashboardLayout"
 import { Link } from "react-router-dom"
 
-function StaffDashboard(){
+function MemberDashboard(){
 
   return(
 
@@ -24,4 +24,4 @@ function StaffDashboard(){
 
 }
 
-export default StaffDashboard
+export default MemberDashboard

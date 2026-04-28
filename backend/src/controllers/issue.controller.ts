@@ -138,7 +138,7 @@ export const getSocietyIssues = async (req: Request, res: Response) => {
       filter.reporters = id;
     }
 
-    if (role === "staff") {
+    if (role === "member") {
       filter.assignedTo = id;
     }
 
@@ -156,7 +156,7 @@ export const getSocietyIssues = async (req: Request, res: Response) => {
 };
 
 
-// Update Issue Status (Staff/Admin)
+// Update Issue Status (Member/Admin)
 export const updateIssueStatus = async (req: Request, res: Response) => {
   try {
     const { status } = req.body;
@@ -190,22 +190,22 @@ export const updateIssueStatus = async (req: Request, res: Response) => {
 
 export const assignIssue = async (req: Request, res: Response) => {
   try {
-    const { staffId } = req.body;
+    const { memberId } = req.body;
 
     const issue = await Issue.findById(req.params.id);
     if (!issue) {
       return res.status(404).json({ message: "Issue not found" });
     }
 
-    const staff = await User.findById(staffId);
-    if (!staff) {
-      return res.status(404).json({ message: "Staff user not found" });
+    const member = await User.findById(memberId);
+    if (!member) {
+      return res.status(404).json({ message: "Member user not found" });
     }
 
     const oldAssignedId = issue.assignedTo;
-    const staffOld = await User.findById(oldAssignedId);
+    const oldMember = await User.findById(oldAssignedId);
 
-    issue.assignedTo = new mongoose.Types.ObjectId(staffId);
+    issue.assignedTo = new mongoose.Types.ObjectId(memberId);
     issue.assignedAt = new Date();
     issue.assignedBy = new mongoose.Types.ObjectId(req.user!.id);
 
@@ -215,8 +215,8 @@ export const assignIssue = async (req: Request, res: Response) => {
       issue: issue._id,
       action: "assignment",
       performedBy: req.user!.id,
-      oldValue: staffOld.name,
-      newValue: staff.name  
+      oldValue: oldMember.name,
+      newValue: member.name  
     });
 
     res.json({ message: "Issue assigned successfully", issue });
@@ -253,7 +253,7 @@ export const getIssueById = async (req: Request, res: Response) => {
       }
     }
 
-    if (role === "staff") {
+    if (role === "member") {
    const b = issue.assignedTo.toString();
   const assignedId =
     typeof issue.assignedTo === "object"

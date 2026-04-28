@@ -7,7 +7,7 @@ import Card from "../../components/ui/Card"
 import Badge from "../../components/ui/Badge"
 import TimelineItem from "../../components/ui/TimeLineItem"
 
-interface Staff {
+interface Member {
   _id: string
   name: string
 }
@@ -28,7 +28,7 @@ function IssueDetails() {
   const { id } = useParams()
 
   const [issue, setIssue] = useState<Issue | null>(null)
-  const [staff, setStaff] = useState<Staff[]>([])
+  const [members, setMembers] = useState<Member[]>([])
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -42,8 +42,8 @@ function IssueDetails() {
         const issueRes = await API.get(`/issues/${id}`)
         setIssue(issueRes.data)
 
-        const staffRes = await API.get("/users?role=staff")
-        setStaff(staffRes.data)
+        const memberRes = await API.get("/users?role=member")
+        setMembers(memberRes.data)
 
         const logRes = await API.get(`/issues/${id}/logs`)
         setLogs(logRes.data)
@@ -78,12 +78,12 @@ function IssueDetails() {
   }
 
 
-  const assignIssue = async (staffId: string) => {
+  const assignIssue = async (memberId: string) => {
 
     try {
 
       const res = await API.patch(`/issues/${id}/assign`, {
-        staffId
+        memberId
       })
 
       setIssue(res.data)
@@ -170,11 +170,11 @@ function IssueDetails() {
 
         </div>
 
-        {/* ASSIGN STAFF */}
+        {/* ASSIGN MEMBER */}
         <div className="mb-10">
 
           <h3 className="font-semibold mb-2">
-            Assign Staff
+            Assign Member
           </h3>
 
           <select
@@ -182,11 +182,11 @@ function IssueDetails() {
             onChange={(e)=>assignIssue(e.target.value)}
           >
 
-            <option>Select staff</option>
+            <option>Select member</option>
 
-            {staff.map((s)=>(
-              <option key={s._id} value={s._id}>
-                {s.name}
+            {members.map((member)=>(
+              <option key={member._id} value={member._id}>
+                {member.name}
               </option>
             ))}
 

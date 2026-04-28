@@ -3,7 +3,7 @@ import mongoose, {Document,Types} from "mongoose";
 export interface IMembership extends Document {
     userId: Types.ObjectId;
     societyId: Types.ObjectId;
-    role: "resident" | "staff" | "admin";
+    role: "resident" | "member" | "admin";
     createdAt: Date;
     updatedAt: Date;
 }
@@ -24,7 +24,7 @@ const membershipSchema = new mongoose.Schema<IMembership>(
 
         role: {
             type: String,
-            enum: ["resident","staff","admin"],
+            enum: ["resident","member","admin"],
             default: "resident"
         },
 

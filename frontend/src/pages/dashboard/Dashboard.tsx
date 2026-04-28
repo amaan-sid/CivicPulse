@@ -2,7 +2,7 @@ import { useSelector } from "react-redux"
 import type { RootState } from "../../app/store"
 
 import ResidentDashboard from "./ResidentDashboard"
-import StaffDashboard from "./StaffDashboard"
+import MemberDashboard from "./MemberDashboard"
 import AdminDashboard from "./AdminDashboard"
 
 function Dashboard(){
@@ -13,8 +13,8 @@ function Dashboard(){
     return <AdminDashboard/>
   }
 
-  if(user?.role === "staff"){
-    return <StaffDashboard/>
+  if(user?.role === "member"){
+    return <MemberDashboard/>
   }
 
   return <ResidentDashboard/>
