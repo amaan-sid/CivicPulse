@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSociety, getSocieties, getSocietyById, getSocietyIssues, joinSociety } from "../controllers/society.controller";
+import { changeCurrentSociety, createSociety, getSocieties, getSocietyById, getSocietyIssues, joinSociety } from "../controllers/society.controller";
 import { authorize } from "../middlewares/authorize.middleware";
 
 const router = Router();
@@ -9,6 +9,9 @@ router.post("/create", createSociety);
 
 // Join society
 router.post("/join", joinSociety);
+
+// Change active society
+router.post("/current", changeCurrentSociety);
 
 // Get all societies
 router.get("/", getSocieties);

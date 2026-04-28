@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar"
 import Sidebar from "../components/Sidebar"
+import SocietySwitcher from "../components/SocietySwitcher"
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
 
@@ -13,6 +14,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Navbar />
 
         <div className="p-6 bg-gray-100 min-h-screen">
+          <SocietySwitcher />
           {children}
         </div>
 

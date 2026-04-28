@@ -2,10 +2,39 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
+import { Membership } from "../models/membership.model";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS);
 const isProd = process.env.NODE_ENV === "production";
+
+const buildAuthUser = async (userId: string) => {
+  const user = await User.findById(userId);
+
+  if (!user) return null;
+
+  const memberships = await Membership.find({
+    userId: user._id
+  }).select("societyId role").populate("societyId", "name code");
+
+  const currentMembership = memberships.find((membership) => {
+    const societyId = (membership.societyId as any)._id || membership.societyId;
+    return societyId.toString() === user.currentSocietyId?.toString();
+  }) || memberships[0];
+
+  const currentSocietyId = currentMembership
+    ? ((currentMembership.societyId as any)._id || currentMembership.societyId)
+    : user.currentSocietyId;
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    currentSocietyId: currentSocietyId?.toString(),
+    memberships,
+    role: currentMembership?.role
+  };
+};
 
 // SIGNUP
 export const signup = async (req: Request, res: Response) => {
@@ -103,17 +132,40 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    const authUser = await buildAuthUser(user._id.toString());
+
     res.json({
       message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name
-      }
+      user: authUser
     });
 
   } catch (error) {
     console.error("LOGIN ERROR:", error);
     res.status(500).json({ message: "Login failed" });
+  }
+};
+
+
+// ME
+export const me = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const authUser = await buildAuthUser(decoded.id);
+
+    if (!authUser) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    res.json({ user: authUser });
+  } catch (error) {
+    console.error("ME ERROR:", error);
+    res.status(401).json({ message: "Invalid token" });
   }
 };
 

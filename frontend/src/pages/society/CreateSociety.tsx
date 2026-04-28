@@ -1,9 +1,12 @@
 import { useState } from "react"
 import API from "../../services/api"
 import DashboardLayout from "../../layouts/DashboardLayout"
+import { useDispatch } from "react-redux"
+import { setUser } from "../../features/auth/authSlice"
 
 function CreateSociety(){
 
+  const dispatch = useDispatch()
   const [name,setName] = useState("")
   const [address,setAddress] = useState("")
   const [city,setCity] = useState("")
@@ -13,7 +16,10 @@ function CreateSociety(){
   const handleSubmit = async (e:React.FormEvent)=>{
     e.preventDefault()
 
-    await API.post("/society",{ name,address, city, state, totalFlats })
+    await API.post("/society/create",{ name,address, city, state, totalFlats })
+    const res = await API.get("/auth/me")
+
+    dispatch(setUser(res.data.user))
 
     alert("Society created successfully")
   }

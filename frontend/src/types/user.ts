@@ -1,6 +1,19 @@
+export type Role="admin"|"staff"|"resident"
+
+export interface Membership{
+  societyId:string | {
+    _id: string
+    name?: string
+    code?: string
+  }
+  role: Role
+}
+
 export interface User {
   id: string
   name: string
   email: string
-  role: "resident" | "staff" | "admin"
+  currentSocietyId: string
+  memberships: Membership[]
+  role?: Role
 }
