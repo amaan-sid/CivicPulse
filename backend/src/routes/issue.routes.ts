@@ -21,8 +21,8 @@ router.get("/", protect, getSocietyIssues);
 // Get issue by id
 router.get("/:id", protect, getIssueById);
 
-// Update issue status (staff/admin)
-router.patch("/:id", protect, authorize("staff", "admin"), updateIssueStatus);
+// Update issue status (member/admin)
+router.patch("/:id", protect, authorize("member", "admin"), updateIssueStatus);
 
 // Assign issue (admin only)
 router.patch("/:id/assign", protect, authorize("admin"), assignIssue);

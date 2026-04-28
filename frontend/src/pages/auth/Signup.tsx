@@ -12,9 +12,6 @@ function Signup() {
   const [name,setName] = useState("")
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
-  const [role,setRole] = useState("resident")
-  const [flatNumber,setFlatNumber] = useState("")
-  const [society,setSociety] = useState("")
   const [error,setError] = useState("")
   const [loading,setLoading] = useState(false)
 
@@ -31,15 +28,13 @@ function Signup() {
         name,
         email,
         password,
-        role,
-        flatNumber,
-        society
       })
 
-      alert("Signup successful")
+      const user = res.data.user
 
-      dispatch(setUser(res.data.user))
-      navigate("/dashboard")
+      dispatch(setUser(user))
+
+      navigate("/join-society")
 
     } catch (err:any) {
 
@@ -53,13 +48,15 @@ function Signup() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
 
+      {/* option for signup using other means like google needs to be implemented */}
+
       <form
         onSubmit={handleSignup}
         className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md"
       >
 
         <h2 className="text-2xl font-bold text-center mb-6">
-          Create Account
+          CivicsPulse Sign-up
         </h2>
 
         {error && (
@@ -85,33 +82,14 @@ function Signup() {
           onChange={(e)=>setPassword(e.target.value)}
         />
 
-        <select
-          className="w-full border rounded-lg p-2 mb-4"
-          onChange={(e)=>setRole(e.target.value)}
-        >
-          <option value="resident">Resident</option>
-          <option value="staff">Staff</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <input
-          className="w-full border rounded-lg p-2 mb-4"
-          placeholder="Flat Number"
-          onChange={(e)=>setFlatNumber(e.target.value)}
-        />
-
-        <input
-          className="w-full border rounded-lg p-2 mb-6"
-          placeholder="Society ID"
-          onChange={(e)=>setSociety(e.target.value)}
-        />
-
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
         >
           {loading ? "Creating..." : "Signup"}
         </button>
+
+        <button onClick={()=>navigate("/login")} className="text-blue-800 py-2">Log in</button>
 
       </form>
 

@@ -5,6 +5,6 @@ import { authorize } from "../middlewares/authorize.middleware";
 
 const router = express.Router();
 
-router.get("/:id/logs", protect, authorize("admin", "staff"), getIssueLogs);
+router.get("/:id/logs", protect, authorize("admin", "member"), getIssueLogs);
 
 export default router;

@@ -8,7 +8,7 @@ function IssueRoute() {
 
   const user = useSelector((state: RootState) => state.auth.user)
 
-  if (user?.role === "staff") {
+  if (user?.role === "member") {
     return <IssueAssign />
   }
 

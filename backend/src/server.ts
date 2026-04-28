@@ -29,7 +29,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/society", societyRoutes);
+app.use("/api/society",protect, societyRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/issues", auditRoutes);
 app.use("/api/dashboard", dashboardRoutes);

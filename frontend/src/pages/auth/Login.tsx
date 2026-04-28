@@ -26,10 +26,16 @@ function Login() {
         email,
         password
       })
+      
+      const user = res.data.user
 
-      dispatch(setUser(res.data.user))
+      dispatch(setUser(user))
 
-      navigate("/dashboard")
+      if (!user.memberships || user.memberships.length === 0) {
+        navigate("/join-society")
+      } else {
+        navigate("/dashboard")
+      }
 
     } catch (err:any) {
 
@@ -76,6 +82,8 @@ function Login() {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+
+        <button onClick={()=>navigate("/signup")} className="text-blue-800 py-2">Sign up</button>
 
       </form>
 
