@@ -17,3 +17,9 @@ export interface User {
   memberships: Membership[]
   role?: Role
 }
+
+export interface Resident {
+  _id: string
+  name: string
+  role: Role
+}

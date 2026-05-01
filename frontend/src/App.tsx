@@ -7,7 +7,7 @@ import IssueList from "./pages/issues/IssueList"
 import CreateIssue from "./pages/issues/CreateIssue"
 import IssueBoard from "./pages/issues/IssueBoard"
 import CreateSociety from "./pages/society/CreateSociety"
-import SocietyList from "./pages/society/SocietyList"
+import ManageSociety from "./pages/society/ManageSociety"
 import SocietyIssues from "./pages/society/SocietyIssues"
 import Dashboard from "./pages/dashboard/Dashboard"
 import IssueRoute from "./routes/IssueRoutes"
@@ -42,7 +42,7 @@ function App() {
               <Route path="/issues/:id" element={<IssueRoute />} />
               <Route path="/issue-board" element={<IssueBoard />} />
               <Route path="/society/:id" element={<SocietyIssues />} />
-              <Route path="/societies" element={<SocietyList />} />
+              <Route path="/managesociety" element={<ManageSociety />} />
         </Route>
       </Routes>
     </BrowserRouter>
