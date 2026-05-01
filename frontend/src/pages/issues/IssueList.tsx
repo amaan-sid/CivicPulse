@@ -113,8 +113,8 @@ function IssueList() {
                 <div className="flex gap-2">
 
                   <Badge
-                    text={issue.priority}
-                    variant={issue.priority}
+                    text={issue.severity}
+                    variant={issue.severity}
                   />
 
                   <Badge
@@ -126,7 +126,7 @@ function IssueList() {
 
                 <SLATimer
                   createdAt={issue.createdAt}
-                  priority={issue.priority}
+                  priority={issue.severity}
                 />
 
               </div>

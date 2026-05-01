@@ -6,11 +6,7 @@ import type { Issue } from "../../types/issue"
 import Card from "../../components/ui/Card"
 import Badge from "../../components/ui/Badge"
 import TimelineItem from "../../components/ui/TimeLineItem"
-
-interface Member {
-  _id: string
-  name: string
-}
+import type { Membership } from "../../types/user"
 
 interface AuditLog {
   _id: string
@@ -28,10 +24,11 @@ function IssueDetails() {
   const { id } = useParams()
 
   const [issue, setIssue] = useState<Issue | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+  const [members, setMembers] = useState<Membership[]>([])
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [assignmember,setassignMembers] = useState<string | null >(null)
 
   useEffect(() => {
 
@@ -42,6 +39,9 @@ function IssueDetails() {
         const issueRes = await API.get(`/issues/${id}`)
         setIssue(issueRes.data)
 
+        const assignedto = issueRes.data.assignedTo ?? null
+        setassignMembers(assignedto)
+        
         const memberRes = await API.get("/users?role=member")
         setMembers(memberRes.data)
 
@@ -127,7 +127,7 @@ function IssueDetails() {
 
         {/* BADGES */}
         <div className="flex gap-2 mb-4">
-          <Badge text={issue.priority} variant={issue.priority}/>
+          <Badge text={issue.severity} variant={issue.severity}/>
           <Badge text={issue.status} variant={issue.status}/>
         </div>
 
@@ -179,18 +179,27 @@ function IssueDetails() {
 
           <select
             className="border p-2 rounded w-60"
-            onChange={(e)=>assignIssue(e.target.value)}
+            onChange={(e)=>setassignMembers(e.target.value)}
           >
 
-            <option>Select member</option>
+            <option value="">Select member</option>
 
-            {members.map((member)=>(
-              <option key={member._id} value={member._id}>
-                {member.name}
+            {members.map((member)=>{
+              return(
+              <option key={member.userId._id} value={member.userId._id}>
+                {member.userId.name}
               </option>
-            ))}
+            )})}
 
           </select>
+
+          <button
+            onClick={() => assignmember && assignIssue(assignmember)}
+            disabled={!assignmember}
+            className="ml-3 px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+          >
+            Assign
+          </button>
 
         </div>
 

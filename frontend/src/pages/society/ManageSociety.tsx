@@ -1,7 +1,7 @@
 import { useState } from "react"
 import DashboardLayout from "../../layouts/DashboardLayout"
-import ResidentsSection from "./ResidentsSection"
-import SocietySection from "./SocietySection"
+import ResidentsSection from "./ManageSocietySections/ResidentsSection"
+import SocietySection from "./ManageSocietySections/SocietySection"
 
 function ManageSociety(){
 

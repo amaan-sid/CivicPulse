@@ -1,6 +1,7 @@
 import { useDispatch } from "react-redux"
 import { logoutUser } from "../features/auth/authSlice"
 import { useNavigate } from "react-router-dom"
+import API from "../services/api"
 
 function Navbar() {
 
@@ -8,6 +9,7 @@ function Navbar() {
   const navigate = useNavigate()
 
   const handleLogout = () => {
+    API.post("/auth/logout")
     dispatch(logoutUser())
     navigate("/login")
   }

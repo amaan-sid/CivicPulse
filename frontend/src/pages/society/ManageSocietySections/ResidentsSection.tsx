@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import API from "../../services/api";
-import type { Resident } from "../../types/user";
+import API from "../../../services/api";
+import type { Resident } from "../../../types/user";
 
 function ResidentsSection() {
   const [residents, setResidents] = useState<Resident[]>([]);

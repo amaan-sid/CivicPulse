@@ -1,13 +1,16 @@
 import { useState } from "react"
 import API from "../../services/api"
 import DashboardLayout from "../../layouts/DashboardLayout"
+import { useNavigate } from "react-router-dom"
 
-function CreateIssue() {
+function ReportIssue() {
 
   const [title,setTitle] = useState("")
   const [category,setCategory] = useState("plumbing")
   const [description,setDescription] = useState("")
   const [severity,setSeverity] = useState("low")
+
+  const navigate=useNavigate()
 
   const handleSubmit = async (e:React.FormEvent) => {
 
@@ -26,12 +29,19 @@ function CreateIssue() {
   return (
 
     <DashboardLayout>
+      <div className="flex justify-between items-center bg-white p-3 rounded shadow">
+        <h1 className="text-2xl font-bold mb-6">
+            Report Issue
+        </h1>
+        <button
+            onClick={()=>{navigate("/manageissues")}}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+            Issue board
+        </button>
+      </div>
 
-      <div className="max-w-xl bg-white p-6 rounded shadow">
-
-        <h2 className="text-xl font-bold mb-4">
-          Report Issue
-        </h2>
+      <div className="max-w-xl bg-white p-6 rounded shadow my-5">
 
         <form onSubmit={handleSubmit}>
 
@@ -83,4 +93,4 @@ function CreateIssue() {
   )
 }
 
-export default CreateIssue
+export default ReportIssue

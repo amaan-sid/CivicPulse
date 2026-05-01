@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
-import API from "../../services/api"
-import type { Society } from "../../types/society"
+import API from "../../../services/api"
+import type { Society } from "../../../types/society"
 
 type EditableField = keyof Society
 

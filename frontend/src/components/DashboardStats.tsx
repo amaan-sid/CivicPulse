@@ -20,31 +20,25 @@ function DashboardStats() {
 
   useEffect(()=>{
 
-    const fetchStats = async ()=>{
+    const fetchStats = async () => {
+      try {
+        const res = await API.get("//issues");//
+        
+        const issues = Array.isArray(res.data) ? res.data : [];
 
-      try{
+        const counts = issues.reduce((acc, issue) => {
+          acc.total++;
+          if (issue.status === "open") acc.open++;
+          if (issue.status === "in-progress") acc.inProgress++;
+          if (issue.status === "resolved") acc.resolved++;
+          return acc;
+        }, { total: 0, open: 0, inProgress: 0, resolved: 0 });
 
-        const res = await API.get("/society")
-
-        const issues = res.data
-
-        const total = issues.length
-        const open = issues.filter((i:any)=>i.status==="open").length
-        const inProgress = issues.filter((i:any)=>i.status==="in-progress").length
-        const resolved = issues.filter((i:any)=>i.status==="resolved").length
-
-        setStats({
-          total,
-          open,
-          inProgress,
-          resolved
-        })
-
-      }catch(err){
-        console.error(err)
+        setStats(counts);
+      } catch (err) {
+        console.error("Fetch Stats Error:", err);
       }
-
-    }
+    };
 
     fetchStats()
 

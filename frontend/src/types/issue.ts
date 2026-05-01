@@ -1,9 +1,27 @@
 export interface Issue {
-  _id: string
-  title: string
-  description: string
-  reportCount: string
-  priority: "low" | "medium" | "high"
-  status: "open" | "in-progress" | "resolved"
-  createdAt: string
+  _id: string;
+  title: string;
+  description: string;
+  category: "plumbing" | "electricity" | "lift" | "security" | "cleanliness" | "water";
+  status: "open" | "in-progress" | "resolved";
+  severity: "low" | "medium" | "high";
+  priorityScore: number;
+  reportCount: number;
+  
+  reportedBy: {
+    _id: string;
+    name: string;
+  };
+
+  reporters: string[];
+
+  assignedTo?: {
+    _id: string;
+    name: string;
+    role: string;
+  };
+
+  isEscalated: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -30,7 +30,7 @@ function Sidebar() {
         </NavLink>
 
         <NavLink
-          to="/issue-board"
+          to="/manageissues"
           className={({ isActive }) =>
             `px-3 py-2 rounded transition ${
               isActive
@@ -40,19 +40,6 @@ function Sidebar() {
           }
         >
           Issue Board
-        </NavLink>
-
-        <NavLink
-          to="/create-issue"
-          className={({ isActive }) =>
-            `px-3 py-2 rounded transition ${
-              isActive
-                ? "bg-blue-600 text-white"
-                : "hover:bg-gray-700 text-gray-200"
-            }`
-          }
-        >
-          Report Issue
         </NavLink>
 
         {/* Admin Only */}
