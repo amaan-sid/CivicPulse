@@ -4,15 +4,16 @@ import Login from "./pages/auth/Login"
 import Signup from "./pages/auth/Signup"
 import ProtectedRoute from "./components/ProtectedRoute"
 import IssueList from "./pages/issues/IssueList"
-import CreateIssue from "./pages/issues/CreateIssue"
-import IssueBoard from "./pages/issues/IssueBoard"
+import ReportIssue from "./pages/issues/ReportIssue"
 import CreateSociety from "./pages/society/CreateSociety"
-import SocietyList from "./pages/society/SocietyList"
+import ManageSociety from "./pages/society/ManageSociety"
 import SocietyIssues from "./pages/society/SocietyIssues"
 import Dashboard from "./pages/dashboard/Dashboard"
 import IssueRoute from "./routes/IssueRoutes"
 import JoinSociety from "./pages/society/JoinSociety"
 import { useSelector } from "react-redux"
+import ManageIssues from "./pages/issues/ManageIssues"
+import IssueDetails from "./pages/issues/IssueDetails"
 
 function App() {
 
@@ -38,11 +39,12 @@ function App() {
               <Route path="/join-society" element={<JoinSociety />} />
 
               <Route path="/issues" element={<IssueList />} />
-              <Route path="/create-issue" element={<CreateIssue />} />
+              <Route path="/report-issue" element={<ReportIssue />} />
               <Route path="/issues/:id" element={<IssueRoute />} />
-              <Route path="/issue-board" element={<IssueBoard />} />
+              <Route path="/manageissues" element={<ManageIssues />} />
               <Route path="/society/:id" element={<SocietyIssues />} />
-              <Route path="/societies" element={<SocietyList />} />
+              <Route path="/managesociety" element={<ManageSociety />} />
+              <Route path="/issuedetails/:id" element={<IssueDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>

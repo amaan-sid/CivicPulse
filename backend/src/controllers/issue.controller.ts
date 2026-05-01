@@ -102,7 +102,7 @@ export const createIssue = async (req: Request, res: Response) => {
 
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
-    const { role, id, society } = req.user!;
+    const { society } = req.user!;
 
     const overdueIssues = await Issue.find({
       society,
@@ -134,17 +134,9 @@ export const getSocietyIssues = async (req: Request, res: Response) => {
 
     let filter: any = { society };
 
-    if (role === "resident") {
-      filter.reporters = id;
-    }
-
-    if (role === "member") {
-      filter.assignedTo = id;
-    }
-
     const issues = await Issue.find(filter)
-      .populate("reportedBy", "name flatNumber")
-      .populate("assignedTo", "name role")
+      .populate("reportedBy", "name")
+      .populate("assignedTo", "name")
       .sort({ priorityScore: -1 });
 
     res.json(issues);
@@ -216,7 +208,7 @@ export const assignIssue = async (req: Request, res: Response) => {
       action: "assignment",
       performedBy: req.user!.id,
       oldValue: oldMember.name,
-      newValue: member.name  
+      newValue: member.name
     });
 
     res.json({ message: "Issue assigned successfully", issue });
@@ -273,6 +265,7 @@ export const getIssueById = async (req: Request, res: Response) => {
       description: issue.description,
       category: issue.category,
       status: issue.status,
+      severity: issue.severity,
       priority: issue.priorityScore,
       reportCount: issue.reportCount,
       slaDeadline: issue.slaDeadline,
@@ -284,5 +277,29 @@ export const getIssueById = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("GET ISSUE BY ID ERROR:", error);
     res.status(500).json({ message: "Failed to fetch issue" });
+  }
+};
+
+export const toggleReporter = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const issueId = req.params.id;
+
+    const issue = await Issue.findById(issueId);
+    if (!issue) return res.status(404).json({ message: "Issue not found" });
+    const hasReported = issue.reporters.some(rid => rid.toString() === userId);
+
+    if (hasReported) {
+      issue.reporters = issue.reporters.filter(rid => rid.toString() !== userId);
+      issue.reportCount = Math.max(0, issue.reportCount - 1);
+    } else {
+      issue.reporters.push(userId as any);
+      issue.reportCount += 1;
+    }
+
+    await issue.save();
+    res.json(issue);
+  } catch (error) {
+    res.status(500).json({ message: "Toggle failed" });
   }
 };

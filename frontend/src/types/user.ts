@@ -1,10 +1,14 @@
 export type Role="admin"|"member"|"resident"
 
 export interface Membership{
-  societyId:string | {
+  societyId:{
     _id: string
     name?: string
     code?: string
+  }
+  userId: {
+    _id:string
+    name?:string
   }
   role: Role
 }
@@ -16,4 +20,10 @@ export interface User {
   currentSocietyId: string
   memberships: Membership[]
   role?: Role
+}
+
+export interface Resident {
+  _id: string
+  name: string
+  role: Role
 }

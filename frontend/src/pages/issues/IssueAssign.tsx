@@ -104,7 +104,7 @@ function IssueAssign() {
 
         {/* BADGES */}
         <div className="flex gap-2 mb-4">
-          <Badge text={issue.priority} variant={issue.priority}/>
+          <Badge text={issue.severity} variant={issue.severity}/>
           <Badge text={issue.status} variant={issue.status}/>
         </div>
 

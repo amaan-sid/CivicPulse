@@ -1,17 +1,22 @@
 import { Request, Response } from "express";
-import { User } from "../models/user.model";
+import { Membership } from "../models/membership.model";
 
 export const getAllUsers = async (req: Request, res: Response) => {
-  try {
+    try {
+    const { role="resident" } = req.query ;
+    const user = req.user
+    
+    const query: any = { societyId: user.society };
 
-    const users = await User.find()
-      .select("-password")
-      .populate("society", "name");
+    if (role) {
+      query.role = role;
+    }
+
+    const users= await Membership.find(query).populate("userId","_id name")
 
     res.json(users);
 
   } catch (error) {
-    console.error("GET USERS ERROR:", error);
-    res.status(500).json({ message: "Failed to fetch users" });
+    res.status(500).json({ message: "Error fetching users" });
   }
 };

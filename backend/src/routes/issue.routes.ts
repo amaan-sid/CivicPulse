@@ -4,7 +4,8 @@ import {
   createIssue,
   getIssueById,
   getSocietyIssues,
-  updateIssueStatus
+  updateIssueStatus,
+  toggleReporter
 } from "../controllers/issue.controller";
 
 import { protect } from "../middlewares/auth.middleware";
@@ -26,5 +27,8 @@ router.patch("/:id", protect, authorize("member", "admin"), updateIssueStatus);
 
 // Assign issue (admin only)
 router.patch("/:id/assign", protect, authorize("admin"), assignIssue);
+
+// Increase/Decrease report count
+router.patch("/:id/report", protect, toggleReporter);
 
 export default router;
