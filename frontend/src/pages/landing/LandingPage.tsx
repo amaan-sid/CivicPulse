@@ -56,6 +56,14 @@ function LandingPage() {
     }
   }
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault()
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans selection:bg-sky-500 selection:text-white">
       {/* Dynamic Background Glow Elements */}
@@ -79,16 +87,32 @@ function LandingPage() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <a href="#features" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+            <a
+              href="#features"
+              onClick={(e) => scrollToSection(e, "features")}
+              className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+            >
               Features
             </a>
-            <a href="#how-it-works" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+            <a
+              href="#how-it-works"
+              onClick={(e) => scrollToSection(e, "how-it-works")}
+              className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+            >
               How it Works
             </a>
-            <a href="#roles" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+            <a
+              href="#roles"
+              onClick={(e) => scrollToSection(e, "roles")}
+              className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+            >
               Roles & Support
             </a>
-            <a href="#stats" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+            <a
+              href="#stats"
+              onClick={(e) => scrollToSection(e, "stats")}
+              className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+            >
               Impact
             </a>
           </nav>
@@ -251,7 +275,7 @@ function LandingPage() {
         </section>
 
         {/* METRICS & IMPACT BAR */}
-        <section id="stats" className="py-12 bg-white/60 dark:bg-slate-900/60 border-y border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
+        <section id="stats" className="scroll-mt-24 py-12 bg-white/60 dark:bg-slate-900/60 border-y border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <p className="text-4xl font-extrabold text-sky-600 dark:text-sky-400 tracking-tight">99.4%</p>
@@ -273,7 +297,7 @@ function LandingPage() {
         </section>
 
         {/* PLATFORM FEATURES */}
-        <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
+        <section id="features" className="scroll-mt-24 py-24 px-6 max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400">
               Comprehensive Platform Capabilities
@@ -356,7 +380,7 @@ function LandingPage() {
         </section>
 
         {/* HOW IT WORKS SECTION */}
-        <section id="how-it-works" className="py-20 px-6 bg-slate-100/60 dark:bg-slate-900/40 border-y border-slate-200/80 dark:border-slate-800">
+        <section id="how-it-works" className="scroll-mt-24 py-20 px-6 bg-slate-100/60 dark:bg-slate-900/40 border-y border-slate-200/80 dark:border-slate-800">
           <div className="max-w-7xl mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
               <h2 className="text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400">
@@ -404,7 +428,7 @@ function LandingPage() {
         </section>
 
         {/* ROLE SHOWCASE INTERACTIVE TABS */}
-        <section id="roles" className="py-24 px-6 max-w-7xl mx-auto">
+        <section id="roles" className="scroll-mt-24 py-24 px-6 max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400">
               Tailored Experiences
@@ -617,7 +641,11 @@ function LandingPage() {
             <button onClick={() => navigate("/signup")} className="hover:text-sky-500 transition-colors">
               Signup
             </button>
-            <a href="#features" className="hover:text-sky-500 transition-colors">
+            <a
+              href="#features"
+              onClick={(e) => scrollToSection(e, "features")}
+              className="hover:text-sky-500 transition-colors"
+            >
               Features
             </a>
           </div>

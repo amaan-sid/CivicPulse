@@ -7,6 +7,7 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "strict": false,
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"]
     },
