@@ -1,4 +1,4 @@
-import DashboardLayout from "../../layouts/DashboardLayout"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { Link } from "react-router-dom"
 
 function MemberDashboard(){

@@ -4,7 +4,8 @@ declare global {
       user?: {
         id: string;
         society?: string;
-        role?: "resident" | "member" | "admin";
+        role?: "resident" | "member" | "staff" | "admin";
+        platformRole?: "SUPER_ADMIN" | "USER";
       };
     }
   }

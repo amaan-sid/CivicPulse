@@ -1,13 +1,24 @@
 import { useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { useDispatch } from "react-redux"
-import { setUser } from "../../features/auth/authSlice"
+import { setUser } from "@/features/auth/authSlice"
+import { useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
+import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect"
+
+const ORG_TYPE_OPTIONS: SelectOption[] = [
+  { value: "SOCIETY", label: "Housing Society" },
+  { value: "HOSTEL", label: "Hostel" },
+  { value: "CAMPUS", label: "Campus" },
+];
 
 function CreateSociety(){
 
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [name,setName] = useState("")
+  const [type,setType] = useState<"SOCIETY" | "HOSTEL" | "CAMPUS">("SOCIETY")
   const [address,setAddress] = useState("")
   const [city,setCity] = useState("")
   const [state,setState] = useState("")
@@ -16,12 +27,18 @@ function CreateSociety(){
   const handleSubmit = async (e:React.FormEvent)=>{
     e.preventDefault()
 
-    await API.post("/society/create",{ name,address, city, state, totalFlats })
-    const res = await API.get("/auth/me")
+    try {
+      await API.post("/society/create",{ name, type, address, city, state, totalFlats })
+      const res = await API.get("/auth/me")
 
-    dispatch(setUser(res.data.user))
+      dispatch(setUser(res.data.user))
 
-    alert("Society created successfully")
+      toast.success("Organization created successfully!")
+      navigate("/dashboard")
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || "Failed to create organization")
+    }
   }
 
   return(
@@ -29,16 +46,27 @@ function CreateSociety(){
     <DashboardLayout>
 
       <h1 className="text-2xl font-bold mb-6">
-        Create Society
+        Create Organization
       </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow max-w-md space-y-4"
+        className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-700 max-w-md space-y-4 shadow-sm"
       >
 
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Organization Type
+          </label>
+          <CustomSelect
+            value={type}
+            options={ORG_TYPE_OPTIONS}
+            onChange={(val) => setType(val as any)}
+          />
+        </div>
+
         <input
-          placeholder="Society Name"
+          placeholder="Organization Name"
           className="border p-2 w-full"
           onChange={(e)=>setName(e.target.value)}
         />
@@ -62,7 +90,7 @@ function CreateSociety(){
         />
 
         <input
-          placeholder="Total Flats"
+          placeholder="Total Flats / Rooms"
           className="border p-2 w-full"
           onChange={(e)=>setTotalFlats(e.target.value)}
         />

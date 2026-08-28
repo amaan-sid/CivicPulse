@@ -1,11 +1,29 @@
 import { Router } from "express";
-import { changeCurrentSociety, createSociety, getCurrentSociety,getResidents, getSocietyById, getSocietyIssues, updateResident, updateSociety,removeResident ,joinSociety } from "../controllers/society.controller";
-import { authorize } from "../middlewares/authorize.middleware";
+import {
+  changeCurrentSociety,
+  createSociety,
+  getCurrentSociety,
+  getMyAdminOrganizations,
+  getResidents,
+  getSocietyById,
+  getSocietyIssues,
+  updateResident,
+  updateSociety,
+  removeResident,
+  joinSociety,
+  deleteSociety,
+  getMyJoinedSocieties
+} from "@/controllers/society.controller";
+import { protect } from "@/middlewares/auth.middleware";
+import { authorize, authorizePlatform } from "@/middlewares/authorize.middleware";
 
 const router = Router();
 
-// Create society 
-router.post("/create", createSociety);
+// Apply protect middleware to all society routes
+router.use(protect);
+
+// Create society (Super Admin only)
+router.post("/create", authorizePlatform("SUPER_ADMIN"), createSociety);
 
 // Join society
 router.post("/join", joinSociety);
@@ -14,24 +32,33 @@ router.post("/join", joinSociety);
 router.post("/current", changeCurrentSociety);
 
 // Get active society info
-router.get("/current", getCurrentSociety)
+router.get("/current", getCurrentSociety);
 
-//get all residents of active society
-router.get("/residents", getResidents)
+// Get all joined societies for current user
+router.get("/my-joined-societies", getMyJoinedSocieties);
 
-//get all issues of active society
-router.get("/:id/issues", getSocietyIssues)
+// Get all organizations managed by current admin
+router.get("/my-admin-organizations", authorize("admin"), getMyAdminOrganizations);
 
-//get all info about  society of goven Id
-router.get("/:id", getSocietyById)
+// Get all residents of active society (for admin, member, staff)
+router.get("/residents", authorize("admin", "member", "staff"), getResidents);
 
-//Update info of active society
-router.patch("/update", updateSociety)
+// Update info of active society
+router.patch("/update", authorize("admin"), updateSociety);
 
-//update info of the resident of the given Id
-router.put("/residents/:id", updateResident)
+// Update info of resident by Id
+router.put("/residents/:id", authorize("admin"), updateResident);
 
-//delete the membership object of the resident of the given id
-router.delete("/residents/:id", removeResident)
+// Delete resident membership by Id
+router.delete("/residents/:id", authorize("admin"), removeResident);
+
+// Delete active society
+router.delete("/", authorize("admin"), deleteSociety);
+
+// Get all issues of active society
+router.get("/:id/issues", getSocietyIssues);
+
+// Get all info about society of given Id
+router.get("/:id", getSocietyById);
 
 export default router;

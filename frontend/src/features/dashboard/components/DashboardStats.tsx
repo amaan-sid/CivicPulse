@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import API from "../services/api"
-import Card from "./ui/Card"
+import API from "@/services/api"
+import Card from "@/components/ui/Card"
 import { LayoutList, FolderOpen, Loader, CheckCircle2 } from "lucide-react"
 
 interface Stats {

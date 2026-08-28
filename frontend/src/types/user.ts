@@ -1,4 +1,4 @@
-export type Role="admin"|"member"|"resident"
+export type Role = "admin" | "member" | "staff" | "resident"
 
 export interface Membership{
   societyId:{
@@ -17,6 +17,7 @@ export interface User {
   id: string
   name: string
   email: string
+  platformRole?: "SUPER_ADMIN" | "USER"
   currentSocietyId: string
   memberships: Membership[]
   role?: Role

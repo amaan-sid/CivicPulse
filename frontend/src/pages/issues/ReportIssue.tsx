@@ -1,10 +1,30 @@
 import { useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
+import type { RootState } from "@/app/store"
+import toast from "react-hot-toast"
+import { ShieldCheck, ArrowLeft } from "lucide-react"
+import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect"
+
+const CATEGORY_OPTIONS: SelectOption[] = [
+  { value: "plumbing", label: "Plumbing" },
+  { value: "electricity", label: "Electricity" },
+  { value: "lift", label: "Lift" },
+  { value: "security", label: "Security" },
+  { value: "cleanliness", label: "Cleanliness" },
+  { value: "water", label: "Water" },
+];
+
+const SEVERITY_OPTIONS: SelectOption[] = [
+  { value: "low", label: "Low Priority" },
+  { value: "medium", label: "Medium Priority" },
+  { value: "high", label: "High Priority" },
+];
 
 function ReportIssue() {
-
+  const user = useSelector((state: RootState) => state.auth.user)
   const [title,setTitle] = useState("")
   const [category,setCategory] = useState("plumbing")
   const [description,setDescription] = useState("")
@@ -13,6 +33,29 @@ function ReportIssue() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navigate=useNavigate()
+
+  if (user?.platformRole === "SUPER_ADMIN") {
+    return (
+      <DashboardLayout>
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 max-w-2xl mx-auto my-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Super Admin Access</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            As a Super Admin, your account manages global platform organizations and metrics. Complaint creation is reserved for organization residents and members.
+          </p>
+          <button
+            onClick={() => navigate("/super-admin")}
+            className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-600/20 cursor-pointer"
+          >
+            <ArrowLeft size={18} />
+            Go to Super Admin Portal
+          </button>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,11 +82,11 @@ function ReportIssue() {
         image: imageBase64
       })
 
-      alert("Issue created")
+      toast.success("Issue created successfully!")
       navigate("/manageissues")
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert("Failed to create issue")
+      toast.error(err.response?.data?.message || "Failed to create issue")
     } finally {
       setIsSubmitting(false)
     }
@@ -58,7 +101,7 @@ function ReportIssue() {
         </h1>
         <button
             onClick={()=>{navigate("/manageissues")}}
-            className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
         >
             Issue Board
         </button>
@@ -80,26 +123,29 @@ function ReportIssue() {
             onChange={(e)=>setDescription(e.target.value)}
           />
 
-          <select
-            className="w-full border border-slate-300 dark:border-slate-600 bg-transparent text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-xl outline-none focus:border-sky-500 dark:focus:border-sky-400 appearance-none"
-            onChange={(e)=>setCategory(e.target.value)}
-          >
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="plumbing">Plumbing</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="electricity">Electricity</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="lift">Lift</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="security">Security</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="cleanliness">Cleanliness</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="water">Water</option>
-          </select>
+          <div className="mb-5 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Category
+              </label>
+              <CustomSelect
+                value={category}
+                options={CATEGORY_OPTIONS}
+                onChange={(val) => setCategory(val)}
+              />
+            </div>
 
-          <select
-            className="w-full border border-slate-300 dark:border-slate-600 bg-transparent text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-xl outline-none focus:border-sky-500 dark:focus:border-sky-400 appearance-none"
-            onChange={(e)=>setSeverity(e.target.value)}
-          >
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="low">Low</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="medium">Medium</option>
-            <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white" value="high">High</option>
-          </select>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Priority / Severity
+              </label>
+              <CustomSelect
+                value={severity}
+                options={SEVERITY_OPTIONS}
+                onChange={(val) => setSeverity(val)}
+              />
+            </div>
+          </div>
           
           <div className="mb-6">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Attach Image (Optional)</label>

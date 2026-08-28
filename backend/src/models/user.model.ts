@@ -4,7 +4,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  currentSocietyId?: mongoose.Schema.Types.ObjectId;
+  platformRole: "SUPER_ADMIN" | "USER";
+  currentSocietyId?: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -26,6 +27,12 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       required: true,
       select: false
+    },
+
+    platformRole: {
+      type: String,
+      enum: ["SUPER_ADMIN", "USER"],
+      default: "USER"
     },
 
     currentSocietyId: {

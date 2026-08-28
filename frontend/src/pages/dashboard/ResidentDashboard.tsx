@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react"
-import DashboardLayout from "../../layouts/DashboardLayout"
-import API from "../../services/api"
-import type { Issue } from "../../types/issue"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import API from "@/services/api"
+import type { Issue } from "@/types"
 import { useSelector } from "react-redux"
-import type { RootState } from "../../app/store"
-import Card from "../../components/ui/Card"
-import Badge from "../../components/ui/Badge"
-import SLATimer from "../../components/SLATimer"
+import type { RootState } from "@/app/store"
+import Card from "@/components/ui/Card"
+import Badge from "@/components/ui/Badge"
+import SLATimer from "@/features/issues/components/SLATimer"
 import { Link } from "react-router-dom"
-import { AlertCircle, Users } from "lucide-react"
+import { AlertCircle, Users, Plus } from "lucide-react"
 
 function ResidentDashboard() {
   const [issues, setIssues] = useState<Issue[]>([])
@@ -33,11 +33,20 @@ function ResidentDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
-          My Society Issues
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Track and manage issues reported by you.</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+            My Organization Issues
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Track and manage issues reported by you.</p>
+        </div>
+        <Link
+          to="/report-issue"
+          className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm shadow-sky-600/20"
+        >
+          <Plus size={18} />
+          Create Issue
+        </Link>
       </div>
       
       {loading ? (

@@ -1,73 +1,37 @@
-import { useParams, Link } from "react-router-dom"
-import { useEffect, useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
+import { useParams, useNavigate } from "react"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import SocietyIssuesSection from "@/features/society/components/SocietyIssuesSection"
+import { ArrowLeft } from "lucide-react"
 
-function SocietyIssues(){
-
+function SocietyIssues() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
-  const [issues,setIssues] = useState<any[]>([])
+  if (!id) {
+    return (
+      <DashboardLayout>
+        <p className="text-slate-500 p-4">No organization specified.</p>
+      </DashboardLayout>
+    )
+  }
 
-  useEffect(()=>{
-
-    const fetchIssues = async ()=>{
-      const res = await API.get(`/society/${id}/issues`)
-      setIssues(res.data)
-    }
-
-    fetchIssues()
-
-  },[id])
-
-  return(
-
+  return (
     <DashboardLayout>
-
-      <h1 className="text-2xl font-bold mb-6">
-        Society Issues
-      </h1>
-
-      {issues.length === 0 && (
-        <p className="text-gray-500">
-          No issues reported in this society.
-        </p>
-      )}
-
-      {/* GRID LAYOUT */}
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-        {issues.map(issue => (
-
-          <Link
-            key={issue._id}
-            to={`/issues/${issue._id}`}
-            className="bg-white p-5 rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition"
-          >
-
-            <h3 className="font-semibold text-lg mb-2">
-              {issue.title}
-            </h3>
-
-            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-              {issue.description}
-            </p>
-
-            <div className="text-xs text-gray-500">
-              Status: {issue.status}
-            </div>
-
-          </Link>
-
-        ))}
-
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate("/managesociety")}
+          className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200 dark:border-slate-700 transition-all shadow-sm cursor-pointer"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
+          Organization Issues
+        </h1>
       </div>
 
+      <SocietyIssuesSection organizationId={id} />
     </DashboardLayout>
-
   )
-
 }
 
 export default SocietyIssues

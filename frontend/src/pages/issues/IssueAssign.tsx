@@ -1,11 +1,11 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
-import type { Issue } from "../../types/issue"
-import Card from "../../components/ui/Card"
-import Badge from "../../components/ui/Badge"
-import TimelineItem from "../../components/ui/TimeLineItem"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import type { Issue } from "@/types"
+import Card from "@/components/ui/Card"
+import Badge from "@/components/ui/Badge"
+import TimelineItem from "@/components/ui/TimeLineItem"
 
 
 interface AuditLog {

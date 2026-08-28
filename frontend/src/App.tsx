@@ -1,19 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import type { RootState } from "./app/store"
-import Login from "./pages/auth/Login"
-import Signup from "./pages/auth/Signup"
-import ProtectedRoute from "./components/ProtectedRoute"
-import IssueList from "./pages/issues/IssueList"
-import ReportIssue from "./pages/issues/ReportIssue"
-import CreateSociety from "./pages/society/CreateSociety"
-import ManageSociety from "./pages/society/ManageSociety"
-import SocietyIssues from "./pages/society/SocietyIssues"
-import Dashboard from "./pages/dashboard/Dashboard"
-import IssueRoute from "./routes/IssueRoutes"
-import JoinSociety from "./pages/society/JoinSociety"
+import type { RootState } from "@/app/store"
+import { Toaster } from "react-hot-toast"
+import AuthPage from "@/pages/auth/AuthPage"
+import LandingPage from "@/pages/landing/LandingPage"
+import ProtectedRoute from "@/components/layout/ProtectedRoute"
+import IssueList from "@/pages/issues/IssueList"
+import ReportIssue from "@/pages/issues/ReportIssue"
+import ManageSociety from "@/pages/society/ManageSociety"
+import SocietyIssues from "@/pages/society/SocietyIssues"
+import IssueRoute from "@/routes/IssueRoutes"
+import JoinSociety from "@/pages/society/JoinSociety"
 import { useSelector } from "react-redux"
-import ManageIssues from "./pages/issues/ManageIssues"
-import IssueDetails from "./pages/issues/IssueDetails"
+import ManageIssues from "@/pages/issues/ManageIssues"
+import IssueDetails from "@/pages/issues/IssueDetails"
+import SuperAdminDashboard from "@/pages/admin/SuperAdminDashboard"
 
 function App() {
 
@@ -21,21 +21,42 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Routes>
 
         {/* DEFAULT ROUTE */}
         <Route
           path="/"
           element={
-            user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            !user ? (
+              <LandingPage />
+            ) : user.platformRole === "SUPER_ADMIN" ? (
+              <Navigate to="/super-admin" />
+            ) : (
+              <Navigate to="/managesociety" />
+            ) 
           }
         />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/signup" element={<AuthPage />} />
+        <Route path="/auth" element={<AuthPage />} />
 
         <Route element={<ProtectedRoute/>}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/create-society" element={<CreateSociety />} />
+              <Route path="/super-admin" element={<SuperAdminDashboard initialTab="overview" />} />
+              <Route path="/super-admin/organizations" element={<SuperAdminDashboard initialTab="orgs" />} />
+              <Route path="/super-admin/users" element={<SuperAdminDashboard initialTab="users" />} />
+              <Route path="/super-admin/issues" element={<SuperAdminDashboard initialTab="issues" />} />
+              <Route
+                path="/create-society"
+                element={
+                  user?.platformRole === "SUPER_ADMIN" ? (
+                    <Navigate to="/super-admin/organizations" replace />
+                  ) : (
+                    <Navigate to="/join-society" replace />
+                  )
+                }
+              />
               <Route path="/join-society" element={<JoinSociety />} />
 
               <Route path="/issues" element={<IssueList />} />
@@ -44,6 +65,7 @@ function App() {
               <Route path="/manageissues" element={<ManageIssues />} />
               <Route path="/society/:id" element={<SocietyIssues />} />
               <Route path="/managesociety" element={<ManageSociety />} />
+              <Route path="/my-societies" element={<ManageSociety />} />
               <Route path="/issuedetails/:id" element={<IssueDetails />} />
         </Route>
       </Routes>

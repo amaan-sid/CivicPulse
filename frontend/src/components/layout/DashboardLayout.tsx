@@ -1,6 +1,5 @@
-import Navbar from "../components/Navbar"
-import Sidebar from "../components/Sidebar"
-import SocietySwitcher from "../components/SocietySwitcher"
+import Navbar from "@/components/layout/Navbar"
+import Sidebar from "@/components/layout/Sidebar"
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +9,6 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Navbar />
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto animate-in fade-in duration-500">
-            <SocietySwitcher />
             {children}
           </div>
         </div>

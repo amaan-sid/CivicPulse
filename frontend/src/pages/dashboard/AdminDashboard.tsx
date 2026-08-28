@@ -1,6 +1,6 @@
-import DashboardLayout from "../../layouts/DashboardLayout"
-import DashboardStats from "../../components/DashboardStats"
-import API from "../../services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import DashboardStats from "@/features/dashboard/components/DashboardStats"
+import API from "@/services/api"
 import { useEffect, useState } from "react"
 import { Hash } from "lucide-react"
 
@@ -35,7 +35,7 @@ function AdminDashboard(){
               <Hash size={18} />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">Society Code</p>
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">Organization Code</p>
               <p className="font-bold text-slate-800 dark:text-white tracking-widest">{societyCode}</p>
             </div>
           </div>

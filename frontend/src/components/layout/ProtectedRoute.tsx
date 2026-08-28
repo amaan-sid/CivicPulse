@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import { Navigate,Outlet } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
-import API from "../services/api"
-import { setUser } from "../features/auth/authSlice"
-import type { RootState } from "../app/store"
+import API from "@/services/api"
+import { setUser } from "@/features/auth/authSlice"
+import type { RootState } from "@/app/store"
 
 const ProtectedRoute = () => {
   const dispatch = useDispatch()

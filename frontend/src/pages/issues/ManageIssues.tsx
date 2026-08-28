@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
-import type { Issue } from "../../types/issue"
-import Card from "../../components/ui/Card"
-import Badge from "../../components/ui/Badge"
-import SLATimer from "../../components/SLATimer"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import type { Issue } from "@/types"
+import Card from "@/components/ui/Card"
+import Badge from "@/components/ui/Badge"
+import SLATimer from "@/features/issues/components/SLATimer"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import type { RootState } from "../../app/store"
+import type { RootState } from "@/app/store"
 import { Plus, ChevronRight, Users } from "lucide-react"
 
 function ManageIssues() {
@@ -130,13 +130,15 @@ function ManageIssues() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and track the progress of community issues.</p>
         </div>
-        <button
-            onClick={()=>{navigate("/report-issue")}}
-            className="flex items-center gap-2 bg-sky-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20"
-        >
-            <Plus size={18} />
-            Report Issue
-        </button>
+        {user?.platformRole !== "SUPER_ADMIN" && (
+          <button
+              onClick={()=>{navigate("/report-issue")}}
+              className="flex items-center gap-2 bg-sky-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20 cursor-pointer"
+          >
+              <Plus size={18} />
+              Report Issue
+          </button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 my-5">

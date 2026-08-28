@@ -1,389 +1,360 @@
 import { Request, Response } from "express";
-import { Society } from "../models/society.model";
-import { Issue } from "../models/issue.model";
-import codeGen from "../utils/codeGenerator";
-import { Membership } from "../models/membership.model";
-import { User } from "../models/user.model";
-import {Types} from "mongoose";
+import { SocietyService } from "@/services/society.service";
+import { Society } from "@/models/society.model";
+import { Issue } from "@/models/issue.model";
+import { Membership } from "@/models/membership.model";
 
-// Create Society
 export const createSociety = async (req: Request, res: Response) => {
   try {
-    const { name, address, city, state, totalFlats } = req.body;
-
+    const { name, address, city, state, totalFlats, type } = req.body;
     if (!name || !address || !city || !state || !totalFlats) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     const user = req.user;
-
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const code = await codeGen();
-
-    const society = await Society.create({
+    const result = await SocietyService.createSociety(user.id, {
       name,
       address,
       city,
       state,
       totalFlats,
-      code
+      type,
     });
 
-    await Membership.create({
-      societyId: society._id as Types.ObjectId,
-      userId: user.id,
-      role: "admin"
-    });
-
-    await User.findByIdAndUpdate(user.id, {
-      currentSocietyId: society._id
-    });
-
-    const memberships = await Membership.find({
-      userId:user.id
-    }).select("societyId role").populate("societyId", "name code")
-
-    res.status(201).json({
-      currentSocietyId:society.id ,
-      memberships
-    });
-
+    res.status(201).json(result);
   } catch (error) {
     console.error("CREATE SOCIETY ERROR:", error);
     res.status(500).json({ message: "Failed to create society" });
   }
 };
 
-//Join Society
-export const joinSociety = async(req:Request,res: Response)=>{
-  const {societyCode}=req.body
+export const joinSociety = async (req: Request, res: Response) => {
+  const { societyCode } = req.body;
 
-  try{
+  try {
     if (!societyCode) {
-      return res.status(400).json({ message: "Society code is required" })
+      return res.status(400).json({ message: "Society code is required" });
     }
 
-    const user = req.user
-
+    const user = req.user;
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" })
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const society = await Society.findOne({code:societyCode})
-
-    if (!society) {
-      return res.status(404).json({ message: "Society not found" })
+    if (user.platformRole === "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Super Admin accounts manage the platform and cannot join organizations as members or appoint themselves as admins." });
     }
 
-    const existing = await Membership.findOne({
-      userId: user.id,
-      societyId: society._id
-    })
-
-    if (!existing) {
-      await Membership.create({
-        userId:user.id,
-        societyId:society._id,
-        role:"resident"
-      })
-    }
-
-    await User.findByIdAndUpdate(user.id, {
-      currentSocietyId: society._id
-    })
-
-    const memberships = await Membership.find({
-      userId:user.id
-    }).select("societyId role").populate("societyId", "name code")
+    const result = await SocietyService.joinSociety(user.id, societyCode);
 
     res.json({
-      message: existing ? "Already Joined" : "Society Joined",
-      currentSocietyId: society.id,
-      memberships
-    })
-
-  } catch (error) {
-    console.error("JOIN SOCIETY ERROR:", error)
-    res.status(500).json({ message: "Failed to join society" })
-  }
-}
-
-// Change Current Society
-export const changeCurrentSociety = async (req: Request, res: Response) => {
-  try {
-    const { societyId } = req.body
-
-    if (!societyId) {
-      return res.status(400).json({ message: "Society id is required" })
-    }
-
-    const user = req.user
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized" })
-    }
-
-    const membership = await Membership.findOne({
-      userId: user.id,
-      societyId
-    })
-
-    if (!membership) {
-      return res.status(403).json({ message: "You are not part of this society" })
-    }
-
-    await User.findByIdAndUpdate(user.id, {
-      currentSocietyId: societyId
-    })
-
-    const memberships = await Membership.find({
-      userId: user.id
-    }).select("societyId role").populate("societyId", "name code")
-
-    res.json({
-      currentSocietyId: societyId,
-      role: membership.role,
-      memberships
-    })
-  } catch (error) {
-    console.error("CHANGE SOCIETY ERROR:", error)
-    res.status(500).json({ message: "Failed to change society" })
-  }
-}
-
-// Get All Societies (for admin view)
-// export const getSocieties = async (req: Request, res: Response) => {
-//   try {
-//     const societies = await Society.find()
-//     res.json(societies)
-//   } catch (error) {
-//     console.error("GET SOCIETIES ERROR:", error)
-//     res.status(500).json({ message: "Failed to fetch societies" })
-//   }
-// }
-
-// Get all Residents of the society of the user
-type PopulatedUser = {
-  _id: string
-  name: string
-  email: string
-}
-
-export const getResidents = async (req: Request, res: Response) => {
-  try {
-    const user = req.user
-
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized" })
-    }
-
-    if (!user.society) {
-      return res.status(400).json({ message: "No society selected" })
-    }
-
-    if (user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" })
-    }
-
-    const memberships = await Membership.find({
-      societyId: user.society
-    }).populate("userId", "name email")
-
-    const residents = memberships.map(m => {
-      const u = m.userId as unknown as PopulatedUser
-
-      return {
-        _id: u._id,
-        name: u.name,
-        email: u.email,
-        role: m.role,
-        flatNumber: (m as any).flatNumber || ""
-      }
-    })
-
-    res.json(residents)
-
-  } catch (error) {
-    console.error("GET RESIDENTS ERROR:", error)
-    res.status(500).json({ message: "Failed to fetch residents" })
+      message: "Society Joined",
+      currentSocietyId: result.currentSocietyId,
+      memberships: result.memberships,
+    });
+  } catch (error: any) {
+    console.error("JOIN SOCIETY ERROR:", error);
+    const statusCode =
+      error.message === "Society not found"
+        ? 404
+        : error.message?.includes("already joined")
+        ? 400
+        : 500;
+    res.status(statusCode).json({
+      message: error.message || "Failed to join society",
+    });
   }
 };
 
-//Update Society fields
+export const changeCurrentSociety = async (req: Request, res: Response) => {
+  try {
+    const { societyId } = req.body;
+    if (!societyId) {
+      return res.status(400).json({ message: "Society id is required" });
+    }
+
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const result = await SocietyService.changeCurrentSociety(user.id, societyId);
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("CHANGE SOCIETY ERROR:", error);
+    res.status(error.message === "You are not part of this society" ? 403 : 500).json({
+      message: error.message || "Failed to change society",
+    });
+  }
+};
+
+export const getResidents = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const targetSocietyId = (req.query.societyId || req.body?.societyId || user.society) as string;
+
+    if (!targetSocietyId) {
+      return res.status(400).json({ message: "No organization selected" });
+    }
+    const allowedRoles = ["admin", "member", "staff"];
+    if (!allowedRoles.includes(user.role || "") && user.platformRole !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const residents = await SocietyService.getResidents(targetSocietyId);
+    res.json(residents);
+  } catch (error) {
+    console.error("GET RESIDENTS ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch residents" });
+  }
+};
+
 export const updateSociety = async (req: Request, res: Response) => {
   try {
-    const user = req.user
-    if (!user?.society) {
-      return res.status(400).json({ message: "No society selected" })
+    const user = req.user;
+    const targetSocietyId = (req.body.societyId || req.query.societyId || user?.society) as string;
+
+    if (!targetSocietyId) {
+      return res.status(400).json({ message: "No organization selected" });
+    }
+    if (user?.role !== "admin" && user?.platformRole !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    if (user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" })
-    }
-
-    const allowedFields = ["name", "address", "city", "state", "totalFlats"]
-
-    const updates: any = {}
+    const allowedFields = ["name", "address", "city", "state", "totalFlats"];
+    const updates: any = {};
 
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) {
-        updates[key] =
-          key === "totalFlats" ? Number(req.body[key]) : req.body[key]
+        updates[key] = key === "totalFlats" ? Number(req.body[key]) : req.body[key];
       }
     }
 
-    const society = await Society.findByIdAndUpdate(
-      user.society,
-      updates,
-      { new: true }
-    )
-
-    res.json(society)
-
+    const society = await SocietyService.updateSociety(targetSocietyId, updates);
+    res.json(society);
   } catch (err) {
-    console.error("UPDATE SOCIETY ERROR:", err)
-    res.status(500).json({ message: "Failed to update society" })
+    console.error("UPDATE SOCIETY ERROR:", err);
+    res.status(500).json({ message: "Failed to update society" });
   }
-}
+};
 
-//Update Resident's Role
 export const updateResident = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params
-    const { role } = req.body
-    const user = req.user
+    const { id } = req.params;
+    const { role, societyId } = req.body;
+    const user = req.user;
 
-    if (!user?.society) {
-      return res.status(400).json({ message: "No society selected" })
+    const targetSocietyId = (societyId || req.query.societyId || user?.society) as string;
+
+    if (!targetSocietyId) {
+      return res.status(400).json({ message: "No organization selected" });
+    }
+    if (user?.role !== "admin" && user?.platformRole !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    if (user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" })
-    }
-
-    const membership = await Membership.findOne({
-      userId: id,
-      societyId: user.society
-    })
-
-    if (!membership) {
-      return res.status(404).json({ message: "Resident not found" })
-    }
-
-    if (id === user.id && role ) {
-      return res.status(400).json({ message: "You cannot demote yourself" })
-    }
-
-    if (role) membership.role = role
-
-    await membership.save()
-
-    res.json({ message: "Resident updated" })
-
-  } catch (err) {
-    console.error("UPDATE RESIDENT ERROR:", err)
-    res.status(500).json({ message: "Failed to update resident" })
+    await SocietyService.updateResidentRole(user.id, id as string, targetSocietyId, role);
+    res.json({ message: "Resident updated" });
+  } catch (err: any) {
+    console.error("UPDATE RESIDENT ERROR:", err);
+    res.status(err.message === "You cannot demote yourself" ? 400 : 500).json({
+      message: err.message || "Failed to update resident",
+    });
   }
-}
+};
 
-//Remove Resident
 export const removeResident = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params
-    const user = req.user
+    const { id } = req.params;
+    const user = req.user;
 
-    if (!user?.society) {
-      return res.status(400).json({ message: "No society selected" })
+    const targetSocietyId = (req.body?.societyId || req.query?.societyId || user?.society) as string;
+
+    if (!targetSocietyId) {
+      return res.status(400).json({ message: "No organization selected" });
+    }
+    if (user?.role !== "admin" && user?.platformRole !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    if (user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" })
-    }
-
-    if (id === user.id) {
-      return res.status(400).json({ message: "You cannot remove yourself" })
-    }
-
-    const membership = await Membership.findOne({
-      userId: id,
-      societyId: user.society
-    })
-
-    if (!membership) {
-      return res.status(404).json({ message: "Resident not found" })
-    }
-
-    await membership.deleteOne()
-
-    res.json({ message: "Resident removed" })
-
-  } catch (err) {
-    console.error("REMOVE RESIDENT ERROR:", err)
-    res.status(500).json({ message: "Failed to remove resident" })
+    await SocietyService.removeResident(user.id, id as string, targetSocietyId);
+    res.json({ message: "Resident removed" });
+  } catch (err: any) {
+    console.error("REMOVE RESIDENT ERROR:", err);
+    res.status(err.message === "You cannot remove yourself" ? 400 : 500).json({
+      message: err.message || "Failed to remove resident",
+    });
   }
-}
+};
 
-//Get the society object by using the id provided in the user object
 export const getCurrentSociety = async (req: Request, res: Response) => {
   try {
-    const user = req.user
+    const user = req.user;
 
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" })
+      return res.status(401).json({ message: "Unauthorized" });
     }
-
     if (!user.society) {
-      return res.status(400).json({ message: "No society selected" })
+      return res.status(400).json({ message: "No society selected" });
     }
 
-    const society = await Society.findById(user.society)
-
+    const society = await Society.findById(user.society);
     if (!society) {
-      return res.status(404).json({ message: "Society not found" })
+      return res.status(404).json({ message: "Society not found" });
     }
 
-    res.json(society)
+    const adminMembership = await Membership.findOne({
+      societyId: society._id,
+      role: "admin"
+    }).populate("userId", "name email");
 
+    const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
+
+    res.json({
+      ...society.toObject(),
+      admin
+    });
   } catch (error) {
-    console.error("GET CURRENT SOCIETY ERROR:", error)
-    res.status(500).json({ message: "Failed to fetch society" })
+    console.error("GET CURRENT SOCIETY ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch society" });
   }
-}
+};
 
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
-
-    const { id } = req.params
-
+    const { id } = req.params;
     const issues = await Issue.find({ society: id })
-      .populate("reportedBy", "name flatNumber")
-      .populate("assignedTo", "name role")
-      .sort({ priorityScore: -1 })
+      .populate("reportedBy", "name email")
+      .populate("assignedTo", "name email")
+      .sort({ createdAt: -1 });
 
-    res.json(issues)
-
+    res.json(issues);
   } catch (error) {
-    console.error("GET SOCIETY ISSUES ERROR:", error)
-    res.status(500).json({ message: "Failed to fetch society issues" })
+    console.error("GET SOCIETY ISSUES ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch society issues" });
   }
-}
+};
 
 export const getSocietyById = async (req: Request, res: Response) => {
   try {
-
-    const { id } = req.params
-
-    const society = await Society.findById(id)
+    const { id } = req.params;
+    const society = await Society.findById(id);
     if (!society) {
-      return res.status(404).json({ message: "Society not found" })
+      return res.status(404).json({ message: "Society not found" });
     }
 
-    res.json(society)
+    const adminMembership = await Membership.findOne({
+      societyId: society._id,
+      role: "admin"
+    }).populate("userId", "name email");
 
+    const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
+
+    res.json({
+      ...society.toObject(),
+      admin
+    });
   } catch (error) {
-    console.error("GET SOCIETY ERROR:", error)
-    res.status(500).json({ message: "Failed to fetch society" })
+    console.error("GET SOCIETY ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch society" });
   }
-}
+};
+
+export const deleteSociety = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const targetSocietyId = (req.body?.societyId || req.query?.societyId || req.params?.id || user?.society) as string;
+
+    if (!targetSocietyId) {
+      return res.status(400).json({ message: "No organization selected" });
+    }
+    if (user?.role !== "admin" && user?.platformRole !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    await SocietyService.deleteSociety(user.id, targetSocietyId);
+    res.json({ message: "Society deleted successfully" });
+  } catch (error) {
+    console.error("DELETE SOCIETY ERROR:", error);
+    res.status(500).json({ message: "Failed to delete society" });
+  }
+};
+
+export const getMyAdminOrganizations = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const memberships = await Membership.find({ userId: user.id, role: "admin" }).populate("societyId");
+
+    const orgs = await Promise.all(
+      memberships.map(async (m: any) => {
+        const soc = m.societyId;
+        if (!soc || typeof soc === "string") return null;
+        const memberCount = await Membership.countDocuments({ societyId: soc._id });
+        const issueCount = await Issue.countDocuments({ society: soc._id });
+        return {
+          ...soc.toObject(),
+          memberCount,
+          issueCount,
+        };
+      })
+    );
+
+    res.json(orgs.filter(Boolean));
+  } catch (error) {
+    console.error("GET MY ADMIN ORGANIZATIONS ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch admin organizations" });
+  }
+};
+
+export const getMyJoinedSocieties = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const memberships = await Membership.find({ userId: user.id }).populate("societyId");
+
+    const orgs = await Promise.all(
+      memberships.map(async (m: any) => {
+        const soc = m.societyId;
+        if (!soc || typeof soc === "string") return null;
+        const memberCount = await Membership.countDocuments({ societyId: soc._id });
+        const issueCount = await Issue.countDocuments({ society: soc._id });
+        const adminMembership = await Membership.findOne({
+          societyId: soc._id,
+          role: "admin",
+        }).populate("userId", "name email");
+
+        const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
+
+        return {
+          ...soc.toObject(),
+          admin,
+          myRole: m.role,
+          memberCount,
+          issueCount,
+        };
+      })
+    );
+
+    res.json(orgs.filter(Boolean));
+  } catch (error) {
+    console.error("GET MY JOINED SOCIETIES ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch joined societies" });
+  }
+};

@@ -1,10 +1,10 @@
 import express from "express";
-import { getIssueLogs } from "../controllers/audit.controller";
-import { protect } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/authorize.middleware";
+import { getIssueLogs } from "@/controllers/audit.controller";
+import { protect } from "@/middlewares/auth.middleware";
+import { authorize } from "@/middlewares/authorize.middleware";
 
 const router = express.Router();
 
-router.get("/:id/logs", protect, authorize("admin", "member"), getIssueLogs);
+router.get("/:id/logs", protect, authorize("resident", "member", "staff", "admin"), getIssueLogs);
 
 export default router;

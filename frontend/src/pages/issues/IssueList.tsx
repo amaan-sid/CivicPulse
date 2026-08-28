@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react"
-import API from "../../services/api"
-import DashboardLayout from "../../layouts/DashboardLayout"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { Link } from "react-router-dom"
-import type { Issue } from "../../types/issue"
-
-import Card from "../../components/ui/Card"
-import Badge from "../../components/ui/Badge"
-import SLATimer from "../../components/SLATimer"
+import type { Issue } from "@/types"
+import Card from "@/components/ui/Card"
+import Badge from "@/components/ui/Badge"
+import SLATimer from "@/features/issues/components/SLATimer"
 
 
 function IssueList() {

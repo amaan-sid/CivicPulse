@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from "react-redux"
-import { logoutUser } from "../features/auth/authSlice"
+import { logoutUser } from "@/features/auth/authSlice"
 import { useNavigate } from "react-router-dom"
-import API from "../services/api"
+import API from "@/services/api"
 import { LogOut, Bell, Moon, Sun } from "lucide-react"
-import type { RootState } from "../app/store"
+import type { RootState } from "@/app/store"
 import { useEffect, useState } from "react"
 
 function Navbar() {
@@ -11,20 +11,25 @@ function Navbar() {
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.auth.user)
   
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return document.documentElement.classList.contains("dark")
+    }
+    return false
+  })
 
   useEffect(() => {
-    if (document.documentElement.classList.contains("dark")) {
-      setIsDark(true)
-    }
+    setIsDark(document.documentElement.classList.contains("dark"))
   }, [])
 
   const toggleDarkMode = () => {
     if (isDark) {
       document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
       setIsDark(false)
     } else {
       document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
       setIsDark(true)
     }
   }
@@ -47,10 +52,6 @@ function Navbar() {
       <div className="flex items-center gap-5">
         <button onClick={toggleDarkMode} className="p-2.5 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-full transition-all">
           {isDark ? <Sun size={22} /> : <Moon size={22} />}
-        </button>
-        <button className="p-2.5 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-full transition-all relative">
-          <Bell size={22} />
-          <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
         </button>
         <div className="w-px h-8 bg-slate-200 dark:bg-slate-700"></div>
         <button
