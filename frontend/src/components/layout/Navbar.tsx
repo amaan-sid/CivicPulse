@@ -36,6 +36,7 @@ function Navbar() {
 
   const handleLogout = () => {
     API.post("/auth/logout")
+    localStorage.removeItem("token")
     dispatch(logoutUser())
     navigate("/login")
   }

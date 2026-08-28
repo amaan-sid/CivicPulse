@@ -81,6 +81,9 @@ function AuthPage() {
       if (isSignup) {
         // Sign Up API call
         const res = await API.post("/auth/signup", { name, email, password })
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token)
+        }
         const user = res.data.user
         dispatch(setUser(user))
 
@@ -92,6 +95,9 @@ function AuthPage() {
       } else {
         // Login API call
         const res = await API.post("/auth/login", { email, password })
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token)
+        }
         const user = res.data.user
         dispatch(setUser(user))
 

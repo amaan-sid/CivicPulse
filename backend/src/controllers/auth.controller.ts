@@ -28,7 +28,9 @@ export const signup = async (req: Request, res: Response) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        platformRole: newUser.platformRole,
       },
+      token,
     });
   } catch (error: any) {
     console.error("SIGNUP ERROR:", error);
@@ -56,6 +58,7 @@ export const login = async (req: Request, res: Response) => {
     res.json({
       message: "Login successful",
       user: authUser,
+      token,
     });
   } catch (error: any) {
     console.error("LOGIN ERROR:", error);
