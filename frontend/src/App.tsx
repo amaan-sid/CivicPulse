@@ -24,7 +24,6 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Routes>
 
-        {/* DEFAULT ROUTE */}
         <Route
           path="/"
           element={
