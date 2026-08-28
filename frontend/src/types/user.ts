@@ -15,12 +15,14 @@ export interface Membership{
 
 export interface User {
   id: string
+  _id?: string
   name: string
   email: string
   platformRole?: "SUPER_ADMIN" | "USER"
   currentSocietyId: string
   memberships: Membership[]
   role?: Role
+  society?: string
 }
 
 export interface Resident {

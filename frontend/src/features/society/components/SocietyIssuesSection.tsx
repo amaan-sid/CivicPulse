@@ -15,8 +15,7 @@ import {
   Clock,
   Plus,
   X,
-  ThumbsUp,
-  Users
+  ThumbsUp
 } from "lucide-react"
 
 const CATEGORY_OPTIONS: SelectOption[] = [
@@ -134,11 +133,12 @@ function SocietyIssuesSection({ organizationId }: Props) {
 
   const hasUserReported = (iss: IssueItem) => {
     if (!user) return false
-    if (typeof iss.reportedBy === "object" ? iss.reportedBy?._id === user._id : iss.reportedBy === user._id) {
+    const userId = user._id || user.id
+    if (typeof iss.reportedBy === "object" ? iss.reportedBy?._id === userId : iss.reportedBy === userId) {
       return true
     }
     if (Array.isArray(iss.reporters)) {
-      return iss.reporters.some((r: any) => (typeof r === "string" ? r : r._id) === user._id)
+      return iss.reporters.some((r: any) => (typeof r === "string" ? r : r._id) === userId)
     }
     return false
   }

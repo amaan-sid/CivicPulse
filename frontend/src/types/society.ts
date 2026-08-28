@@ -8,4 +8,5 @@ export interface Society {
   totalFlats: number
   code?: string
   isActive?: boolean
+  admin?: string | { _id: string; name: string; email: string }
 }

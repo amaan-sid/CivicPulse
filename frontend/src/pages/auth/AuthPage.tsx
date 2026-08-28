@@ -4,18 +4,12 @@ import { useDispatch } from "react-redux"
 import API from "@/services/api"
 import { setUser } from "@/features/auth/authSlice"
 import {
-  Building2,
   ArrowRight,
   Eye,
   EyeOff,
   Sun,
   Moon,
-  Zap,
-  ShieldCheck,
-  Clock,
-  Sparkles,
-  ArrowLeft,
-  CheckCircle2
+  ArrowLeft
 } from "lucide-react"
 
 function AuthPage() {

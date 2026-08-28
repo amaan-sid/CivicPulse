@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/layout/DashboardLayout"
 import SocietyIssuesSection from "@/features/society/components/SocietyIssuesSection"
 import { ArrowLeft } from "lucide-react"

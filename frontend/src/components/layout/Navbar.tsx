@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { logoutUser } from "@/features/auth/authSlice"
 import { useNavigate } from "react-router-dom"
 import API from "@/services/api"
-import { LogOut, Bell, Moon, Sun } from "lucide-react"
+import { LogOut, Moon, Sun } from "lucide-react"
 import type { RootState } from "@/app/store"
 import { useEffect, useState } from "react"
 

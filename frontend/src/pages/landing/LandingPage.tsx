@@ -12,12 +12,7 @@ import {
   BarChart3,
   Moon,
   Sun,
-  ChevronRight,
-  MessageSquare,
   Sparkles,
-  Lock,
-  Layers,
-  ArrowUpRight,
   LogIn,
   UserPlus
 } from "lucide-react"

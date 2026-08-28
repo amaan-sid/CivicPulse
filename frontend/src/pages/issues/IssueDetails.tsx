@@ -139,11 +139,12 @@ function IssueDetails() {
 
   const hasUserReported = (iss: any) => {
     if (!user || !iss) return false
-    if (typeof iss.reportedBy === "object" ? iss.reportedBy?._id === user._id : iss.reportedBy === user._id) {
+    const userId = user._id || user.id
+    if (typeof iss.reportedBy === "object" ? iss.reportedBy?._id === userId : iss.reportedBy === userId) {
       return true
     }
     if (Array.isArray(iss.reporters)) {
-      return iss.reporters.some((r: any) => (typeof r === "string" ? r : r._id) === user._id)
+      return iss.reporters.some((r: any) => (typeof r === "string" ? r : r._id) === userId)
     }
     return false
   }
@@ -218,6 +219,7 @@ function IssueDetails() {
 
   const isSuperAdmin = user?.platformRole === "SUPER_ADMIN"
   const issueSocietyId = typeof issue.society === "string" ? issue.society : issue.society?._id
+  const userId = user?._id || user?.id
   const isSocietyAdmin =
     (user?.role === "admin" && (user.society === issueSocietyId || user.currentSocietyId === issueSocietyId)) ||
     user?.memberships?.some(
@@ -227,7 +229,7 @@ function IssueDetails() {
     )
 
   const isAssignee =
-    (typeof issue.assignedTo === "object" ? issue.assignedTo?._id : issue.assignedTo) === user?._id
+    (typeof issue.assignedTo === "object" ? issue.assignedTo?._id : issue.assignedTo) === userId
 
   const canUpdateStatus = Boolean(isSuperAdmin || isSocietyAdmin || isAssignee)
   const canAssign = Boolean(isSuperAdmin || isSocietyAdmin)

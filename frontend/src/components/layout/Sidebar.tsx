@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/app/store"
-import { LayoutDashboard, AlertCircle, Building2, ShieldCheck, Plus, Users } from "lucide-react"
+import { AlertCircle, Building2, ShieldCheck, Users } from "lucide-react"
 
 function Sidebar() {
   const user = useSelector((state: RootState) => state.auth.user)

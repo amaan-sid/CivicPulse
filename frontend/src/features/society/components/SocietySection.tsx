@@ -158,10 +158,11 @@ function SocietySection({ organizationId }: SocietySectionProps) {
   const userMembership = user?.memberships?.find(
     (m: any) => (typeof m.societyId === "string" ? m.societyId : m.societyId._id) === targetId
   )
+  const userId = user?._id || user?.id
   const isSocietyAdmin =
     user?.role === "admin" ||
     userMembership?.role === "admin" ||
-    (society.admin && (typeof society.admin === "string" ? society.admin === user?._id : society.admin._id === user?._id))
+    (society.admin && (typeof society.admin === "string" ? society.admin === userId : society.admin._id === userId))
 
   const canEdit = Boolean(isSuperAdmin || isSocietyAdmin)
 

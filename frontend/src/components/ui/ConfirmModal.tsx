@@ -8,9 +8,11 @@ interface ConfirmModalProps {
   confirmText?: string
   cancelText?: string
   variant?: "danger" | "warning" | "info"
+  confirmVariant?: "danger" | "warning" | "info" | string
   isLoading?: boolean
   onConfirm: () => void
-  onClose: () => void
+  onClose?: () => void
+  onCancel?: () => void
 }
 
 function ConfirmModal({
@@ -20,24 +22,29 @@ function ConfirmModal({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "danger",
+  confirmVariant,
   isLoading = false,
   onConfirm,
-  onClose
+  onClose,
+  onCancel
 }: ConfirmModalProps) {
+  const handleClose = onClose || onCancel || (() => {})
+  const activeVariant = (confirmVariant as "danger" | "warning" | "info") || variant
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen && !isLoading) {
-        onClose()
+        handleClose()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen, isLoading, onClose])
+  }, [isOpen, isLoading, handleClose])
 
   if (!isOpen) return null
 
   const getVariantStyles = () => {
-    switch (variant) {
+    switch (activeVariant) {
       case "danger":
         return {
           iconBg: "bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400",
@@ -63,13 +70,13 @@ function ConfirmModal({
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200 cursor-pointer" 
-        onClick={() => !isLoading && onClose()}
+        onClick={() => !isLoading && handleClose()}
       />
 
       {/* Modal Dialog */}
       <div className="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-200/80 dark:border-slate-700 z-10 animate-in zoom-in-95 duration-200">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           disabled={isLoading}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -94,7 +101,7 @@ function ConfirmModal({
         <div className="flex items-center justify-end gap-3 mt-8 pt-4 border-t border-slate-100 dark:border-slate-700">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
             className="px-4 py-2.5 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-sm"
           >

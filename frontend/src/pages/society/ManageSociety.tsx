@@ -20,8 +20,7 @@ import {
   Filter,
   CheckCircle2,
   AlertCircle,
-  Users,
-  Settings
+  Users
 } from "lucide-react"
 
 interface Organization {
