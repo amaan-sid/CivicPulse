@@ -125,7 +125,7 @@ function AuthPage() {
 
       {/* TOP HEADER */}
       <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/landing")}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-sky-500/30">
             C
           </div>
@@ -136,7 +136,7 @@ function AuthPage() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/landing")}
             className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm transition-all cursor-pointer"
           >
             <ArrowLeft size={14} />

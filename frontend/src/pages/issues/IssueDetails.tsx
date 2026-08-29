@@ -21,7 +21,11 @@ import {
   Sparkles,
   Tag,
   Send,
-  ThumbsUp
+  Plus,
+  Maximize2,
+  ZoomIn,
+  ExternalLink,
+  X
 } from "lucide-react"
 
 interface AuditLog {
@@ -50,6 +54,7 @@ function IssueDetails() {
   const [assignMemberId, setAssignMemberId] = useState<string>("")
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isAssigning, setIsAssigning] = useState(false)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,6 +108,20 @@ function IssueDetails() {
     try {
       const res = await API.patch(`/issues/${id}`, { status })
       setIssue(res.data)
+
+      if (status === "resolved") {
+        toast.success("Issue resolved! Redirecting to issues list...")
+        setTimeout(() => {
+          const targetOrgId = user?.currentSocietyId || (issue?.society ? (typeof issue.society === "string" ? issue.society : issue.society._id) : "")
+          if (targetOrgId) {
+            navigate(`/managesociety?orgId=${targetOrgId}&view=issues`, { replace: true })
+          } else {
+            navigate(-1)
+          }
+        }, 1200)
+        return
+      }
+
       toast.success(`Status updated to ${status.toUpperCase()}`)
 
       // Refresh logs
@@ -204,10 +223,17 @@ function IssueDetails() {
               <ArrowLeft size={16} /> Back to Previous Page
             </button>
             <button
-              onClick={() => navigate("/managesociety")}
+              onClick={() => {
+                const targetOrgId = user?.currentSocietyId
+                if (targetOrgId) {
+                  navigate(`/managesociety?orgId=${targetOrgId}&view=issues`)
+                } else {
+                  navigate("/managesociety")
+                }
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-sky-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-sky-500 transition-colors text-xs cursor-pointer shadow-sm shadow-sky-600/20"
             >
-              <Building2 size={16} /> Joined Organizations
+              <AlertCircle size={16} /> Back to Issues List
             </button>
           </div>
         </div>
@@ -232,7 +258,7 @@ function IssueDetails() {
     (typeof issue.assignedTo === "object" ? issue.assignedTo?._id : issue.assignedTo) === userId
 
   const canUpdateStatus = Boolean(isSuperAdmin || isSocietyAdmin || isAssignee)
-  const canAssign = Boolean(isSuperAdmin || isSocietyAdmin)
+  const canAssign = Boolean((isSuperAdmin || isSocietyAdmin) && issue.status !== "resolved")
   const userReported = hasUserReported(issue)
   const count = issue.reportCount || issue.reporters?.length || 1
 
@@ -336,18 +362,32 @@ function IssueDetails() {
             </span>
 
             {!isSuperAdmin && (
-              <button
-                onClick={handleToggleReporter}
-                className={`inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                  userReported
-                    ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-300 dark:border-sky-500/40 shadow-sm"
-                    : "bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/10 dark:text-slate-200 border border-slate-200 dark:border-slate-600"
-                }`}
-                title="Click to increase reporter count / report this issue"
-              >
-                <ThumbsUp size={14} className={userReported ? "fill-current" : ""} />
-                <span>{count} {count === 1 ? "Reporter" : "Reporters"} (+1 Me Too)</span>
-              </button>
+              issue.status === "resolved" ? (
+                <span
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600"
+                  title="Resolved issues cannot receive new reports"
+                >
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  <span>Resolved ({count})</span>
+                </span>
+              ) : userReported ? (
+                <span
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30"
+                  title="You have already reported this issue"
+                >
+                  <CheckCircle2 size={14} />
+                  <span>Already reported ({count})</span>
+                </span>
+              ) : (
+                <button
+                  onClick={handleToggleReporter}
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-all cursor-pointer"
+                  title="Click to increase report count"
+                >
+                  <Plus size={14} />
+                  <span>Increase ({count})</span>
+                </button>
+              )
             )}
           </div>
         </div>
@@ -369,15 +409,29 @@ function IssueDetails() {
             {/* Image Attachment Card */}
             {(issue.imageUrl || issue.image) && (
               <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <ImageIcon size={16} className="text-sky-500" /> Image Attachment
-                </h3>
-                <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <ImageIcon size={16} className="text-sky-500" /> Image Attachment
+                  </h3>
+                  <button
+                    onClick={() => setIsImageModalOpen(true)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors cursor-pointer"
+                  >
+                    <Maximize2 size={14} /> Expand View
+                  </button>
+                </div>
+                <div
+                  onClick={() => setIsImageModalOpen(true)}
+                  className="relative group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 cursor-pointer"
+                >
                   <img
                     src={issue.imageUrl || issue.image}
                     alt="Issue attachment"
-                    className="w-full h-auto max-h-96 object-contain hover:scale-105 transition-transform duration-300"
+                    className="w-full h-auto max-h-96 object-contain group-hover:scale-105 transition-transform duration-300"
                   />
+                  <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs backdrop-blur-[2px]">
+                    <ZoomIn size={18} /> Click to view full image
+                  </div>
                 </div>
               </div>
             )}
@@ -447,48 +501,47 @@ function IssueDetails() {
               </div>
             </div>
 
-            {/* Status Update Controls (ONLY FOR AUTHORIZED USERS) */}
-            {canUpdateStatus && (
-              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm space-y-3">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Update Issue Status
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => updateStatus("open")}
-                    disabled={isUpdatingStatus || issue.status === "open"}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      issue.status === "open"
-                        ? "bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/30"
-                        : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                    }`}
-                  >
-                    Open
-                  </button>
-                  <button
-                    onClick={() => updateStatus("in-progress")}
-                    disabled={isUpdatingStatus || issue.status === "in-progress"}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      issue.status === "in-progress"
-                        ? "bg-sky-600 text-white shadow-sm ring-2 ring-sky-600/30"
-                        : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-100 dark:hover:bg-sky-900/30"
-                    }`}
-                  >
-                    In Progress
-                  </button>
-                  <button
-                    onClick={() => updateStatus("resolved")}
-                    disabled={isUpdatingStatus || issue.status === "resolved"}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      issue.status === "resolved"
-                        ? "bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/30"
-                        : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
-                    }`}
-                  >
-                    Resolved
-                  </button>
+            {/* Status Update Controls or Resolved Notice */}
+            {issue.status === "resolved" ? (
+              <div className="bg-emerald-50/80 dark:bg-emerald-500/10 rounded-3xl border border-emerald-200/80 dark:border-emerald-800/30 p-6 shadow-sm flex items-start gap-3">
+                <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                    Issue Marked as Resolved
+                  </h3>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 leading-relaxed">
+                    This complaint has been completed and locked. Resolved issues cannot be changed back to Open or In Progress.
+                  </p>
                 </div>
               </div>
+            ) : (
+              canUpdateStatus && (
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm space-y-3">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Update Issue Status
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => updateStatus("in-progress")}
+                      disabled={isUpdatingStatus || issue.status === "in-progress"}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        issue.status === "in-progress"
+                          ? "bg-sky-600 text-white shadow-sm ring-2 ring-sky-600/30"
+                          : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-100 dark:hover:bg-sky-900/30"
+                      }`}
+                    >
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => updateStatus("resolved")}
+                      disabled={isUpdatingStatus}
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-600/30"
+                    >
+                      Mark Resolved
+                    </button>
+                  </div>
+                </div>
+              )
             )}
 
             {/* Member Assignment Selector (For Admins & Super Admins) */}
@@ -529,6 +582,56 @@ function IssueDetails() {
           </div>
         </div>
       </div>
+
+      {/* FULLSCREEN IMAGE LIGHTBOX MODAL */}
+      {isImageModalOpen && (issue.imageUrl || issue.image) && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <div
+            className="relative max-w-5xl w-full max-h-[90vh] bg-slate-900 rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-2xl flex flex-col items-center overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="w-full flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <div className="flex items-center gap-2 text-slate-200">
+                <ImageIcon size={18} className="text-sky-400" />
+                <span className="font-bold text-sm truncate max-w-md">
+                  {issue.title} &bull; Image Attachment
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href={issue.imageUrl || issue.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 rounded-xl border border-sky-500/20 transition-all"
+                >
+                  <ExternalLink size={14} /> Open Original
+                </a>
+                <button
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                  title="Close Modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Image Body */}
+            <div className="w-full flex-1 flex items-center justify-center overflow-auto max-h-[75vh] p-2">
+              <img
+                src={issue.imageUrl || issue.image}
+                alt={issue.title}
+                className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-xl border border-slate-800"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }

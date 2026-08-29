@@ -15,7 +15,7 @@ import {
   Clock,
   Plus,
   X,
-  ThumbsUp
+  Image as ImageIcon
 } from "lucide-react"
 
 const CATEGORY_OPTIONS: SelectOption[] = [
@@ -50,6 +50,7 @@ interface IssueItem {
   reportedBy?: { _id: string; name: string; email: string }
   assignedTo?: { _id: string; name: string; email: string }
   createdAt: string
+  updatedAt?: string
 }
 
 function SocietyIssuesSection({ organizationId }: Props) {
@@ -60,7 +61,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
   const [issues, setIssues] = useState<IssueItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("ALL")
+  const [statusFilter, setStatusFilter] = useState<string>("active")
 
   // Modal States for Create Issue
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -171,13 +172,24 @@ function SocietyIssuesSection({ organizationId }: Props) {
   }
 
   const filteredIssues = issues.filter((iss) => {
+    // 1-Week (7 Days) Auto-Expiration for Resolved Issues
+    if (iss.status === "resolved") {
+      const resolvedDate = new Date(iss.updatedAt || iss.createdAt).getTime()
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
+      if (Date.now() - resolvedDate > ONE_WEEK_MS) {
+        return false // Disappears from resolved issues after 1 week
+      }
+    }
+
     const matchesSearch =
       iss.title.toLowerCase().includes(search.toLowerCase()) ||
       iss.category.toLowerCase().includes(search.toLowerCase()) ||
       (iss.reportedBy?.name && iss.reportedBy.name.toLowerCase().includes(search.toLowerCase()))
 
     let matchesStatus = true
-    if (statusFilter === "escalated") {
+    if (statusFilter === "active") {
+      matchesStatus = iss.status !== "resolved"
+    } else if (statusFilter === "escalated") {
       matchesStatus = Boolean(iss.isEscalated)
     } else if (statusFilter !== "ALL") {
       matchesStatus = iss.status === statusFilter
@@ -238,10 +250,11 @@ function SocietyIssuesSection({ organizationId }: Props) {
               <Filter size={14} /> Status:
             </span>
             {[
-              { label: "All Issues", value: "ALL" },
+              { label: "Active Issues", value: "active" },
               { label: "Open", value: "open" },
               { label: "In Progress", value: "in-progress" },
-              { label: "Resolved", value: "resolved" }
+              { label: "Resolved", value: "resolved" },
+              { label: "All", value: "ALL" }
             ].map((st) => (
               <button
                 key={st.value}
@@ -326,22 +339,43 @@ function SocietyIssuesSection({ organizationId }: Props) {
                       >
                         {issue.severity}
                       </span>
+                      {((issue as any).imageUrl || (issue as any).image) && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 flex items-center gap-1">
+                          <ImageIcon size={10} /> Photo
+                        </span>
+                      )}
                     </div>
 
-                    {/* INCREASE REPORTERS / ME TOO UPVOTE BUTTON */}
+                    {/* INCREASE REPORTERS BUTTON */}
                     {!isSuperAdmin && (
-                      <button
-                        onClick={(e) => handleToggleReporter(e, issue._id)}
-                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                          reported
-                            ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-300 dark:border-sky-500/40"
-                            : "bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/10 dark:text-slate-300 dark:hover:text-sky-400 border border-slate-200 dark:border-slate-600"
-                        }`}
-                        title={reported ? "Click to unreport" : "Click to increase reporter count / upvote"}
-                      >
-                        <ThumbsUp size={13} className={reported ? "fill-current" : ""} />
-                        <span>{currentReportersCount} {currentReportersCount === 1 ? "Reporter" : "Reporters"}</span>
-                      </button>
+                      issue.status === "resolved" ? (
+                        <span
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600"
+                          title="Resolved issues cannot receive new reports"
+                        >
+                          <CheckCircle2 size={13} className="text-emerald-500" />
+                          <span>Resolved ({currentReportersCount})</span>
+                        </span>
+                      ) : reported ? (
+                        <span
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30"
+                          title="You have already reported this issue"
+                        >
+                          <CheckCircle2 size={13} />
+                          <span>Already reported ({currentReportersCount})</span>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => handleToggleReporter(e, issue._id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-all cursor-pointer"
+                          title="Click to increase report count"
+                        >
+                          <Plus size={13} />
+                          <span>Increase ({currentReportersCount})</span>
+                        </button>
+                      )
                     )}
                   </div>
 

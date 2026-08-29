@@ -133,6 +133,10 @@ export class IssueService {
       throw new Error("Issue not found");
     }
 
+    if (issue.status === "resolved") {
+      throw new Error("This issue is already resolved and cannot be reopened");
+    }
+
     const user = await User.findById(userId);
     const isSuperAdmin = user?.platformRole === "SUPER_ADMIN";
     const membership = await Membership.findOne({
@@ -167,6 +171,10 @@ export class IssueService {
     const issue = await Issue.findById(issueId);
     if (!issue) {
       throw new Error("Issue not found");
+    }
+
+    if (issue.status === "resolved") {
+      throw new Error("Cannot reassign a resolved issue");
     }
 
     const member = await User.findById(memberId);
@@ -250,6 +258,10 @@ export class IssueService {
   static async toggleReporter(issueId: string, userId: string) {
     const issue = await Issue.findById(issueId);
     if (!issue) throw new Error("Issue not found");
+
+    if (issue.status === "resolved") {
+      throw new Error("Cannot update report count for a resolved issue");
+    }
 
     const hasReported = issue.reporters.some((rid) => rid.toString() === userId);
     if (hasReported) {

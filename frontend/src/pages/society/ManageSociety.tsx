@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import type { RootState } from "@/app/store"
 import { setUser } from "@/features/auth/authSlice"
 import DashboardLayout from "@/components/layout/DashboardLayout"
@@ -44,10 +44,12 @@ function ManageSociety() {
   const user = useSelector((state: RootState) => state.auth.user)
   const isSuperAdmin = user?.platformRole === "SUPER_ADMIN"
 
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedOrgId = searchParams.get("orgId")
+  const selectedDetailView = searchParams.get("view") as "info" | "issues" | "residents" | null
+
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null)
-  const [selectedDetailView, setSelectedDetailView] = useState<"info" | "issues" | "residents" | null>(null)
   const [search, setSearch] = useState("")
 
   // Filter States
@@ -71,8 +73,7 @@ function ManageSociety() {
   }, [isSuperAdmin])
 
   const handleSelectOrg = async (orgId: string) => {
-    setSelectedOrgId(orgId)
-    setSelectedDetailView(null) // Show the 3-option grid initially!
+    setSearchParams({ orgId })
     if (!isSuperAdmin && orgId !== user?.currentSocietyId) {
       try {
         await API.post("/society/current", { societyId: orgId })
@@ -163,9 +164,9 @@ function ManageSociety() {
               <button
                 onClick={() => {
                   if (selectedDetailView) {
-                    setSelectedDetailView(null) // Return to 3-option grid menu
+                    setSearchParams({ orgId: selectedOrgId! }) // Return to 3-option grid menu
                   } else {
-                    setSelectedOrgId(null) // Return to joined orgs list
+                    setSearchParams({}) // Return to joined orgs list
                   }
                 }}
                 className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200 dark:border-slate-700 transition-all shadow-sm cursor-pointer"
@@ -187,15 +188,6 @@ function ManageSociety() {
                 </p>
               </div>
             </div>
-
-            {selectedDetailView && (
-              <button
-                onClick={() => setSelectedDetailView(null)}
-                className="text-xs font-bold px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer self-start sm:self-auto"
-              >
-                ← Back to Options
-              </button>
-            )}
           </div>
 
           {/* VIEW LEVEL 1: THE 3-OPTION GRID MENU */}
@@ -208,7 +200,7 @@ function ManageSociety() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                 {/* Option 1: Organization Info Card */}
                 <div
-                  onClick={() => setSelectedDetailView("info")}
+                  onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "info" })}
                   className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-sky-500 dark:hover:border-sky-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/15 transition-all"></div>
@@ -234,7 +226,7 @@ function ManageSociety() {
 
                 {/* Option 2: Issues & Complaints Card */}
                 <div
-                  onClick={() => setSelectedDetailView("issues")}
+                  onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "issues" })}
                   className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-amber-500 dark:hover:border-amber-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/15 transition-all"></div>
@@ -265,7 +257,7 @@ function ManageSociety() {
 
                 {/* Option 3: Residents & Members Card */}
                 <div
-                  onClick={() => setSelectedDetailView("residents")}
+                  onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "residents" })}
                   className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-emerald-500 dark:hover:border-emerald-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/15 transition-all"></div>
