@@ -11,9 +11,9 @@ import {
   Moon,
   ArrowLeft,
   Camera,
-  Trash2
+  Trash2,
+  Image as ImageIcon
 } from "lucide-react"
-import { getDefaultAvatar } from "@/components/common/UserAvatar"
 
 function AuthPage() {
   const dispatch = useDispatch()
@@ -235,18 +235,30 @@ function AuthPage() {
             {isSignup && (
               <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-md border border-slate-100 dark:border-slate-800 space-y-3">
                 <div className="flex items-center gap-4">
-                  <div className="relative group">
-                    <img
-                      src={profilePic || getDefaultAvatar(gender)}
-                      alt="Avatar Preview"
-                      className="w-16 h-16 rounded-full object-cover border-2 border-sky-500/30 shadow-xs"
-                    />
+                  <div className="relative group shrink-0">
                     <label
                       htmlFor="signup-avatar-input"
-                      className="absolute bottom-0 right-0 bg-sky-600 text-white p-1 rounded-full cursor-pointer hover:bg-sky-700 transition-colors shadow-sm"
+                      className="block w-16 h-16 rounded-full cursor-pointer overflow-hidden relative"
+                      title={profilePic ? "Change profile photo" : "Upload profile photo"}
+                    >
+                      {profilePic ? (
+                        <img
+                          src={profilePic}
+                          alt="Avatar Preview"
+                          className="w-full h-full object-cover border-2 border-sky-500 shadow-xs"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:border-sky-500 hover:text-sky-500 transition-colors shadow-xs">
+                          <ImageIcon size={26} />
+                        </div>
+                      )}
+                    </label>
+                    <label
+                      htmlFor="signup-avatar-input"
+                      className="absolute bottom-0 right-0 bg-sky-600 hover:bg-sky-700 text-white p-1.5 rounded-full cursor-pointer transition-colors shadow-sm"
                       title="Upload profile photo"
                     >
-                      <Camera size={12} />
+                      <Camera size={11} />
                     </label>
                     <input
                       id="signup-avatar-input"
@@ -279,7 +291,7 @@ function AuthPage() {
                       {profilePic ? "Change Photo" : "Upload Custom Photo"}
                     </label>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      Default {gender} avatar used if none uploaded. Max 2MB.
+                      JPG, PNG, or WEBP. Max 2MB.
                     </p>
                   </div>
                 </div>
@@ -299,7 +311,7 @@ function AuthPage() {
                           : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                       }`}
                     >
-                      👨 Male (Default)
+                      Male
                     </button>
                     <button
                       type="button"
@@ -310,7 +322,7 @@ function AuthPage() {
                           : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                       }`}
                     >
-                      👩 Female
+                      Female
                     </button>
                   </div>
                 </div>

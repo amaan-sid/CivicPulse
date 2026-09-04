@@ -348,7 +348,7 @@ export default function UserProfileModal({ isOpen, onClose, currentUser: propUse
                     : "bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                 }`}
               >
-                👨 Male
+                Male
               </button>
               <button
                 type="button"
@@ -359,7 +359,7 @@ export default function UserProfileModal({ isOpen, onClose, currentUser: propUse
                     : "bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                 }`}
               >
-                👩 Female
+              Female
               </button>
             </div>
           </div>

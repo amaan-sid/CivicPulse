@@ -107,7 +107,7 @@ export const getResidents = async (req: Request, res: Response) => {
     if (!targetSocietyId) {
       return res.status(400).json({ message: "No organization selected" });
     }
-    const allowedRoles = ["admin", "member", "staff"];
+    const allowedRoles = ["admin", "member", "staff", "resident"];
     if (!allowedRoles.includes(user.role || "") && user.platformRole !== "SUPER_ADMIN") {
       return res.status(403).json({ message: "Access denied" });
     }

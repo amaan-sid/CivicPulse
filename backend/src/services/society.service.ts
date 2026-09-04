@@ -97,9 +97,12 @@ export class SocietyService {
   }
 
   static async getResidents(societyId: string) {
-    const memberships = await Membership.find({ societyId }).populate("userId", "name email profilePic gender");
+    const memberships = await Membership.find({ societyId }).populate(
+      "userId",
+      "name email username profilePic gender platformRole role"
+    );
 
-    return memberships
+    const residentList = memberships
       .filter((m) => m.userId != null)
       .map((m) => {
         const u = m.userId as any;
@@ -107,12 +110,45 @@ export class SocietyService {
           _id: u._id,
           name: u.name,
           email: u.email,
+          username: u.username || "",
           profilePic: u.profilePic || "",
           gender: u.gender || "male",
-          role: m.role,
+          role: m.role || "resident",
           flatNumber: (m as any).flatNumber || "",
+          joinedAt: m.createdAt,
         };
       });
+
+    // Also include any users directly linked to this society who might be missing a Membership doc
+    const existingUserIds = new Set(residentList.map((r) => r._id.toString()));
+    const additionalUsers = await User.find({
+      $or: [{ currentSocietyId: societyId }, { society: societyId }],
+      _id: { $nin: Array.from(existingUserIds) },
+    }).select("name email username profilePic gender createdAt");
+
+    for (const u of additionalUsers) {
+      const uAny = u as any;
+      existingUserIds.add(u._id.toString());
+      await Membership.create({
+        userId: u._id,
+        societyId,
+        role: uAny.role || "resident",
+      }).catch(() => {});
+
+      residentList.push({
+        _id: u._id,
+        name: u.name,
+        email: u.email,
+        username: u.username || "",
+        profilePic: u.profilePic || "",
+        gender: u.gender || "male",
+        role: uAny.role || "resident",
+        flatNumber: "",
+        joinedAt: uAny.createdAt,
+      });
+    }
+
+    return residentList;
   }
 
   static async updateSociety(societyId: string, updates: Record<string, any>) {

@@ -39,4 +39,6 @@ export interface Resident {
   profilePic?: string
   gender?: "male" | "female"
   role: Role
+  flatNumber?: string
+  joinedAt?: string
 }
