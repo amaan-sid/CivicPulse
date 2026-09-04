@@ -73,9 +73,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [isOpen]);
 
   const sizeClasses = {
-    sm: "px-3 py-1.5 text-xs rounded-lg gap-1.5",
-    md: "px-3.5 py-2 text-sm rounded-xl gap-2",
-    lg: "px-4 py-2.5 text-base rounded-xl gap-2.5",
+    sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
+    md: "px-3.5 py-2 text-sm rounded-md gap-2",
+    lg: "px-4 py-2.5 text-base rounded-md gap-2.5",
   };
 
   const handleSelect = (val: string, isDisabled?: boolean) => {
@@ -91,12 +91,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`w-full flex items-center justify-between font-medium border transition-all duration-200 outline-none select-none cursor-pointer ${
+        className={`w-full flex items-center justify-between font-medium shadow-sm transition-all duration-200 outline-none select-none cursor-pointer ${
           sizeClasses[size]
         } ${
           isOpen
-            ? "border-sky-500 ring-2 ring-sky-500/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-            : "border-slate-300/80 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"
+            ? "ring-2 ring-sky-500/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${buttonClassName}`}
       >
         <div className="flex items-center gap-2 truncate">
@@ -121,7 +121,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         <div
           className={`absolute ${
             align === "right" ? "right-0" : "left-0"
-          } mt-1.5 w-full min-w-[180px] max-h-60 overflow-y-auto rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white/95 dark:bg-slate-800/95 shadow-xl shadow-slate-900/10 dark:shadow-black/50 backdrop-blur-md z-50 p-1.5 space-y-0.5 animation-fadeIn ${dropdownClassName}`}
+          } mt-1.5 w-full min-w-[180px] max-h-60 overflow-y-auto rounded-md bg-white dark:bg-slate-800 shadow-sm z-50 p-1.5 space-y-0.5 animation-fadeIn ${dropdownClassName}`}
         >
           {options.length === 0 ? (
             <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 text-center">
@@ -136,7 +136,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   type="button"
                   disabled={opt.disabled}
                   onClick={() => handleSelect(opt.value, opt.disabled)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer select-none text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors cursor-pointer select-none text-left ${
                     isSelected
                       ? "bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 font-semibold"
                       : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60"

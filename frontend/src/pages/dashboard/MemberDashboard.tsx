@@ -13,7 +13,7 @@ function MemberDashboard(){
 
       <Link
         to="/issues"
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-4 py-2.5 rounded-md shadow-sm"
       >
         View Assigned Issues
       </Link>

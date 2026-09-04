@@ -2,6 +2,7 @@ import { Society } from "@/models/society.model";
 import { User } from "@/models/user.model";
 import { Membership } from "@/models/membership.model";
 import { Issue } from "@/models/issue.model";
+import { IssueService } from "@/services/issue.service";
 import codeGen from "@/utils/codeGenerator";
 import bcrypt from "bcryptjs";
 
@@ -9,12 +10,31 @@ const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "10", 10);
 
 export class SuperAdminService {
   static async getPlatformStats() {
+    await IssueService.checkAndEscalateOverdueIssues();
+
+    const ONE_DAY_AGO = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     const totalOrganizations = await Society.countDocuments();
     const activeOrganizations = await Society.countDocuments({ isActive: true });
     const totalUsers = await User.countDocuments();
-    const totalIssues = await Issue.countDocuments();
-    const resolvedIssues = await Issue.countDocuments({ status: "resolved" });
-    const breachedIssues = await Issue.countDocuments({ isEscalated: true });
+
+    const unexpiredFilter = {
+      $nor: [
+        { status: "resolved", updatedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $exists: false }, slaDeadline: { $lt: ONE_DAY_AGO } }
+      ]
+    };
+
+    const totalIssues = await Issue.countDocuments(unexpiredFilter);
+    const resolvedIssues = await Issue.countDocuments({ status: "resolved", updatedAt: { $gte: ONE_DAY_AGO } });
+    const breachedIssues = await Issue.countDocuments({
+      isEscalated: true,
+      $or: [
+        { breachedAt: { $gte: ONE_DAY_AGO } },
+        { breachedAt: { $exists: false }, slaDeadline: { $gte: ONE_DAY_AGO } }
+      ]
+    });
 
     const orgTypeDistribution = await Society.aggregate([
       {
@@ -46,7 +66,7 @@ export class SuperAdminService {
         const adminMembership = await Membership.findOne({
           societyId: org._id,
           role: "admin",
-        }).populate("userId", "name email");
+        }).populate("userId", "name email profilePic gender");
 
         return {
           _id: org._id,
@@ -117,11 +137,24 @@ export class SuperAdminService {
       });
 
       if (!adminUser) {
+        let baseUsername = (adminEmail.split("@")[0] || data.adminName!.replace(/\s+/g, "_"))
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, "");
+        if (!baseUsername) baseUsername = "admin";
+        let candidate = baseUsername;
+        let count = 1;
+        while (await User.findOne({ username: candidate })) {
+          candidate = `${baseUsername}${count}`;
+          count++;
+        }
+
         const hashedPassword = await bcrypt.hash(data.adminPassword!, SALT_ROUNDS);
         adminUser = await User.create({
           name: data.adminName,
+          username: candidate,
           email: adminEmail,
           password: hashedPassword,
+          profilePic: "",
           currentSocietyId: society._id as any,
         });
       } else {
@@ -198,7 +231,10 @@ export class SuperAdminService {
         return {
           _id: user._id,
           name: user.name,
+          username: user.username,
           email: user.email,
+          profilePic: user.profilePic || "",
+          gender: user.gender || "male",
           platformRole: user.platformRole,
           primaryRole,
           isActive: user.isActive !== false,
@@ -210,10 +246,20 @@ export class SuperAdminService {
   }
 
   static async getAllIssues() {
-    const issues = await Issue.find()
+    await IssueService.checkAndEscalateOverdueIssues();
+
+    const ONE_DAY_AGO = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const issues = await Issue.find({
+      $nor: [
+        { status: "resolved", updatedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $exists: false }, slaDeadline: { $lt: ONE_DAY_AGO } }
+      ]
+    })
       .populate("society", "name code type")
-      .populate("reportedBy", "name email")
-      .populate("assignedTo", "name email")
+      .populate("reportedBy", "name email profilePic gender")
+      .populate("assignedTo", "name email profilePic gender")
       .sort({ createdAt: -1 });
 
     return issues;

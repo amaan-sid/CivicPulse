@@ -7,13 +7,13 @@ const isProd = process.env.NODE_ENV === "production";
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, username, email, password, profilePic, gender } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!name || !username || !email || !password) {
+      return res.status(400).json({ message: "Missing required fields (name, username, email, password)" });
     }
 
-    const { newUser, token } = await AuthService.signup({ name, email, password });
+    const { newUser, token } = await AuthService.signup({ name, username, email, password, profilePic, gender });
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -27,7 +27,10 @@ export const signup = async (req: Request, res: Response) => {
       user: {
         id: newUser._id,
         name: newUser.name,
+        username: newUser.username,
         email: newUser.email,
+        profilePic: newUser.profilePic || "",
+        gender: newUser.gender || "male",
         platformRole: newUser.platformRole,
       },
       token,
@@ -40,13 +43,14 @@ export const signup = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, identifier, password } = req.body;
+    const loginIdentifier = identifier || email || username;
 
-    if (!email || !password) {
+    if (!loginIdentifier || !password) {
       return res.status(400).json({ message: "Missing credentials" });
     }
 
-    const { authUser, token } = await AuthService.login({ email, password });
+    const { authUser, token } = await AuthService.login({ identifier: loginIdentifier, password });
 
     res.cookie("token", token, {
       httpOnly: true,

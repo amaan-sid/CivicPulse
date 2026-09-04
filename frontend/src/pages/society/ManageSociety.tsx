@@ -105,19 +105,19 @@ function ManageSociety() {
     switch (type) {
       case "HOSTEL":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
             <Home size={12} /> Hostel
           </span>
         )
       case "CAMPUS":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border border-purple-200/60 dark:border-purple-500/20">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
             <GraduationCap size={12} /> Campus
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 border border-sky-200/60 dark:border-sky-500/20">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">
             <Building2 size={12} /> Society
           </span>
         )
@@ -129,25 +129,25 @@ function ManageSociety() {
     switch (role.toLowerCase()) {
       case "admin":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300">
             <UserCheck size={12} /> Admin
           </span>
         )
       case "staff":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
             <User size={12} /> Staff
           </span>
         )
       case "member":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
             <User size={12} /> Member
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
             <User size={12} /> Resident
           </span>
         )
@@ -159,7 +159,7 @@ function ManageSociety() {
       {selectedOrgId ? (
         <div className="space-y-6">
           {/* Header for Selected Organization */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => {
@@ -169,7 +169,7 @@ function ManageSociety() {
                     setSearchParams({}) // Return to joined orgs list
                   }
                 }}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200 dark:border-slate-700 transition-all shadow-sm cursor-pointer"
+                className="p-2.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all shadow-sm cursor-pointer"
                 title={selectedDetailView ? "Back to Organization Menu" : "Back to Joined Organizations"}
               >
                 <ArrowLeft size={18} />
@@ -201,12 +201,10 @@ function ManageSociety() {
                 {/* Option 1: Organization Info Card */}
                 <div
                   onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "info" })}
-                  className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-sky-500 dark:hover:border-sky-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white dark:bg-slate-800 p-6 rounded-md shadow-sm transition-all cursor-pointer flex flex-col justify-between group"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/15 transition-all"></div>
-
                   <div>
-                    <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 rounded-md bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                       <Building2 size={28} />
                     </div>
 
@@ -227,16 +225,14 @@ function ManageSociety() {
                 {/* Option 2: Issues & Complaints Card */}
                 <div
                   onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "issues" })}
-                  className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-amber-500 dark:hover:border-amber-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white dark:bg-slate-800 p-6 rounded-md shadow-sm transition-all cursor-pointer flex flex-col justify-between group"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/15 transition-all"></div>
-
                   <div>
                     <div className="flex justify-between items-start mb-5">
-                      <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-14 h-14 rounded-md bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                         <AlertCircle size={28} />
                       </div>
-                      <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                      <span className="text-xs font-extrabold px-3 py-1 rounded-sm bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
                         {selectedOrg?.issueCount || 0} Issues
                       </span>
                     </div>
@@ -258,16 +254,14 @@ function ManageSociety() {
                 {/* Option 3: Residents & Members Card */}
                 <div
                   onClick={() => setSearchParams({ orgId: selectedOrgId!, view: "residents" })}
-                  className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-emerald-500 dark:hover:border-emerald-400 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white dark:bg-slate-800 p-6 rounded-md shadow-sm transition-all cursor-pointer flex flex-col justify-between group"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/15 transition-all"></div>
-
                   <div>
                     <div className="flex justify-between items-start mb-5">
-                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-14 h-14 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                         <Users size={28} />
                       </div>
-                      <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                      <span className="text-xs font-extrabold px-3 py-1 rounded-sm bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
                         {selectedOrg?.memberCount || 0} Members
                       </span>
                     </div>
@@ -312,7 +306,7 @@ function ManageSociety() {
           </div>
 
           {/* Search & Role/Type Filter Bar */}
-          <div className="space-y-3 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm">
+          <div className="space-y-3 bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm">
             <div className="relative w-full">
               <Search size={18} className="absolute left-3.5 top-3 text-slate-400" />
               <input
@@ -320,7 +314,7 @@ function ManageSociety() {
                 placeholder="Search by organization name, code, or city..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-sm outline-none focus:border-sky-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-sm outline-none rounded-md"
               />
             </div>
 
@@ -337,40 +331,82 @@ function ManageSociety() {
                     { label: "Resident", value: "RESIDENT" },
                     { label: "Staff", value: "STAFF" },
                     { label: "Member", value: "MEMBER" }
-                  ].map((role) => (
-                    <button
-                      key={role.value}
-                      onClick={() => setRoleFilter(role.value as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        roleFilter === role.value
-                          ? "bg-sky-600 text-white shadow-sm"
-                          : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-                      }`}
-                    >
-                      {role.label}
-                    </button>
-                  ))}
+                  ].map((role) => {
+                    const count =
+                      role.value === "ALL"
+                        ? organizations.length
+                        : organizations.filter(
+                            (o) => o.myRole && o.myRole.toUpperCase() === role.value
+                          ).length
+
+                    return (
+                      <button
+                        key={role.value}
+                        onClick={() => setRoleFilter(role.value as any)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          roleFilter === role.value
+                            ? "bg-sky-600 text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                        }`}
+                      >
+                        <span>{role.label}</span>
+                        <span
+                          className={`ml-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            roleFilter === role.value
+                              ? "bg-sky-700/70 text-white"
+                              : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
 
-              {/* Type Filters */}
+              {/* Category Filters */}
               <div className="flex items-center gap-2 overflow-x-auto">
                 <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
-                  Type:
+                  <Filter size={14} /> Category:
                 </span>
-                {(["ALL", "SOCIETY", "HOSTEL", "CAMPUS"] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setTypeFilter(type)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      typeFilter === type
-                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-                        : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-                    }`}
-                  >
-                    {type === "ALL" ? "All Types" : type.charAt(0) + type.slice(1).toLowerCase()}
-                  </button>
-                ))}
+                {(["ALL", "SOCIETY", "HOSTEL", "CAMPUS"] as const).map((type) => {
+                  const count =
+                    type === "ALL"
+                      ? organizations.length
+                      : organizations.filter(
+                          (o) => (o.type || "SOCIETY").toUpperCase() === type
+                        ).length
+
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setTypeFilter(type)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        typeFilter === type
+                          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                      }`}
+                    >
+                      <span>
+                        {type === "ALL"
+                          ? "All Categories"
+                          : type === "SOCIETY"
+                          ? "Housing Society"
+                          : type.charAt(0) + type.slice(1).toLowerCase()}
+                      </span>
+                      <span
+                        className={`ml-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          typeFilter === type
+                            ? "bg-slate-700 text-white dark:bg-slate-200 dark:text-slate-900"
+                            : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -379,7 +415,7 @@ function ManageSociety() {
           {loading ? (
             <p className="text-slate-500 dark:text-slate-400">Loading your organizations...</p>
           ) : filteredOrgs.length === 0 ? (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700 p-12 text-center shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-md p-12 text-center shadow-sm">
               <Building2 size={36} className="mx-auto text-slate-400 mb-3" />
               <h3 className="text-lg font-bold text-slate-700 dark:text-white">No organizations found</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4">
@@ -390,7 +426,7 @@ function ManageSociety() {
               {!isSuperAdmin && (
                 <Link
                   to="/join-society"
-                  className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2.5 rounded-md transition-all shadow-sm"
                 >
                   <Building2 size={16} /> Join an Organization
                 </Link>
@@ -404,10 +440,10 @@ function ManageSociety() {
                   <div
                     key={org._id}
                     onClick={() => handleSelectOrg(org._id)}
-                    className={`bg-white dark:bg-slate-800 rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group ${
+                    className={`bg-white dark:bg-slate-800 rounded-md p-5 shadow-sm transition-all cursor-pointer flex flex-col justify-between group ${
                       isActiveContext
-                        ? "border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/20"
-                        : "border-slate-200/60 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-500/40"
+                        ? "ring-2 ring-sky-600"
+                        : ""
                     }`}
                   >
                     <div>
@@ -421,7 +457,7 @@ function ManageSociety() {
 
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
                           {isActiveContext && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                               <CheckCircle2 size={10} /> Active Context
                             </span>
                           )}

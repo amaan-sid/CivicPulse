@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { SocietyService } from "@/services/society.service";
+import { IssueService } from "@/services/issue.service";
 import { Society } from "@/models/society.model";
 import { Issue } from "@/models/issue.model";
 import { Membership } from "@/models/membership.model";
@@ -216,7 +217,7 @@ export const getCurrentSociety = async (req: Request, res: Response) => {
     const adminMembership = await Membership.findOne({
       societyId: society._id,
       role: "admin"
-    }).populate("userId", "name email");
+    }).populate("userId", "name email profilePic gender");
 
     const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
 
@@ -232,12 +233,8 @@ export const getCurrentSociety = async (req: Request, res: Response) => {
 
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const issues = await Issue.find({ society: id })
-      .populate("reportedBy", "name email")
-      .populate("assignedTo", "name email")
-      .sort({ createdAt: -1 });
-
+    const id = req.params.id as string;
+    const issues = await IssueService.getSocietyIssues(id);
     res.json(issues);
   } catch (error) {
     console.error("GET SOCIETY ISSUES ERROR:", error);
@@ -256,7 +253,7 @@ export const getSocietyById = async (req: Request, res: Response) => {
     const adminMembership = await Membership.findOne({
       societyId: society._id,
       role: "admin"
-    }).populate("userId", "name email");
+    }).populate("userId", "name email profilePic gender");
 
     const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
 
@@ -338,7 +335,7 @@ export const getMyJoinedSocieties = async (req: Request, res: Response) => {
         const adminMembership = await Membership.findOne({
           societyId: soc._id,
           role: "admin",
-        }).populate("userId", "name email");
+        }).populate("userId", "name email profilePic gender");
 
         const admin = adminMembership && typeof adminMembership.userId === "object" ? adminMembership.userId : null;
 

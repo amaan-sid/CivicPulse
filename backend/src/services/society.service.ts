@@ -97,7 +97,7 @@ export class SocietyService {
   }
 
   static async getResidents(societyId: string) {
-    const memberships = await Membership.find({ societyId }).populate("userId", "name email");
+    const memberships = await Membership.find({ societyId }).populate("userId", "name email profilePic gender");
 
     return memberships
       .filter((m) => m.userId != null)
@@ -107,6 +107,8 @@ export class SocietyService {
           _id: u._id,
           name: u.name,
           email: u.email,
+          profilePic: u.profilePic || "",
+          gender: u.gender || "male",
           role: m.role,
           flatNumber: (m as any).flatNumber || "",
         };

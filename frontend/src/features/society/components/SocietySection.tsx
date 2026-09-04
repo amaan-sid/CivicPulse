@@ -34,11 +34,11 @@ const FieldCard = ({
   startEdit,
   saveEdit
 }: FieldCardProps) => (
-  <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:border-sky-300 dark:hover:border-sky-500/40 transition-all">
+  <div className="bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm flex flex-col justify-between transition-all">
     <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-md bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
             <Icon size={18} />
           </div>
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</span>
@@ -48,14 +48,14 @@ const FieldCard = ({
           editing === field ? (
             <button
               onClick={saveEdit}
-              className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 hover:bg-emerald-200 cursor-pointer transition-colors"
+              className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 hover:bg-emerald-200 cursor-pointer transition-colors"
             >
               <Check size={14} /> Save
             </button>
           ) : (
             <button
               onClick={() => startEdit(field, society?.[field])}
-              className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 cursor-pointer transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 cursor-pointer transition-colors"
             >
               <Edit2 size={12} /> Edit
             </button>
@@ -68,7 +68,7 @@ const FieldCard = ({
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full border border-sky-500 bg-slate-50 dark:bg-slate-900 rounded-xl outline-none text-slate-900 dark:text-white px-3 py-2 text-sm font-semibold"
+            className="w-full bg-slate-100 dark:bg-slate-900 rounded-md outline-none text-slate-900 dark:text-white px-3 py-2 text-sm font-semibold"
             autoFocus
           />
         ) : (
@@ -204,9 +204,9 @@ function SocietySection({ organizationId }: SocietySectionProps) {
         <FieldCard icon={Building2} label="Organization Name" field="name" {...fieldProps} />
 
         {/* Read-Only Type Card */}
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-md bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
               {getTypeIcon(society.type)}
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -219,9 +219,9 @@ function SocietySection({ organizationId }: SocietySectionProps) {
         </div>
 
         {/* Admin Card */}
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-md bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
               <UserCheck size={18} />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -235,9 +235,9 @@ function SocietySection({ organizationId }: SocietySectionProps) {
         </div>
 
         {/* Code Card */}
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Hash size={18} />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -257,7 +257,7 @@ function SocietySection({ organizationId }: SocietySectionProps) {
 
       {/* Danger Zone (ONLY SHOWN TO AUTHORIZED ADMINS & SUPER ADMINS) */}
       {canEdit && (
-        <div className="p-6 border border-red-200 dark:border-red-900/40 rounded-2xl bg-red-50/50 dark:bg-red-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 rounded-md bg-red-50/50 dark:bg-red-500/5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-bold mb-1">
               <ShieldAlert size={18} />
@@ -269,7 +269,7 @@ function SocietySection({ organizationId }: SocietySectionProps) {
           </div>
 
           <button
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-red-600/20 cursor-pointer shrink-0"
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-5 py-2.5 rounded-md transition-all shadow-sm cursor-pointer shrink-0"
             onClick={() => setIsDeleteModalOpen(true)}
           >
             Delete {orgTypeLabel}

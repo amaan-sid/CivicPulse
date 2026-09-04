@@ -37,8 +37,8 @@ function ReportIssue() {
   if (user?.platformRole === "SUPER_ADMIN") {
     return (
       <DashboardLayout>
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 max-w-2xl mx-auto my-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-md shadow-sm max-w-2xl mx-auto my-12 text-center">
+          <div className="w-16 h-16 rounded-md bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck size={32} />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Super Admin Access</h2>
@@ -47,7 +47,7 @@ function ReportIssue() {
           </p>
           <button
             onClick={() => navigate("/super-admin")}
-            className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-600/20 cursor-pointer"
+            className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-purple-700 transition-colors shadow-sm cursor-pointer"
           >
             <ArrowLeft size={18} />
             Go to Super Admin Portal
@@ -95,30 +95,30 @@ function ReportIssue() {
   return (
 
     <DashboardLayout>
-      <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200/60 dark:border-slate-700">
+      <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-md shadow-sm">
         <h1 className="text-2xl font-bold mb-0 text-slate-800 dark:text-white tracking-tight">
             Report Issue
         </h1>
         <button
             onClick={()=>{navigate("/manageissues")}}
-            className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+            className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-4 py-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
         >
             Issue Board
         </button>
       </div>
 
-      <div className="w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 my-6">
+      <div className="w-full bg-white dark:bg-slate-800 p-8 rounded-md shadow-sm my-6">
 
         <form onSubmit={handleSubmit}>
 
           <input
-            className="w-full border border-slate-300 dark:border-slate-600 bg-transparent text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-xl outline-none focus:border-sky-500 dark:focus:border-sky-400 placeholder:text-slate-400"
+            className="w-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-md outline-none placeholder:text-slate-400"
             placeholder="Issue Title"
             onChange={(e)=>setTitle(e.target.value)}
           />
 
           <textarea
-            className="w-full border border-slate-300 dark:border-slate-600 bg-transparent text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-xl outline-none focus:border-sky-500 dark:focus:border-sky-400 placeholder:text-slate-400 h-32 resize-y"
+            className="w-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-3 mb-5 rounded-md outline-none placeholder:text-slate-400 h-32 resize-y"
             placeholder="Description"
             onChange={(e)=>setDescription(e.target.value)}
           />
@@ -152,17 +152,17 @@ function ReportIssue() {
             <input
               type="file"
               accept="image/*"
-              className="w-full border border-slate-300 dark:border-slate-600 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 dark:file:bg-sky-900/30 dark:file:text-sky-400 dark:hover:file:bg-sky-900/50 transition-all cursor-pointer"
+              className="w-full p-3 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 dark:file:bg-sky-950 dark:file:text-sky-300 transition-all cursor-pointer outline-none"
               onChange={handleImageChange}
             />
             {imageBase64 && (
-              <img src={imageBase64} alt="Preview" className="mt-4 h-40 object-cover rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" />
+              <img src={imageBase64} alt="Preview" className="mt-4 h-40 object-cover rounded-md shadow-sm" />
             )}
           </div>
 
           <button
             disabled={isSubmitting}
-            className="w-full bg-sky-600 text-white px-6 py-3 rounded-xl hover:bg-sky-700 disabled:opacity-70 transition-colors font-semibold shadow-sm shadow-sky-600/20 mt-2"
+            className="w-full bg-sky-600 text-white px-6 py-3 rounded-md hover:bg-sky-500 disabled:opacity-70 transition-colors font-semibold shadow-sm mt-2 cursor-pointer"
           >
             {isSubmitting ? "Submitting..." : "Submit Issue"}
           </button>

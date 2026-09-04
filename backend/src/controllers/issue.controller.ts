@@ -57,7 +57,8 @@ export const updateIssueStatus = async (req: Request, res: Response) => {
     const issue = await IssueService.updateIssueStatus(req.params.id as string, req.user!.id, status);
     res.json(issue);
   } catch (error: any) {
-    res.status(error.message === "Issue not found" ? 404 : 500).json({
+    const statusCode = error.message === "Issue not found" ? 404 : error.message.includes("breached") ? 400 : 500;
+    res.status(statusCode).json({
       message: error.message || "Failed to update issue",
     });
   }
@@ -70,7 +71,8 @@ export const assignIssue = async (req: Request, res: Response) => {
     res.json({ message: "Issue assigned successfully", issue });
   } catch (error: any) {
     console.error("ASSIGN ISSUE ERROR:", error);
-    res.status(error.message.includes("not found") ? 404 : 500).json({
+    const statusCode = error.message.includes("not found") ? 404 : error.message.includes("breached") ? 400 : 500;
+    res.status(statusCode).json({
       message: error.message || "Assignment failed",
     });
   }
@@ -97,7 +99,8 @@ export const toggleReporter = async (req: Request, res: Response) => {
     const issue = await IssueService.toggleReporter(req.params.id as string, req.user!.id);
     res.json(issue);
   } catch (error: any) {
-    res.status(error.message === "Issue not found" ? 404 : 500).json({
+    const statusCode = error.message === "Issue not found" ? 404 : error.message.includes("breached") ? 400 : 500;
+    res.status(statusCode).json({
       message: error.message || "Toggle failed",
     });
   }

@@ -11,6 +11,9 @@ export interface Issue {
   reportedBy: {
     _id: string;
     name: string;
+    email?: string;
+    profilePic?: string;
+    gender?: "male" | "female";
   };
 
   reporters: string[];
@@ -19,9 +22,14 @@ export interface Issue {
     _id: string;
     name: string;
     role: string;
+    email?: string;
+    profilePic?: string;
+    gender?: "male" | "female";
   };
 
   isEscalated: boolean;
+  slaDeadline?: string;
+  breachedAt?: string;
   imageUrl?: string;
   createdAt: string;
   updatedAt: string;

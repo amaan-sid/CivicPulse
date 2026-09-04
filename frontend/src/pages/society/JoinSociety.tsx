@@ -18,8 +18,8 @@ export default function JoinSociety() {
   if (user?.platformRole === "SUPER_ADMIN") {
     return (
       <DashboardLayout>
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 max-w-2xl mx-auto my-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-md shadow-sm max-w-2xl mx-auto my-12 text-center">
+          <div className="w-16 h-16 rounded-md bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck size={32} />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Super Admin Account</h2>
@@ -28,7 +28,7 @@ export default function JoinSociety() {
           </p>
           <button
             onClick={() => navigate("/super-admin")}
-            className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-600/20 cursor-pointer"
+            className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-purple-700 transition-colors shadow-sm cursor-pointer"
           >
             <ArrowLeft size={18} />
             Go to Super Admin Portal
@@ -77,18 +77,18 @@ export default function JoinSociety() {
 
       <form
         onSubmit={handleJoin}
-        className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 max-w-md space-y-4"
+        className="bg-white dark:bg-slate-800 p-6 rounded-md shadow-sm max-w-md space-y-4"
       >
         
         <input
           placeholder="Enter Organization Code"
           value={societyCode}
           onChange={(e) => setsocietyCode(e.target.value)}
-          className="w-full border border-slate-300 dark:border-slate-600 bg-transparent text-slate-800 dark:text-slate-200 p-3 rounded-xl outline-none focus:border-sky-500"
+          className="w-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-3 rounded-md outline-none"
         />
 
         <button 
-          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+          className="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold px-4 py-2.5 rounded-md transition-colors cursor-pointer shadow-sm"
           disabled={loading}
         >
           {loading===true?"Joining...":"Join Organization"}

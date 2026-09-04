@@ -61,9 +61,9 @@ function SocietySwitcher() {
       }));
 
   return (
-    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700">
+    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-md shadow-sm">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+        <div className="w-12 h-12 rounded-md bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
           <Building size={24} />
         </div>
         <div>
@@ -74,7 +74,7 @@ function SocietySwitcher() {
               options={societyOptions}
               onChange={(val) => handleChange(val)}
               placeholder="Select society..."
-              buttonClassName="border-none bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-700/40 p-1 font-semibold text-lg text-slate-800 dark:text-white"
+              buttonClassName="bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-700/40 p-1 font-semibold text-lg text-slate-800 dark:text-white"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ function SocietySwitcher() {
         {user?.platformRole !== "SUPER_ADMIN" && (
           <Link
             to="/join-society"
-            className="flex items-center gap-2 bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-4 py-2.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-600 transition-all shadow-sm cursor-pointer"
           >
             <LogIn size={18} />
             Join Society
@@ -94,7 +94,7 @@ function SocietySwitcher() {
         {user?.platformRole === "SUPER_ADMIN" && (
           <Link
             to="/super-admin/organizations"
-            className="flex items-center gap-2 bg-slate-900 dark:bg-purple-600 text-white font-medium px-4 py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-purple-500 transition-all shadow-sm shadow-slate-900/20 dark:shadow-purple-600/20 cursor-pointer"
+            className="flex items-center gap-2 bg-slate-900 dark:bg-purple-600 text-white font-medium px-4 py-2.5 rounded-md hover:bg-slate-800 dark:hover:bg-purple-500 transition-all shadow-sm cursor-pointer"
           >
             <Plus size={18} />
             Create Organization

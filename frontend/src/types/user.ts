@@ -7,8 +7,11 @@ export interface Membership{
     code?: string
   }
   userId: {
-    _id:string
-    name?:string
+    _id: string
+    name?: string
+    email?: string
+    profilePic?: string
+    gender?: "male" | "female"
   }
   role: Role
 }
@@ -17,7 +20,10 @@ export interface User {
   id: string
   _id?: string
   name: string
+  username?: string
   email: string
+  profilePic?: string
+  gender?: "male" | "female"
   platformRole?: "SUPER_ADMIN" | "USER"
   currentSocietyId: string
   memberships: Membership[]
@@ -28,5 +34,9 @@ export interface User {
 export interface Resident {
   _id: string
   name: string
+  email?: string
+  username?: string
+  profilePic?: string
+  gender?: "male" | "female"
   role: Role
 }

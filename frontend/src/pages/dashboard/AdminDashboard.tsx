@@ -30,8 +30,8 @@ function AdminDashboard(){
         </div>
 
         {societyCode && (
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-md shadow-sm">
+            <div className="w-8 h-8 rounded-md bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
               <Hash size={18} />
             </div>
             <div>
@@ -45,7 +45,7 @@ function AdminDashboard(){
       <DashboardStats/>
 
       {/* Placeholder for future sections */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700 p-8 shadow-sm text-center mt-6">
+      <div className="bg-white dark:bg-slate-800 rounded-md p-8 shadow-sm text-center mt-6">
         <h3 className="text-lg font-semibold text-slate-700 dark:text-white mb-2">Detailed Analytics Coming Soon</h3>
         <p className="text-slate-500 dark:text-slate-400">We are currently gathering data to generate comprehensive reports.</p>
       </div>

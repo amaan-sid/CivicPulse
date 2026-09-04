@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 import { User, UserCheck, Wrench, Shield, Trash2 } from "lucide-react";
+import UserAvatar from "@/components/common/UserAvatar";
 
 type ResidentsSectionProps = {
   organizationId?: string
@@ -74,17 +75,18 @@ function ResidentsSection({ organizationId }: ResidentsSectionProps) {
 
   return (
     <div className="space-y-3">
-      {residents.map((r) => {
-        const initial = r.name ? r.name.charAt(0).toUpperCase() : "U";
-        return (
-          <div
-            key={r._id}
-            className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800/90 p-4 rounded-2xl shadow-xs hover:shadow-md border border-slate-200/70 dark:border-slate-700/80 transition-all duration-200"
-          >
+      {residents.map((r) => (
+        <div
+          key={r._id}
+          className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 p-4 rounded-md shadow-sm transition-all duration-200"
+        >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400/20 to-blue-600/20 dark:from-sky-500/20 dark:to-blue-500/20 text-sky-700 dark:text-sky-300 font-bold flex items-center justify-center shrink-0 border border-sky-200/50 dark:border-sky-500/30 text-sm shadow-2xs">
-                {initial}
-              </div>
+              <UserAvatar
+                src={r.profilePic}
+                gender={r.gender}
+                name={r.name}
+                className="w-10 h-10 rounded-md border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm"
+              />
               <div>
                 <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
                   {r.name}
@@ -108,7 +110,7 @@ function ResidentsSection({ organizationId }: ResidentsSectionProps) {
 
               <button 
                 onClick={() => setResidentToRemove(r)} 
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200/80 dark:border-rose-500/30 rounded-xl transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-md transition-all duration-150 cursor-pointer shadow-sm shrink-0"
                 title={`Remove ${r.name}`}
               >
                 <Trash2 size={13} className="shrink-0" />
@@ -116,8 +118,7 @@ function ResidentsSection({ organizationId }: ResidentsSectionProps) {
               </button>
             </div>
           </div>
-        );
-      })}
+        ))}
 
       <ConfirmModal
         isOpen={Boolean(residentToRemove)}

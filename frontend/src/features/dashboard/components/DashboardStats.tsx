@@ -49,7 +49,7 @@ function DashboardStats() {
     <div className="grid md:grid-cols-4 gap-6 mb-8">
       {statCards.map((stat, i) => (
         <Card key={i} className="flex items-center gap-5 group hover:-translate-y-1">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${stat.bg} ${stat.color}`}>
+          <div className={`w-14 h-14 rounded-md flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${stat.bg} ${stat.color}`}>
             <stat.icon size={26} />
           </div>
           <div>

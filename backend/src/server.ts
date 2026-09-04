@@ -36,8 +36,31 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-// Database Connection
-db();
+import { IssueService } from "@/services/issue.service";
+
+// Database Connection & Initial SLA Escalation Check
+db().then(async () => {
+  try {
+    const escalated = await IssueService.checkAndEscalateOverdueIssues();
+    if (escalated > 0) {
+      console.log(`[SLA Checker] Escalated ${escalated} overdue issues on startup`);
+    }
+  } catch (err) {
+    console.error("[SLA Checker] Initial startup check error:", err);
+  }
+});
+
+// Periodic SLA Escalation Check (every 30 seconds)
+setInterval(async () => {
+  try {
+    const escalated = await IssueService.checkAndEscalateOverdueIssues();
+    if (escalated > 0) {
+      console.log(`[SLA Checker] Escalated ${escalated} newly overdue issues`);
+    }
+  } catch (err) {
+    console.error("[SLA Checker] Periodic check error:", err);
+  }
+}, 30000);
 
 // Start Server
 app.listen(ENV.PORT, () => {

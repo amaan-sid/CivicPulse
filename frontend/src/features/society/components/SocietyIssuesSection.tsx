@@ -8,6 +8,7 @@ import toast from "react-hot-toast"
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect"
 import {
   AlertCircle,
+  AlertTriangle,
   Search,
   Filter,
   ChevronRight,
@@ -17,6 +18,8 @@ import {
   X,
   Image as ImageIcon
 } from "lucide-react"
+import { isIssueBreached, isIssueExpired } from "@/utils/issueHelpers"
+import UserAvatar from "@/components/common/UserAvatar"
 
 const CATEGORY_OPTIONS: SelectOption[] = [
   { value: "plumbing", label: "Plumbing" },
@@ -47,8 +50,10 @@ interface IssueItem {
   reportCount?: number
   reporters?: any[]
   isEscalated?: boolean
-  reportedBy?: { _id: string; name: string; email: string }
-  assignedTo?: { _id: string; name: string; email: string }
+  slaDeadline?: string
+  breachedAt?: string
+  reportedBy?: { _id: string; name: string; email: string; profilePic?: string; gender?: "male" | "female" }
+  assignedTo?: { _id: string; name: string; email: string; profilePic?: string; gender?: "male" | "female" }
   createdAt: string
   updatedAt?: string
 }
@@ -146,6 +151,11 @@ function SocietyIssuesSection({ organizationId }: Props) {
 
   const handleToggleReporter = async (e: React.MouseEvent, issueId: string) => {
     e.stopPropagation()
+    const target = issues.find((i) => i._id === issueId)
+    if (target && isIssueBreached(target)) {
+      toast.error("This issue's SLA has been breached and cannot be modified")
+      return
+    }
     try {
       const res = await API.patch(`/issues/${issueId}/report`)
       const updatedIssue = res.data
@@ -181,18 +191,33 @@ function SocietyIssuesSection({ organizationId }: Props) {
       }
     }
 
+    // Remove resolved and breached issues older than 1 day
+    if (isIssueExpired(iss)) {
+      return false
+    }
+
     const matchesSearch =
       iss.title.toLowerCase().includes(search.toLowerCase()) ||
       iss.category.toLowerCase().includes(search.toLowerCase()) ||
       (iss.reportedBy?.name && iss.reportedBy.name.toLowerCase().includes(search.toLowerCase()))
 
+    const breached = isIssueBreached(iss)
+
     let matchesStatus = true
     if (statusFilter === "active") {
-      matchesStatus = iss.status !== "resolved"
+      matchesStatus = iss.status !== "resolved" && !breached
+    } else if (statusFilter === "open") {
+      matchesStatus = iss.status === "open" && !breached
+    } else if (statusFilter === "in-progress") {
+      matchesStatus = iss.status === "in-progress" && !breached
+    } else if (statusFilter === "resolved") {
+      matchesStatus = iss.status === "resolved"
     } else if (statusFilter === "escalated") {
-      matchesStatus = Boolean(iss.isEscalated)
-    } else if (statusFilter !== "ALL") {
-      matchesStatus = iss.status === statusFilter
+      matchesStatus = breached
+    } else if (statusFilter === "ALL") {
+      matchesStatus = !breached
+    } else {
+      matchesStatus = iss.status === statusFilter && !breached
     }
 
     return matchesSearch && matchesStatus
@@ -202,19 +227,19 @@ function SocietyIssuesSection({ organizationId }: Props) {
     switch (status) {
       case "resolved":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 size={12} /> Resolved
           </span>
         )
       case "in-progress":
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300">
             <Clock size={12} /> In Progress
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
             <AlertCircle size={12} /> Open
           </span>
         )
@@ -232,7 +257,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
   return (
     <div className="space-y-6">
       {/* Search Bar, Status Filters & Create Issue Button */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-md shadow-sm">
         <div className="relative w-full sm:w-80">
           <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
           <input
@@ -240,7 +265,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
             placeholder="Search issues by title, category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-sm outline-none focus:border-sky-500"
+            className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-900 rounded-md text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-sm outline-none"
           />
         </div>
 
@@ -254,26 +279,50 @@ function SocietyIssuesSection({ organizationId }: Props) {
               { label: "Open", value: "open" },
               { label: "In Progress", value: "in-progress" },
               { label: "Resolved", value: "resolved" },
+              { label: "Breached Issues", value: "escalated" },
               { label: "All", value: "ALL" }
-            ].map((st) => (
-              <button
-                key={st.value}
-                onClick={() => setStatusFilter(st.value)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  statusFilter === st.value
-                    ? "bg-sky-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-                }`}
-              >
-                {st.label}
-              </button>
-            ))}
+            ].map((st) => {
+              const count = issues.filter((iss) => {
+                if (isIssueExpired(iss)) return false
+                const breached = isIssueBreached(iss)
+                if (st.value === "ALL") return !breached
+                if (st.value === "active") return iss.status !== "resolved" && !breached
+                if (st.value === "open") return iss.status === "open" && !breached
+                if (st.value === "in-progress") return iss.status === "in-progress" && !breached
+                if (st.value === "resolved") return iss.status === "resolved"
+                if (st.value === "escalated") return breached
+                return iss.status === st.value && !breached
+              }).length
+
+              return (
+                <button
+                  key={st.value}
+                  onClick={() => setStatusFilter(st.value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                    statusFilter === st.value
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                  }`}
+                >
+                  <span>{st.label}</span>
+                  <span
+                    className={`ml-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      statusFilter === st.value
+                        ? "bg-sky-700/70 text-white"
+                        : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           {!isSuperAdmin && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm shadow-sky-600/20 cursor-pointer shrink-0"
+              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2 rounded-md transition-all shadow-sm cursor-pointer shrink-0"
             >
               <Plus size={16} />
               Report Issue
@@ -284,7 +333,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
 
       {/* Issues Grid */}
       {filteredIssues.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700 p-12 text-center shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-md p-12 text-center shadow-sm">
           <AlertCircle size={36} className="mx-auto text-slate-400 mb-3" />
           <h3 className="text-lg font-bold text-slate-700 dark:text-white">No issues reported</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4">
@@ -293,7 +342,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
           {!isSuperAdmin && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2.5 rounded-md transition-all shadow-sm cursor-pointer"
             >
               <Plus size={16} /> Report an Issue Now
             </button>
@@ -309,86 +358,108 @@ function SocietyIssuesSection({ organizationId }: Props) {
               <div
                 key={issue._id}
                 onClick={() => navigate(`/issues/${issue._id}`)}
-                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-sky-300 dark:hover:border-sky-500/40 transition-all cursor-pointer flex flex-col justify-between group"
+                className="bg-white dark:bg-slate-800 rounded-md p-5 shadow-sm transition-all cursor-pointer flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex justify-between items-start mb-2 gap-2">
                     <h3 className="font-bold text-base text-slate-800 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors line-clamp-1">
                       {issue.title}
                     </h3>
-                    {getStatusBadge(issue.status)}
+                    {isIssueBreached(issue) ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm shrink-0">
+                        <AlertTriangle size={12} /> SLA Breached
+                      </span>
+                    ) : (
+                      getStatusBadge(issue.status)
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
                     {issue.description}
                   </p>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                        {issue.category}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                          issue.severity === "high"
-                            ? "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
-                            : issue.severity === "medium"
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        }`}
-                      >
-                        {issue.severity}
-                      </span>
-                      {((issue as any).imageUrl || (issue as any).image) && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 flex items-center gap-1">
-                          <ImageIcon size={10} /> Photo
+                  {!isIssueBreached(issue) && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          {issue.category}
                         </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase ${
+                            issue.severity === "high"
+                              ? "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                              : issue.severity === "medium"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {issue.severity}
+                        </span>
+                        {((issue as any).imageUrl || (issue as any).image) && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 flex items-center gap-1">
+                            <ImageIcon size={10} /> Photo
+                          </span>
+                        )}
+                      </div>
+
+                      {/* INCREASE REPORTERS BUTTON */}
+                      {!isSuperAdmin && (
+                        issue.status === "resolved" ? (
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-sm bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400"
+                            title="Resolved issues cannot receive new reports"
+                          >
+                            <CheckCircle2 size={13} className="text-emerald-500" />
+                            <span>Resolved ({currentReportersCount})</span>
+                          </span>
+                        ) : reported ? (
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-sm bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                            title="You have already reported this issue"
+                          >
+                            <CheckCircle2 size={13} />
+                            <span>Already reported ({currentReportersCount})</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => handleToggleReporter(e, issue._id)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-sm bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 transition-all cursor-pointer"
+                            title="Click to increase report count"
+                          >
+                            <Plus size={13} />
+                            <span>Increase ({currentReportersCount})</span>
+                          </button>
+                        )
                       )}
                     </div>
+                  )}
 
-                    {/* INCREASE REPORTERS BUTTON */}
-                    {!isSuperAdmin && (
-                      issue.status === "resolved" ? (
-                        <span
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600"
-                          title="Resolved issues cannot receive new reports"
-                        >
-                          <CheckCircle2 size={13} className="text-emerald-500" />
-                          <span>Resolved ({currentReportersCount})</span>
-                        </span>
-                      ) : reported ? (
-                        <span
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30"
-                          title="You have already reported this issue"
-                        >
-                          <CheckCircle2 size={13} />
-                          <span>Already reported ({currentReportersCount})</span>
-                        </span>
-                      ) : (
-                        <button
-                          onClick={(e) => handleToggleReporter(e, issue._id)}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-all cursor-pointer"
-                          title="Click to increase report count"
-                        >
-                          <Plus size={13} />
-                          <span>Increase ({currentReportersCount})</span>
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  {issue.status !== "resolved" && (
+                  {!isIssueBreached(issue) && issue.status !== "resolved" && (
                     <div className="mb-3">
-                      <SLATimer createdAt={issue.createdAt} priority={issue.severity || "medium"} />
+                      <SLATimer
+                        createdAt={issue.createdAt}
+                        priority={issue.severity || "medium"}
+                        slaDeadline={issue.slaDeadline}
+                        isEscalated={issue.isEscalated}
+                        status={issue.status}
+                      />
                     </div>
                   )}
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-                  <span>By: {issue.reportedBy?.name || "Member"}</span>
-                  <span className="flex items-center text-sky-600 dark:text-sky-400 font-semibold group-hover:translate-x-1 transition-transform">
+                  <div className="flex items-center gap-2">
+                    <UserAvatar
+                      src={issue.reportedBy?.profilePic}
+                      gender={issue.reportedBy?.gender}
+                      name={issue.reportedBy?.name || "Member"}
+                      className="w-5 h-5 rounded-full border border-slate-200 dark:border-slate-700 shrink-0"
+                    />
+                    <span className="truncate max-w-[150px]">By: {issue.reportedBy?.name || "Member"}</span>
+                  </div>
+                  <span className="flex items-center text-sky-600 dark:text-sky-400 font-semibold group-hover:translate-x-1 transition-transform shrink-0">
                     Details <ChevronRight size={14} />
                   </span>
                 </div>
@@ -401,10 +472,10 @@ function SocietyIssuesSection({ organizationId }: Props) {
       {/* CREATE ISSUE MODAL */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-md p-8 max-w-lg w-full shadow-sm relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer"
+              className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -424,7 +495,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
                   placeholder="e.g. Water leak in 3rd floor hallway"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-sky-500 text-slate-800 dark:text-slate-200"
+                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-900 rounded-md text-sm outline-none text-slate-800 dark:text-slate-200"
                   required
                 />
               </div>
@@ -462,7 +533,7 @@ function SocietyIssuesSection({ organizationId }: Props) {
                   placeholder="Describe the issue details and location..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-sky-500 text-slate-800 dark:text-slate-200 resize-y"
+                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-900 rounded-md text-sm outline-none text-slate-800 dark:text-slate-200 resize-y"
                   required
                 />
               </div>
@@ -475,13 +546,13 @@ function SocietyIssuesSection({ organizationId }: Props) {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full text-xs text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl p-2 bg-slate-50 dark:bg-slate-900 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-300 hover:file:bg-sky-100 transition-all cursor-pointer"
+                  className="w-full text-xs text-slate-500 rounded-md p-2 bg-slate-100 dark:bg-slate-900 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-300 transition-all cursor-pointer"
                 />
                 {imageBase64 && (
                   <img
                     src={imageBase64}
                     alt="Preview"
-                    className="mt-3 h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700"
+                    className="mt-3 h-28 object-cover rounded-md"
                   />
                 )}
               </div>
@@ -490,14 +561,14 @@ function SocietyIssuesSection({ organizationId }: Props) {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                  className="px-5 py-2.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-70"
+                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-md text-xs font-bold shadow-sm cursor-pointer disabled:opacity-70"
                 >
                   {isSubmitting ? "Submitting..." : "Submit Issue"}
                 </button>

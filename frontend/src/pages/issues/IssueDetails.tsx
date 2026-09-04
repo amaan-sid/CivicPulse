@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   ShieldAlert,
   Clock,
-  UserCheck,
   CheckCircle2,
   AlertCircle,
   Calendar,
@@ -27,6 +26,8 @@ import {
   ExternalLink,
   X
 } from "lucide-react"
+import { isIssueBreached, isIssueExpired } from "@/utils/issueHelpers"
+import UserAvatar from "@/components/common/UserAvatar"
 
 interface AuditLog {
   _id: string
@@ -104,6 +105,10 @@ function IssueDetails() {
 
   const updateStatus = async (status: string) => {
     if (!issue) return
+    if (isIssueBreached(issue)) {
+      toast.error("This issue's SLA has been breached and cannot be modified")
+      return
+    }
     setIsUpdatingStatus(true)
     try {
       const res = await API.patch(`/issues/${id}`, { status })
@@ -136,6 +141,11 @@ function IssueDetails() {
   }
 
   const assignIssue = async () => {
+    if (!issue) return
+    if (isIssueBreached(issue)) {
+      toast.error("This issue's SLA has been breached and cannot be assigned or modified")
+      return
+    }
     if (!assignMemberId) return toast.error("Please select a member to assign")
     setIsAssigning(true)
     try {
@@ -170,6 +180,10 @@ function IssueDetails() {
 
   const handleToggleReporter = async () => {
     if (!issue) return
+    if (isIssueBreached(issue)) {
+      toast.error("This issue's SLA has been breached and cannot be modified")
+      return
+    }
     try {
       const res = await API.patch(`/issues/${id}/report`)
       setIssue(res.data)
@@ -243,6 +257,36 @@ function IssueDetails() {
 
   if (!issue) return null
 
+  if (isIssueExpired(issue)) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-xl mx-auto my-12 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xl text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-500 flex items-center justify-center mx-auto shadow-inner">
+            <Clock size={32} />
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+              Issue Archived
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+              This issue has been {issue.status === "resolved" ? "resolved" : "breached"} for more than 24 hours and has been automatically removed.
+            </p>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs cursor-pointer"
+            >
+              <ArrowLeft size={16} /> Back to Previous Page
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   const isSuperAdmin = user?.platformRole === "SUPER_ADMIN"
   const issueSocietyId = typeof issue.society === "string" ? issue.society : issue.society?._id
   const userId = user?._id || user?.id
@@ -257,8 +301,9 @@ function IssueDetails() {
   const isAssignee =
     (typeof issue.assignedTo === "object" ? issue.assignedTo?._id : issue.assignedTo) === userId
 
-  const canUpdateStatus = Boolean(isSuperAdmin || isSocietyAdmin || isAssignee)
-  const canAssign = Boolean((isSuperAdmin || isSocietyAdmin) && issue.status !== "resolved")
+  const isBreached = isIssueBreached(issue)
+  const canUpdateStatus = Boolean((isSuperAdmin || isSocietyAdmin || isAssignee) && !isBreached)
+  const canAssign = Boolean((isSuperAdmin || isSocietyAdmin) && issue.status !== "resolved" && !isBreached)
   const userReported = hasUserReported(issue)
   const count = issue.reportCount || issue.reporters?.length || 1
 
@@ -266,19 +311,19 @@ function IssueDetails() {
     switch (status) {
       case "resolved":
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
             <CheckCircle2 size={14} /> Resolved
           </span>
         )
       case "in-progress":
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-800/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-sm bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
             <Clock size={14} /> In Progress
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-sm bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
             <AlertCircle size={14} /> Open
           </span>
         )
@@ -289,19 +334,19 @@ function IssueDetails() {
     switch (severity) {
       case "high":
         return (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-200 dark:border-rose-800/30 uppercase">
+          <span className="text-xs font-bold px-3 py-1 rounded-sm bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 uppercase">
             High Priority
           </span>
         )
       case "medium":
         return (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30 uppercase">
+          <span className="text-xs font-bold px-3 py-1 rounded-sm bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 uppercase">
             Medium Priority
           </span>
         )
       default:
         return (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 uppercase">
+          <span className="text-xs font-bold px-3 py-1 rounded-sm bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 uppercase">
             Low Priority
           </span>
         )
@@ -315,7 +360,7 @@ function IssueDetails() {
         <div className="flex items-center justify-between gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200/80 dark:border-slate-700 transition-all shadow-sm cursor-pointer text-xs font-bold"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 transition-all shadow-sm cursor-pointer text-xs font-bold"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -330,18 +375,32 @@ function IssueDetails() {
         </div>
 
         {/* HEADER HERO CARD */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-slate-800 rounded-md p-6 sm:p-8 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200/60 dark:border-sky-500/20">
-                {issue.category}
+            {isIssueBreached(issue) ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-sm bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm">
+                <ShieldAlert size={14} /> SLA Breached
               </span>
-              {getSeverityBadge(issue.severity || "low")}
-              {getStatusBadge(issue.status)}
-            </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-sm bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                    {issue.category}
+                  </span>
+                  {getSeverityBadge(issue.severity || "low")}
+                  {getStatusBadge(issue.status)}
+                </div>
 
-            {issue.status !== "resolved" && (
-              <SLATimer createdAt={issue.createdAt} priority={issue.severity || "medium"} />
+                {issue.status !== "resolved" && (
+                  <SLATimer
+                    createdAt={issue.createdAt}
+                    priority={issue.severity || "medium"}
+                    slaDeadline={issue.slaDeadline}
+                    isEscalated={issue.isEscalated}
+                    status={issue.status}
+                  />
+                )}
+              </>
             )}
           </div>
 
@@ -361,10 +420,10 @@ function IssueDetails() {
               })}
             </span>
 
-            {!isSuperAdmin && (
+            {!isSuperAdmin && !isBreached && (
               issue.status === "resolved" ? (
                 <span
-                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600"
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-md bg-slate-100 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400"
                   title="Resolved issues cannot receive new reports"
                 >
                   <CheckCircle2 size={14} className="text-emerald-500" />
@@ -372,7 +431,7 @@ function IssueDetails() {
                 </span>
               ) : userReported ? (
                 <span
-                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/30"
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
                   title="You have already reported this issue"
                 >
                   <CheckCircle2 size={14} />
@@ -381,7 +440,7 @@ function IssueDetails() {
               ) : (
                 <button
                   onClick={handleToggleReporter}
-                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-md bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 dark:bg-slate-700 dark:hover:bg-sky-500/20 dark:text-slate-200 dark:hover:text-sky-300 transition-all cursor-pointer"
                   title="Click to increase report count"
                 >
                   <Plus size={14} />
@@ -397,7 +456,7 @@ function IssueDetails() {
           {/* LEFT COLUMN: DESCRIPTION, ATTACHMENT, TIMELINE */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm">
               <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Tag size={16} className="text-sky-500" /> Issue Description
               </h3>
@@ -408,7 +467,7 @@ function IssueDetails() {
 
             {/* Image Attachment Card */}
             {(issue.imageUrl || issue.image) && (
-              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <ImageIcon size={16} className="text-sky-500" /> Image Attachment
@@ -422,7 +481,7 @@ function IssueDetails() {
                 </div>
                 <div
                   onClick={() => setIsImageModalOpen(true)}
-                  className="relative group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 cursor-pointer"
+                  className="relative group overflow-hidden rounded-md bg-slate-50 dark:bg-slate-900/50 cursor-pointer"
                 >
                   <img
                     src={issue.imageUrl || issue.image}
@@ -437,7 +496,7 @@ function IssueDetails() {
             )}
 
             {/* Activity Timeline Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm">
               <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
                 <Sparkles size={16} className="text-purple-500" /> Activity & Audit Timeline
               </h3>
@@ -464,14 +523,17 @@ function IssueDetails() {
           {/* RIGHT COLUMN: REPORTERS, STATUS UPDATE & ASSIGNMENT CONTROLS */}
           <div className="space-y-6">
             {/* Reporter Info Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
                 Reported By
               </h3>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold flex items-center justify-center text-lg">
-                  {issue.reportedBy?.name?.[0]?.toUpperCase() || "U"}
-                </div>
+                <UserAvatar
+                  src={issue.reportedBy?.profilePic}
+                  gender={issue.reportedBy?.gender}
+                  name={issue.reportedBy?.name || "Reporter"}
+                  className="w-12 h-12 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm"
+                />
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
                     {issue.reportedBy?.name || "Anonymous Member"}
@@ -482,14 +544,17 @@ function IssueDetails() {
             </div>
 
             {/* Assignee Info Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
                 Assigned Admin / Staff
               </h3>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-lg">
-                  {issue.assignedTo?.name?.[0]?.toUpperCase() || <UserCheck size={20} />}
-                </div>
+                <UserAvatar
+                  src={issue.assignedTo?.profilePic}
+                  gender={issue.assignedTo?.gender}
+                  name={issue.assignedTo?.name || "Assignee"}
+                  className="w-12 h-12 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm"
+                />
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
                     {issue.assignedTo?.name || "Unassigned"}
@@ -501,9 +566,21 @@ function IssueDetails() {
               </div>
             </div>
 
-            {/* Status Update Controls or Resolved Notice */}
-            {issue.status === "resolved" ? (
-              <div className="bg-emerald-50/80 dark:bg-emerald-500/10 rounded-3xl border border-emerald-200/80 dark:border-emerald-800/30 p-6 shadow-sm flex items-start gap-3">
+            {/* Status Update Controls or Resolved/Breached Notice */}
+            {isBreached ? (
+              <div className="bg-rose-50/80 dark:bg-rose-500/10 rounded-md p-6 shadow-sm flex items-start gap-3 border border-rose-200 dark:border-rose-900/30">
+                <ShieldAlert size={24} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-rose-800 dark:text-rose-300">
+                    SLA Breached — Modifications Locked
+                  </h3>
+                  <p className="text-xs text-rose-600 dark:text-rose-400 mt-1 leading-relaxed">
+                    This issue has breached its SLA deadline. Status changes, assignments, and modifications are disabled.
+                  </p>
+                </div>
+              </div>
+            ) : issue.status === "resolved" ? (
+              <div className="bg-emerald-50/80 dark:bg-emerald-500/10 rounded-md p-6 shadow-sm flex items-start gap-3">
                 <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
@@ -516,7 +593,7 @@ function IssueDetails() {
               </div>
             ) : (
               canUpdateStatus && (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm space-y-3">
+                <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm space-y-3">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Update Issue Status
                   </h3>
@@ -524,9 +601,9 @@ function IssueDetails() {
                     <button
                       onClick={() => updateStatus("in-progress")}
                       disabled={isUpdatingStatus || issue.status === "in-progress"}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
                         issue.status === "in-progress"
-                          ? "bg-sky-600 text-white shadow-sm ring-2 ring-sky-600/30"
+                          ? "bg-sky-600 text-white shadow-sm"
                           : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-100 dark:hover:bg-sky-900/30"
                       }`}
                     >
@@ -535,7 +612,7 @@ function IssueDetails() {
                     <button
                       onClick={() => updateStatus("resolved")}
                       disabled={isUpdatingStatus}
-                      className="py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-600/30"
+                      className="py-2.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
                     >
                       Mark Resolved
                     </button>
@@ -546,7 +623,7 @@ function IssueDetails() {
 
             {/* Member Assignment Selector (For Admins & Super Admins) */}
             {canAssign && (
-              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 p-6 shadow-sm space-y-3">
+              <div className="bg-white dark:bg-slate-800 rounded-md p-6 shadow-sm space-y-3">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Assign Staff / Member
                 </h3>
@@ -561,7 +638,7 @@ function IssueDetails() {
                         value: member.userId._id,
                         label: member.userId.name || "Unknown",
                         badge: (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium capitalize">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium capitalize">
                             {member.role}
                           </span>
                         ),
@@ -571,7 +648,7 @@ function IssueDetails() {
                   <button
                     onClick={assignIssue}
                     disabled={isAssigning || !assignMemberId}
-                    className="w-full bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2.5 px-4 rounded-md transition-all shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Send size={14} />
                     {isAssigning ? "Assigning..." : "Confirm Assignment"}
@@ -590,7 +667,7 @@ function IssueDetails() {
           onClick={() => setIsImageModalOpen(false)}
         >
           <div
-            className="relative max-w-5xl w-full max-h-[90vh] bg-slate-900 rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-2xl flex flex-col items-center overflow-hidden"
+            className="relative max-w-5xl w-full max-h-[90vh] bg-slate-900 rounded-md p-4 sm:p-6 shadow-sm flex flex-col items-center overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -607,13 +684,13 @@ function IssueDetails() {
                   href={issue.imageUrl || issue.image}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 rounded-xl border border-sky-500/20 transition-all"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 rounded-md transition-all"
                 >
                   <ExternalLink size={14} /> Open Original
                 </a>
                 <button
                   onClick={() => setIsImageModalOpen(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                  className="p-2 rounded-md text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
                   title="Close Modal"
                 >
                   <X size={18} />
@@ -626,7 +703,7 @@ function IssueDetails() {
               <img
                 src={issue.imageUrl || issue.image}
                 alt={issue.title}
-                className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-xl border border-slate-800"
+                className="max-w-full max-h-[72vh] object-contain rounded-md shadow-sm"
               />
             </div>
           </div>

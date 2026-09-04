@@ -124,21 +124,21 @@ function IssueAssign() {
 
             <button
               onClick={() => updateStatus("open")}
-              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-md text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer shadow-sm"
             >
               Open
             </button>
 
             <button
               onClick={() => updateStatus("in-progress")}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-3.5 py-1.5 bg-sky-600 text-white rounded-md text-xs font-semibold hover:bg-sky-500 cursor-pointer shadow-sm"
             >
               In Progress
             </button>
 
             <button
               onClick={() => updateStatus("resolved")}
-              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-md text-xs font-semibold hover:bg-emerald-500 cursor-pointer shadow-sm"
             >
               Resolved
             </button>

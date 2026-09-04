@@ -58,7 +58,15 @@ export class IssueService {
       };
     }
 
-    const slaHours = society.defaultSLAs[data.category as keyof typeof society.defaultSLAs] || 24;
+    const defaultSLAsFallback: Record<string, number> = {
+      plumbing: 24,
+      electricity: 12,
+      lift: 4,
+      security: 2,
+      cleanliness: 48,
+      water: 6,
+    };
+    const slaHours = society.defaultSLAs?.[data.category as keyof typeof society.defaultSLAs] || defaultSLAsFallback[data.category] || 24;
     const slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);
     const priorityScore = calculatePriority({
       category: data.category,
@@ -69,12 +77,17 @@ export class IssueService {
     let imageUrl = undefined;
     if (data.image) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(data.image, {
-          folder: "civicpulse_issues",
-        });
-        imageUrl = uploadRes.secure_url;
+        if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+          const uploadRes = await cloudinary.uploader.upload(data.image, {
+            folder: "civicpulse_issues",
+          });
+          imageUrl = uploadRes.secure_url;
+        } else {
+          imageUrl = data.image;
+        }
       } catch (err) {
-        console.error("Cloudinary Upload Error:", err);
+        console.error("Cloudinary Issue Upload Error (falling back to direct image data):", err);
+        imageUrl = data.image;
       }
     }
 
@@ -94,43 +107,73 @@ export class IssueService {
     return { isDuplicate: false, issue };
   }
 
-  static async getSocietyIssues(societyId: string) {
-    const overdueIssues = await Issue.find({
-      society: societyId,
+  static async checkAndEscalateOverdueIssues(societyId?: string) {
+    const now = new Date();
+    const query: any = {
       status: { $ne: "resolved" },
       isEscalated: false,
-      slaDeadline: { $lt: new Date() },
-    });
+      slaDeadline: { $lte: now },
+    };
+
+    if (societyId) {
+      query.society = societyId;
+    }
+
+    const overdueIssues = await Issue.find(query);
 
     for (const issue of overdueIssues) {
       issue.isEscalated = true;
-      issue.breachedAt = new Date();
+      issue.breachedAt = issue.breachedAt || now;
       issue.priorityScore = calculatePriority({
         category: issue.category,
         reportCount: issue.reportCount,
         isBreached: true,
       });
 
-      await AuditLog.create({
-        issue: issue._id,
-        action: "escalation",
-        oldValue: "SLA Active",
-        newValue: "SLA Breached",
-      });
+      try {
+        await AuditLog.create({
+          issue: issue._id,
+          action: "escalation",
+          oldValue: "SLA Active",
+          newValue: "SLA Breached",
+        });
+      } catch (logErr) {
+        console.error("Failed to create audit log for escalation:", logErr);
+      }
 
       await issue.save();
     }
 
-    return Issue.find({ society: societyId })
-      .populate("reportedBy", "name")
-      .populate("assignedTo", "name")
-      .sort({ priorityScore: -1 });
+    return overdueIssues.length;
+  }
+
+  static async getSocietyIssues(societyId: string) {
+    await this.checkAndEscalateOverdueIssues(societyId);
+
+    const ONE_DAY_AGO = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    return Issue.find({
+      society: societyId,
+      $nor: [
+        { status: "resolved", updatedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $lt: ONE_DAY_AGO } },
+        { isEscalated: true, breachedAt: { $exists: false }, slaDeadline: { $lt: ONE_DAY_AGO } }
+      ]
+    })
+      .populate("reportedBy", "name email profilePic gender")
+      .populate("assignedTo", "name email profilePic role gender")
+      .sort({ priorityScore: -1, createdAt: -1 });
   }
 
   static async updateIssueStatus(issueId: string, userId: string, status: string) {
     const issue = await Issue.findById(issueId);
     if (!issue) {
       throw new Error("Issue not found");
+    }
+
+    const isBreached = issue.isEscalated || (issue.slaDeadline && new Date(issue.slaDeadline) <= new Date());
+    if (isBreached) {
+      throw new Error("This issue's SLA has been breached and cannot be modified");
     }
 
     if (issue.status === "resolved") {
@@ -173,6 +216,11 @@ export class IssueService {
       throw new Error("Issue not found");
     }
 
+    const isBreached = issue.isEscalated || (issue.slaDeadline && new Date(issue.slaDeadline) <= new Date());
+    if (isBreached) {
+      throw new Error("This issue's SLA has been breached and cannot be modified");
+    }
+
     if (issue.status === "resolved") {
       throw new Error("Cannot reassign a resolved issue");
     }
@@ -203,38 +251,53 @@ export class IssueService {
     return issue;
   }
 
-  static async getIssueById(issueId: string, user: { id: string; role?: string; society?: string }) {
+  static async getIssueById(issueId: string, user: { id: string; role?: string; society?: string; platformRole?: string }) {
     const issue = await Issue.findById(issueId)
-      .populate("reportedBy", "name flatNumber")
-      .populate("assignedTo", "name role");
-
+      .populate("reportedBy", "name email flatNumber profilePic gender")
+      .populate("assignedTo", "name email role profilePic gender")
     if (!issue) {
       throw new Error("Issue not found");
     }
 
-    if (issue.society.toString() !== user.society) {
-      throw new Error("Access denied");
-    }
+    const isSuperAdmin = user.platformRole === "SUPER_ADMIN";
 
-    if (user.role === "resident") {
-      const isReporter = issue.reporters.some((r) => r.toString() === user.id);
-      if (!isReporter) {
-        throw new Error("Not allowed to view this issue");
+    if (!isSuperAdmin) {
+      const rawSociety = issue.society as any;
+      const issueSocietyId = typeof rawSociety === "object" ? rawSociety?._id?.toString() : rawSociety?.toString();
+
+      const isSameSociety = Boolean(user.society && issueSocietyId && issueSocietyId === user.society);
+
+      if (!isSameSociety) {
+        const hasMembership = await Membership.exists({
+          userId: user.id,
+          societyId: issueSocietyId,
+        });
+
+        if (!hasMembership) {
+          throw new Error("Access denied: You do not belong to this organization.");
+        }
       }
     }
 
-    if (user.role === "member") {
-      if (!issue.assignedTo) {
-        throw new Error("Not assigned to this issue");
+    if (issue.status !== "resolved" && !issue.isEscalated && issue.slaDeadline && new Date() >= issue.slaDeadline) {
+      issue.isEscalated = true;
+      issue.breachedAt = issue.breachedAt || new Date();
+      issue.priorityScore = calculatePriority({
+        category: issue.category,
+        reportCount: issue.reportCount,
+        isBreached: true,
+      });
+      try {
+        await AuditLog.create({
+          issue: issue._id,
+          action: "escalation",
+          oldValue: "SLA Active",
+          newValue: "SLA Breached",
+        });
+      } catch (e) {
+        console.error("Audit log error on getIssueById:", e);
       }
-      const assignedId =
-        typeof issue.assignedTo === "object" && (issue.assignedTo as any)._id
-          ? (issue.assignedTo as any)._id.toString()
-          : (issue.assignedTo as any).toString();
-
-      if (assignedId !== user.id) {
-        throw new Error("Not assigned to this issue");
-      }
+      await issue.save();
     }
 
     return {
@@ -249,15 +312,24 @@ export class IssueService {
       reportedBy: issue.reportedBy,
       assignedTo: issue.assignedTo,
       reporters: issue.reporters,
+      society: issue.society,
       slaDeadline: issue.slaDeadline,
+      isEscalated: issue.isEscalated,
+      breachedAt: issue.breachedAt,
       imageUrl: issue.imageUrl,
       createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
     };
   }
 
   static async toggleReporter(issueId: string, userId: string) {
     const issue = await Issue.findById(issueId);
     if (!issue) throw new Error("Issue not found");
+
+    const isBreached = issue.isEscalated || (issue.slaDeadline && new Date(issue.slaDeadline) <= new Date());
+    if (isBreached) {
+      throw new Error("This issue's SLA has been breached and cannot be modified");
+    }
 
     if (issue.status === "resolved") {
       throw new Error("Cannot update report count for a resolved issue");
