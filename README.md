@@ -1,66 +1,80 @@
 # CivicPulse
 
-CivicPulse is a real-time, priority-aware community issue resolution platform that intelligently clusters duplicate complaints, ranks issues by severity, enforces SLAs, and improves accountability for hostels, residential societies, and campuses.
+CivicPulse is a real-time, priority-aware community governance and issue resolution platform. Built for **Housing Societies**, **Student Hostels**, and **University Campuses**, CivicPulse automates SLA enforcement, provides live countdown ticket tracking, offers a searchable community member directory, and delivers multi-tier administrative governance from residents to platform Super Admins.
 
 ---
 
 ## Table of Contents
 
+- [Key Features](#key-features)
 - [Architecture Overview](#architecture-overview)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Database Schema](#database-schema)
 - [API Endpoints](#api-endpoints)
   - [Authentication](#authentication)
-  - [Society Management](#society-management)
-  - [Issue Management](#issue-management)
-  - [Dashboard](#dashboard)
+  - [User Profile Management](#user-profile-management)
+  - [Society & Community Management](#society--community-management)
+  - [Issue Management & Tracking](#issue-management--tracking)
+  - [Super Admin Command Center](#super-admin-command-center)
+  - [Dashboard & Analytics](#dashboard--analytics)
   - [Audit Logs](#audit-logs)
-  - [User Management](#user-management)
-- [Authentication & Authorization](#authentication--authorization)
-- [Priority & SLA System](#priority--sla-system)
+- [Authentication & Role-Based Access Control (RBAC)](#authentication--role-based-access-control-rbac)
+- [Priority & Automated SLA Engine](#priority--automated-sla-engine)
 - [Frontend Architecture](#frontend-architecture)
+- [Running the Application](#running-the-application)
+
+---
+
+## Key Features
+
+- ⏱️ **Automated SLA Countdown Engine**: Priority-driven resolution countdown timers with real-time status indicators (`On Schedule`, `Approaching Breach`, `Breached`).
+- 🏢 **Multi-Category Organizations**: Natively supports **Housing Societies** (residential flats), **Student Hostels** (rooms/wings with warden workflows), and **University Campuses** (departments and labs).
+- 👥 **Community Member Directory**: Full roster of residents, members, staff, and admins with live search (by name, `@username`, email, flat/room), role filter pills, and custom user avatars.
+- 🛡️ **Single-Owner Super Admin Governance**: Platform-wide ecosystem analytics, category filtering, detail inspection modals (Issues, Organizations, Users), and secure Super Admin ownership transfer.
+- 📜 **Timestamped Audit Timelines**: Detailed historical milestone tracking for every ticket (Logged &rarr; Auto-Assigned &rarr; On-Site Inspection &rarr; Resolved & Confirmed).
+- 👤 **Custom User Profiles**: Profile picture management, default avatars with gender options (`male`, `female`), verified `@username` handles, and password management.
+- 🌓 **Modern Responsive UI**: Dark/Light mode theme toggle, smooth micro-animations, accessible toast feedback, and directional navigation.
 
 ---
 
 ## Architecture Overview
 
-CivicPulse follows a **client-server architecture** with:
+CivicPulse is architected as a modern, decoupled client-server platform:
 
-- **Frontend**: React + Redux Toolkit + React Router (SPA)
-- **Backend**: Express.js + TypeScript REST API
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT-based cookie authentication
+- **Frontend**: React 19 Single Page Application (Vite + TypeScript) powered by Redux Toolkit for centralized state management, TailwindCSS styling, and Lucide React icons.
+- **Backend**: Modular Express.js REST API with TypeScript, controller-service pattern, and Mongoose ODM.
+- **Database**: MongoDB with indexed schema models and referential relationships.
+- **Authentication**: Stateless JWT token authentication delivered securely via HTTP-only cookies.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend (React)                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
-│  │  Pages   │  │Components│  │  Redux   │  │  Hooks   │        │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘        │
-│       └────────────┴────────────┴────────────┘               │
-│                          │                                      │
-│                    ┌─────▼─────┐                               │
-│                    │  API Layer │                               │
-│                    └─────┬─────┘                               │
-└──────────────────────────┼────────────────────────────────────┘
-                           │ HTTP + Cookies
-┌──────────────────────────┼────────────────────────────────────┐
-│                    ┌─────▼─────┐        Backend (Express)      │
-│                    │  Routes   │                               │
-│                    └─────┬─────┘                               │
-│       ┌──────────────────┼──────────────────┐                  │
-│  ┌────▼─────┐      ┌────▼─────┐      ┌────▼─────┐            │
-│  │ Auth     │      │ Society  │      │ Issues  │            │
-│  │ Middle   │      │ Controller│      │ Controller│           │
-│  └────┬─────┘      └────┬─────┘      └────┬─────┘            │
-│       │                 │                 │                   │
-│       └─────────────────┴─────────────────┘                   │
-│                          │                                      │
-│                    ┌─────▼─────┐                               │
-│                    │ MongoDB   │                               │
-│                    └───────────┘                               │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Frontend (React 19 + Vite)                      │
+│   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌────────┐ │
+│   │    Pages     │   │  Components  │   │ Redux Store  │   │ Hooks  │ │
+│   └──────┬───────┘   └──────┬───────┘   └──────┬───────┘   └───┬────┘ │
+│          └──────────────────┴──────────────────┴───────────────┘      │
+│                                     │                                  │
+│                               ┌─────▼─────┐                            │
+│                               │ Axios API │                            │
+│                               └─────┬─────┘                            │
+└─────────────────────────────────────┼──────────────────────────────────┘
+                                      │ HTTP + Credentials (JWT Cookie)
+┌─────────────────────────────────────┼──────────────────────────────────┐
+│                               ┌─────▼─────┐     Backend (Express + TS) │
+│                               │  Routes   │                            │
+│                               └─────┬─────┘                            │
+│        ┌────────────────────────────┼───────────────────────────┐      │
+│   ┌────▼─────┐  ┌──────────▼────────┐  ┌──────────▼──────┐ ┌───▼────┐ │
+│   │Auth / RBAC  │Society / Community│  │Issue Controller │ │Super-  │ │
+│   │Middleware│  │   Controller      │  │  & SLA Engine   │ │Admin   │ │
+│   └────┬─────┘  └──────────┬────────┘  └──────────┬──────┘ └───┬────┘ │
+│        └───────────────────┴──────────────────────┴────────────┘      │
+│                                     │                                  │
+│                               ┌─────▼─────┐                            │
+│                               │  MongoDB  │                            │
+│                               └───────────┘                            │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -70,23 +84,24 @@ CivicPulse follows a **client-server architecture** with:
 ### Backend
 | Technology | Purpose |
 |------------|---------|
-| Express.js | Web framework |
-| TypeScript | Type safety |
-| MongoDB | Database |
-| Mongoose | ODM |
-| JWT | Authentication |
-| bcryptjs | Password hashing |
-| cookie-parser | Cookie handling |
+| Node.js & Express.js | Core web application framework |
+| TypeScript | Type safety and structured architecture |
+| MongoDB & Mongoose | Document database and object modeling |
+| JSON Web Tokens (JWT) | Secure, stateless authentication |
+| bcryptjs | Salted password hashing |
+| cookie-parser | HTTP-only cookie parsing |
 
 ### Frontend
 | Technology | Purpose |
 |------------|---------|
-| React 19 | UI Framework |
-| Redux Toolkit | State management |
-| React Router | Routing |
-| Axios | HTTP client |
-| TailwindCSS | Styling |
-| Vite | Build tool |
+| React 19 | UI component library |
+| TypeScript | Type-safe interfaces and state |
+| Vite | Lightning-fast build tooling and HMR |
+| Redux Toolkit | Global application state management |
+| React Router v7 | Client-side routing and guarded routes |
+| TailwindCSS v4 | Modern styling and design system |
+| Lucide React | Modern iconography |
+| react-hot-toast | Non-blocking user feedback notifications |
 
 ---
 
@@ -97,52 +112,58 @@ CivicPulse/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── db.ts              # MongoDB connection
+│   │   │   └── db.ts                   # MongoDB connection lifecycle
 │   │   ├── controllers/
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── society.controller.ts
-│   │   │   ├── issue.controller.ts
-│   │   │   ├── dashboard.controller.ts
-│   │   │   ├── audit.controller.ts
-│   │   │   └── user.controller.ts
+│   │   │   ├── audit.controller.ts     # Audit log handlers
+│   │   │   ├── auth.controller.ts      # Auth (signup, login, logout, me)
+│   │   │   ├── dashboard.controller.ts # Admin metrics and distribution
+│   │   │   ├── issue.controller.ts     # Issue creation, assignment, resolution
+│   │   │   ├── society.controller.ts   # Society CRUD, directory roster, roles
+│   │   │   ├── superadmin.controller.ts# Ecosystem stats, orgs, users, promote
+│   │   │   └── user.controller.ts      # Profile, password, user lists
 │   │   ├── middlewares/
-│   │   │   ├── auth.middleware.ts  # JWT verification
-│   │   │   └── authorize.middleware.ts # Role check
+│   │   │   ├── auth.middleware.ts       # JWT cookie verification
+│   │   │   └── authorize.middleware.ts  # Role checks (society & platform)
 │   │   ├── models/
-│   │   │   ├── user.model.ts
-│   │   │   ├── society.model.ts
-│   │   │   ├── issue.model.ts
-│   │   │   ├── membership.model.ts
-│   │   │   └── audit.model.ts
+│   │   │   ├── audit.model.ts          # Audit trail schema
+│   │   │   ├── issue.model.ts          # Issue & SLA tracking schema
+│   │   │   ├── membership.model.ts     # Society-User junction schema
+│   │   │   ├── society.model.ts        # Organization/Community schema
+│   │   │   └── user.model.ts           # User account schema
 │   │   ├── routes/
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── society.routes.ts
-│   │   │   ├── issue.routes.ts
-│   │   │   ├── dashboard.routes.ts
 │   │   │   ├── audit.routes.ts
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── dashboard.routes.ts
+│   │   │   ├── issue.routes.ts
+│   │   │   ├── society.routes.ts
+│   │   │   ├── superadmin.routes.ts
 │   │   │   └── user.routes.ts
-│   │   ├── utils/
-│   │   │   ├── priority.ts        # Priority calculation
-│   │   │   └── codeGenerator.ts   # Unique society codes
-│   │   ├── types/
-│   │   │   └── express.d.ts      # TypeScript declarations
-│   │   └── server.ts             # Entry point
+│   │   ├── services/                   # Business logic and query layer
+│   │   ├── utils/                      # SLA calculation, code generation
+│   │   └── server.ts                   # Application server bootstrap
 │   ├── package.json
 │   └── tsconfig.json
 │
 └── frontend/
     ├── src/
     │   ├── app/
-    │   │   └── store.ts           # Redux store
-    │   ├── components/           # Reusable UI components
-    │   ├── features/             # Redux slices (API + state)
-    │   ├── hooks/                # Custom React hooks
-    │   ├── layouts/              # Page layouts
-    │   ├── pages/                # Route pages
-    │   ├── routes/               # Route definitions
-    │   ├── services/             # API service layer
-    │   ├── types/                # TypeScript types
-    │   └── utils/                # Utility functions
+    │   │   └── store.ts                # Redux Toolkit store config
+    │   ├── components/
+    │   │   ├── common/                 # UserAvatar, badges, UI elements
+    │   │   ├── layout/                 # Navbar, Sidebar, ProtectedRoute
+    │   │   ├── profile/                # UserProfileModal
+    │   │   └── ui/                     # Card, ConfirmModal, CustomSelect
+    │   ├── features/                   # Redux slices (auth, issue, society)
+    │   ├── pages/
+    │   │   ├── admin/                  # SuperAdminDashboard & Detail Modals
+    │   │   ├── auth/                   # Unified AuthPage (Login/Signup)
+    │   │   ├── dashboard/              # Admin, Member, Resident Dashboards
+    │   │   ├── issues/                 # IssueList, IssueDetails, ReportIssue
+    │   │   ├── landing/                # LandingPage with interactive sandbox
+    │   │   └── society/                # ManageSociety, JoinSociety
+    │   ├── routes/                     # App routing tree
+    │   ├── services/                   # Axios API service clients
+    │   └── types/                      # Frontend TypeScript definitions
     ├── package.json
     └── vite.config.ts
 ```
@@ -151,88 +172,94 @@ CivicPulse/
 
 ## Database Schema
 
-### 1. User Model
+### 1. User Model (`User`)
 ```typescript
 {
   _id: ObjectId,
-  name: string,           // Required
-  email: string,         // Required, unique
-  password: string,      // Hashed, select: false
-  currentSocietyId?: ObjectId,  // Reference to Society
-  isActive: boolean,     // Default: true
+  name: string,                         // Full Name
+  username: string,                     // Unique, lowercase handle (e.g. @amaan)
+  email: string,                        // Unique, lowercase
+  password: string,                     // Hashed, select: false
+  profilePic?: string,                  // Custom avatar URL / data URI
+  gender: "male" | "female",            // Avatar defaults (male / female)
+  platformRole: "SUPER_ADMIN" | "USER", // Ecosystem-wide permission level
+  currentSocietyId?: ObjectId,          // Currently active community context
+  isActive: boolean,                    // Account status (default: true)
   createdAt: Date,
   updatedAt: Date
 }
 ```
 
-### 2. Society Model
+### 2. Society Model (`Society`)
 ```typescript
 {
   _id: ObjectId,
-  name: string,          // Required
-  address: string,      // Required
-  city: string,         // Required
-  state: string,        // Required
-  totalFlats: number,   // Required
-  code: string,         // Required, unique (6-char)
+  name: string,                         // e.g., "Emerald Heights"
+  type: "SOCIETY" | "HOSTEL" | "CAMPUS",// Category of community
+  address: string,
+  city: string,
+  state: string,
+  totalFlats: number,                   // Units/Flats/Rooms count
+  code: string,                         // Unique 6-character joining code
+  isActive: boolean,                    // Status toggle
   defaultSLAs: {
-    plumbing: number,   // Default: 24 hours
-    electricity: number,// Default: 12 hours
-    lift: number,       // Default: 4 hours
-    security: number,  // Default: 2 hours
-    cleanliness: number,// Default: 48 hours
-    water: number       // Default: 6 hours
+    plumbing: number,                   // Hours (default: 24)
+    electricity: number,                // Hours (default: 12)
+    lift: number,                       // Hours (default: 4)
+    security: number,                   // Hours (default: 2)
+    cleanliness: number,                // Hours (default: 48)
+    water: number                       // Hours (default: 6)
   },
   createdAt: Date,
   updatedAt: Date
 }
 ```
 
-### 3. Membership Model (Junction Table)
+### 3. Membership Model (`Membership`)
 ```typescript
 {
   _id: ObjectId,
-  userId: ObjectId,     // Reference to User
-  societyId: ObjectId, // Reference to Society
-  role: "resident" | "member" | "admin",
+  userId: ObjectId,                     // Reference -> User
+  societyId: ObjectId,                  // Reference -> Society
+  role: "resident" | "member" | "staff" | "admin", // Organization-scoped role
   createdAt: Date,
   updatedAt: Date
 }
 ```
 
-### 4. Issue Model
+### 4. Issue Model (`Issue`)
 ```typescript
 {
   _id: ObjectId,
-  title: string,        // Required
-  description: string,  // Required
+  title: string,
+  description: string,
   category: "plumbing" | "electricity" | "lift" | "security" | "cleanliness" | "water",
   status: "open" | "in-progress" | "resolved",
   severity: "low" | "medium" | "high",
-  priorityScore: number,  // Calculated
-  reportCount: number,     // Auto-incremented
-  reportedBy: ObjectId,    // Reference to User
-  reporters: ObjectId[],   // Array of users who reported
-  assignedTo?: ObjectId,  // Reference to User
-  assignedBy?: ObjectId,  // Reference to User
+  priorityScore: number,                // Computed priority score
+  reportCount: number,                  // Duplicate report accumulator
+  reportedBy: ObjectId,                 // Reference -> User
+  reporters: ObjectId[],                // Users who reported/upvoted
+  assignedTo?: ObjectId,                // Reference -> User (Staff/Admin)
+  assignedBy?: ObjectId,                // Reference -> User
   assignedAt?: Date,
-  society: ObjectId,      // Reference to Society
-  slaDeadline: Date,      // Calculated from SLA
-  isEscalated: boolean,   // True if breached
+  society: ObjectId,                    // Reference -> Society
+  slaDeadline: Date,                    // Computed SLA expiry date
+  isEscalated: boolean,                 // True if SLA target breached
   breachedAt?: Date,
   createdAt: Date,
   updatedAt: Date
 }
 ```
 
-### 5. AuditLog Model
+### 5. AuditLog Model (`AuditLog`)
 ```typescript
 {
   _id: ObjectId,
-  issueId: ObjectId,     // Reference to Issue
-  action: string,       // e.g., "status_changed", "assigned"
-  performedBy: ObjectId,// Reference to User
-  details: object,     // Action-specific data
+  issueId: ObjectId,                    // Reference -> Issue
+  action: string,                       // e.g. "status_changed", "assigned"
+  performedBy: ObjectId,                // Reference -> User
+  details: object,                      // State diff / metadata
   createdAt: Date
 }
 ```
@@ -249,297 +276,76 @@ CivicPulse/
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| POST | `/auth/signup` | ❌ | - | Register new user |
-| POST | `/auth/login` | ❌ | - | Login user |
-| POST | `/auth/logout` | ✅ | - | Logout user |
-| GET | `/auth/me` | ✅ | - | Get current user |
-
-#### POST `/auth/signup`
-**Request:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "secure123"
-}
-```
-**Response (201):**
-```json
-{
-  "message": "User created successfully",
-  "user": {
-    "id": "...",
-    "name": "John Doe",
-    "email": "john@example.com"
-  }
-}
-```
-- Sets HTTP-only cookie `token` (expires: 7 days)
-
-#### POST `/auth/login`
-**Request:**
-```json
-{
-  "email": "john@example.com",
-  "password": "secure123"
-}
-```
-**Response (200):**
-```json
-{
-  "message": "Login successful",
-  "user": {
-    "id": "...",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "currentSocietyId": "...",
-    "memberships": [...],
-    "role": "resident"
-  }
-}
-```
-
-#### GET `/auth/me`
-**Headers:** `Cookie: token=<jwt>`
-**Response (200):**
-```json
-{
-  "id": "...",
-  "name": "John Doe",
-  "email": "john@example.com",
-  "currentSocietyId": "...",
-  "memberships": [...],
-  "role": "admin"
-}
-```
+| POST | `/auth/signup` | ❌ | - | Register new user with username and gender |
+| POST | `/auth/login` | ❌ | - | Authenticate user & set HTTP-only JWT cookie |
+| POST | `/auth/logout` | ✅ | - | Clear authentication cookie |
+| GET | `/auth/me` | ✅ | - | Retrieve currently authenticated user context |
 
 ---
 
-### Society Management
+### User Profile Management
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| POST | `/society/create` | ✅ | - | Create new society |
-| POST | `/society/join` | ✅ | - | Join society by code |
-| POST | `/society/current` | ✅ | - | Switch active society |
-| GET | `/society/current` | ✅ | - | Get active society |
-| GET | `/society/residents` | ✅ | - | List all residents |
-| GET | `/society/:id` | ✅ | - | Get society by ID |
-| GET | `/society/:id/issues` | ✅ | - | Get society issues |
-| PATCH | `/society/update` | ✅ | admin | Update society |
-| PUT | `/society/residents/:id` | ✅ | admin | Update resident role |
-| DELETE | `/society/residents/:id` | ✅ | admin | Remove resident |
-
-#### POST `/society/create`
-**Request:**
-```json
-{
-  "name": "Sunrise Apartments",
-  "address": "123 Main Road",
-  "city": "Mumbai",
-  "state": "Maharashtra",
-  "totalFlats": 50
-}
-```
-**Response (201):**
-```json
-{
-  "currentSocietyId": "...",
-  "memberships": [
-    {
-      "societyId": { "_id": "...", "name": "Sunrise Apartments", "code": "ABC123" },
-      "role": "admin"
-    }
-  ]
-}
-```
-- Creates society with unique 6-character code
-- Automatically adds creator as **admin** member
-
-#### POST `/society/join`
-**Request:**
-```json
-{
-  "societyCode": "ABC123"
-}
-```
-**Response (200):**
-```json
-{
-  "currentSocietyId": "...",
-  "memberships": [...]
-}
-```
-- Adds user to society with **resident** role
-
-#### POST `/society/current`
-**Request:**
-```json
-{
-  "societyId": "..."
-}
-```
-**Response (200):**
-```json
-{
-  "currentSocietyId": "..."
-}
-```
-- Switches user's active society context
-
-#### GET `/society/residents`
-**Response (200):**
-```json
-{
-  "residents": [
-    {
-      "_id": "...",
-      "userId": { "_id": "...", "name": "John", "email": "john@example.com" },
-      "role": "admin",
-      "createdAt": "..."
-    }
-  ]
-}
-```
+| GET | `/user/profile` | ✅ | - | Get profile data of authenticated user |
+| PUT | `/user/profile` | ✅ | - | Update name, username, gender, profile avatar |
+| PUT | `/user/change-password` | ✅ | - | Change account password |
+| GET | `/user` | ✅ | admin/member | List users in organization |
 
 ---
 
-### Issue Management
+### Society & Community Management
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| GET | `/issues` | ✅ | - | Get society issues |
-| GET | `/issues/:id` | ✅ | - | Get issue by ID |
-| POST | `/issues` | ✅ | resident | Create new issue |
-| PATCH | `/issues/:id` | ✅ | member/admin | Update status |
-| PATCH | `/issues/:id/assign` | ✅ | admin | Assign issue |
-| PATCH | `/issues/:id/report` | ✅ | - | Report/duplicate issue |
-
-#### GET `/issues`
-**Query Parameters:** None (uses user's society)
-**Response (200):**
-```json
-[
-  {
-    "_id": "...",
-    "title": "Water leakage in block A",
-    "description": "Tap in kitchen leaking",
-    "category": "plumbing",
-    "status": "open",
-    "severity": "high",
-    "priorityScore": 25,
-    "reportCount": 3,
-    "slaDeadline": "2026-05-03T...",
-    "isEscalated": false,
-    "createdAt": "..."
-  }
-]
-```
-
-#### POST `/issues`
-**Request:**
-```json
-{
-  "title": "Lift not working",
-  "description": "Lift in Block B is stuck between floors",
-  "category": "lift",
-  "severity": "high"
-}
-```
-**Response (201):**
-```json
-{
-  "_id": "...",
-  "title": "Lift not working",
-  "description": "...",
-  "category": "lift",
-  "status": "open",
-  "severity": "high",
-  "priorityScore": 10,
-  "reportCount": 1,
-  "society": "...",
-  "slaDeadline": "2026-05-02T14:00:00.000Z",
-  "isEscalated": false
-}
-```
-- Calculates SLA deadline based on society's default SLA for category
-- Calculates initial priority score
-
-#### PATCH `/issues/:id`
-**Request:**
-```json
-{
-  "status": "in-progress"
-}
-```
-**Response (200):**
-```json
-{
-  "_id": "...",
-  "status": "in-progress",
-  ...
-}
-```
-- Updates issue status
-- Creates audit log entry
-
-#### PATCH `/issues/:id/assign`
-**Request:**
-```json
-{
-  "assignedTo": "user_id_here"
-}
-```
-**Response (200):**
-```json
-{
-  "_id": "...",
-  "assignedTo": "...",
-  "assignedBy": "...",
-  "assignedAt": "2026-05-02T...",
-  "status": "in-progress"
-}
-```
-
-#### PATCH `/issues/:id/report`
-**Response (200):**
-```json
-{
-  "message": "3 people have reported this issue.",
-  "issue": { ... }
-}
-```
-- Increments `reportCount` if not already reported
-- Adds user to `reporters` array
-- Recalculates priority score
+| POST | `/society/create` | ✅ | - | Create new community (Society, Hostel, Campus) |
+| POST | `/society/join` | ✅ | - | Join organization via unique 6-character code |
+| POST | `/society/current` | ✅ | - | Switch active organization context |
+| GET | `/society/current` | ✅ | - | Fetch details of active organization |
+| GET | `/society/residents` | ✅ | resident+ | Retrieve full community member directory |
+| GET | `/society/:id` | ✅ | - | Get organization details by ID |
+| GET | `/society/:id/issues` | ✅ | - | Fetch all issues filed in organization |
+| PATCH | `/society/update` | ✅ | admin | Update organization parameters and SLAs |
+| PUT | `/society/residents/:id` | ✅ | admin | Update member role (`resident`, `member`, `staff`, `admin`) |
+| DELETE | `/society/residents/:id` | ✅ | admin | Remove member from organization |
 
 ---
 
-### Dashboard
+### Issue Management & Tracking
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| GET | `/dashboard` | ✅ | admin | Get admin statistics |
+| GET | `/issues` | ✅ | - | Get issues in user's active community |
+| GET | `/issues/:id` | ✅ | - | Get detailed ticket record with SLA & assignee |
+| POST | `/issues` | ✅ | resident+ | File new issue (calculates SLA deadline & priority) |
+| PATCH | `/issues/:id` | ✅ | staff/member/admin | Update ticket status (`open` &rarr; `in-progress` &rarr; `resolved`) |
+| PATCH | `/issues/:id/assign` | ✅ | admin | Assign ticket to verified staff or admin |
+| PATCH | `/issues/:id/report` | ✅ | - | Report duplicate issue (increments score) |
 
-#### GET `/dashboard`
-**Response (200):**
-```json
-{
-  "totalIssues": 45,
-  "openIssues": 28,
-  "resolvedIssues": 17,
-  "breachedIssues": 5,
-  "highPriorityIssues": 12,
-  "categoryDistribution": [
-    { "_id": "plumbing", "count": 15 },
-    { "_id": "electricity", "count": 10 },
-    { "_id": "lift", "count": 8 },
-    { "_id": "security", "count": 5 },
-    { "_id": "cleanliness", "count": 4 },
-    { "_id": "water", "count": 3 }
-  ]
-}
-```
+---
+
+### Super Admin Command Center
+
+*(Requires `platformRole: "SUPER_ADMIN"`)*
+
+| Method | Endpoint | Auth | Platform Role | Description |
+|--------|----------|------|---------------|-------------|
+| GET | `/superadmin/stats` | ✅ | SUPER_ADMIN | Platform-wide analytics, totals, breach rate |
+| GET | `/superadmin/organizations` | ✅ | SUPER_ADMIN | List all organizations with category filters |
+| GET | `/superadmin/users` | ✅ | SUPER_ADMIN | List all platform users with society counts |
+| GET | `/superadmin/issues` | ✅ | SUPER_ADMIN | Global issue log with SLA status & organization info |
+| POST | `/superadmin/organizations` | ✅ | SUPER_ADMIN | Directly create organizations with admin |
+| PATCH | `/superadmin/organizations/:id/status` | ✅ | SUPER_ADMIN | Toggle organization active/inactive status |
+| DELETE | `/superadmin/organizations/:id` | ✅ | SUPER_ADMIN | Remove organization and memberships |
+| POST | `/superadmin/promote` | ✅ | SUPER_ADMIN | Securely transfer Super Admin ownership |
+
+---
+
+### Dashboard & Analytics
+
+| Method | Endpoint | Auth | Role | Description |
+|--------|----------|------|------|-------------|
+| GET | `/dashboard` | ✅ | admin | Aggregate statistics, category breakdowns, breach counts |
 
 ---
 
@@ -547,219 +353,124 @@ CivicPulse/
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| GET | `/issues/:id/logs` | ✅ | member/admin | Get issue history |
-
-#### GET `/issues/:id/logs`
-**Response (200):**
-```json
-{
-  "logs": [
-    {
-      "_id": "...",
-      "issueId": "...",
-      "action": "status_changed",
-      "performedBy": { "_id": "...", "name": "Admin User" },
-      "details": { "from": "open", "to": "in-progress" },
-      "createdAt": "2026-05-02T..."
-    }
-  ]
-}
-```
+| GET | `/issues/:id/logs` | ✅ | member+ | Retrieve immutable chronological action history |
 
 ---
 
-### User Management
+## Authentication & Role-Based Access Control (RBAC)
 
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| GET | `/users` | ✅ | admin | Get all users |
+### Dual-Layer Permission Model
 
-#### GET `/users`
-**Response (200):**
-```json
-{
-  "users": [
-    {
-      "_id": "...",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "isActive": true,
-      "createdAt": "..."
-    }
-  ]
-}
-```
+CivicPulse operates on a **two-tier role hierarchy**:
+
+1. **Platform Layer (`platformRole`)**:
+   - `SUPER_ADMIN`: Single-owner platform executive with ecosystem-wide visibility across all organizations, global analytics, and ownership transfer authority.
+   - `USER`: Regular platform user.
+
+2. **Organization Layer (`Membership.role`)**:
+   - `admin`: Full administrative control over the community, assign staff, configure SLAs, manage member roles.
+   - `staff`: Maintenance technicians and operational staff; can receive assignments, update status, and log resolution progress.
+   - `member`: Committee members with permissions to update statuses and review audit trails.
+   - `resident`: Regular resident/student; can report issues, join organizations, track SLAs, view community directory, and customize profiles.
 
 ---
 
-## Authentication & Authorization
+## Priority & Automated SLA Engine
 
-### Authentication Flow
+### Dynamic Priority Score
 
-```
-1. User signs up/logins
-         │
-         ▼
-2. Server validates credentials
-         │
-         ▼
-3. Server generates JWT with user ID
-         │
-         ▼
-4. Server sets HTTP-only cookie (7 days)
-         │
-         ▼
-5. All subsequent requests include cookie
-         │
-         ▼
-6. auth.middleware verifies JWT
-         │
-         ▼
-7. req.user populated with { id, society, role }
-```
+Priority is recalculated dynamically using the formula:
 
-### Role-Based Access Control (RBAC)
-
-| Role | Permissions |
-|------|-------------|
-| `resident` | Create issues, report duplicates, view issues |
-| `member` | + Update issue status, view audit logs |
-| `admin` | + Assign issues, manage society, view dashboard, manage users |
-
-### Middleware Chain
-
-```typescript
-// Protected route example
-router.post("/", protect, authorize("resident"), createIssue);
-
-// protect: Verifies JWT cookie, populates req.user
-// authorize(...roles): Checks if req.user.role is in allowed roles
-```
-
----
-
-## Priority & SLA System
-
-### Priority Calculation
-
-Priority is calculated using the formula:
-
-```
-priorityScore = categoryWeight + (reportCount × 2) + (isBreached ? 15 : 0)
-```
+$$\text{Priority Score} = \text{Category Weight} + (\text{Report Count} \times 2) + (\text{isBreached} \times 15)$$
 
 #### Category Weights
 
-| Category | Weight |
-|----------|--------|
-| Lift | 10 |
-| Security | 9 |
-| Water | 8 |
-| Electricity | 7 |
-| Plumbing | 6 |
-| Cleanliness | 4 |
+| Category | Weight | Default SLA Window |
+|----------|--------|-------------------|
+| 🚨 Security | 9 | 2 hours |
+| 🛗 Lift | 10 | 4 hours |
+| 💧 Water | 8 | 6 hours |
+| ⚡ Electricity | 7 | 12 hours |
+| 🔧 Plumbing | 6 | 24 hours |
+| 🧹 Cleanliness | 4 | 48 hours |
 
-#### SLA Deadlines (Default)
+#### Escalation & Pre-Breach Warning
 
-| Category | SLA (hours) |
-|----------|-------------|
-| Security | 2 |
-| Lift | 4 |
-| Water | 6 |
-| Electricity | 12 |
-| Plumbing | 24 |
-| Cleanliness | 48 |
-
-### Escalation Logic
-
-1. When `slaDeadline` passes and issue is not resolved:
-   - `isEscalated` → `true`
-   - `breachedAt` → current timestamp
-   - Priority score increases by **15 points**
-
-2. High priority threshold: `priorityScore >= 20`
+- **Pre-Breach Warning**: As tickets approach their SLA window, visual timers enter critical state (`Approaching Breach`).
+- **Breach Escalation**: When `slaDeadline < Date.now()` and status is not `resolved`:
+  - `isEscalated` is set to `true`.
+  - `breachedAt` timestamp is recorded.
+  - An additional **+15 points** is added to the priority score.
+  - Ticket is flagged in Super Admin and Admin dashboards for urgent intervention.
 
 ---
 
 ## Frontend Architecture
 
-### State Management (Redux)
+### Core Slices (`src/features/`)
 
-```
-store/
-├── authSlice      # User authentication state
-├── issueSlice     # Issues CRUD
-├── societySlice   # Society management
-└── auditSlice     # Audit logs
-```
+- `authSlice`: Handles user session, credentials, `@username`, avatars, and active organization context.
+- `issueSlice`: Handles ticket fetching, filtering, creation, assignment, and status transitions.
+- `societySlice`: Manages active community data, directory roster, and role changes.
 
-### Key Components
+### Key Interactive Modals & Components
 
-| Component | Description |
-|-----------|-------------|
-| `DashboardStats` | Admin statistics display |
-| `IssueCard` | Issue summary card |
-| `Navbar` | Top navigation |
-| `Sidebar` | Side navigation menu |
-| `SLATimer` | Countdown to SLA deadline |
-| `SocietySwitcher` | Switch between societies |
-
-### Page Structure
-
-```
-pages/
-├── auth/
-│   ├── Login.tsx
-│   └── Signup.tsx
-├── dashboard/
-│   ├── AdminDashboard.tsx
-│   ├── MemberDashboard.tsx
-│   └── ResidentDashboard.tsx
-├── issues/
-│   ├── IssueList.tsx
-│   ├── IssueDetails.tsx
-│   ├── ReportIssue.tsx
-│   └── ManageIssues.tsx
-└── society/
-    ├── CreateSociety.tsx
-    ├── JoinSociety.tsx
-    └── ManageSociety.tsx
-```
+- `UserProfileModal`: Drawer/modal for profile picture upload, gender selection, handle, and password updates.
+- `UserAvatar`: Universal avatar component supporting custom pictures, initials fallback, and gender defaults.
+- `IssueDetailModal`: Deep-dive modal inspecting tickets, category, SLA countdown, and audit logs.
+- `OrganizationDetailModal`: Inspects community details, admins, address, and category.
+- `UserDetailModal`: Inspects user profile details, memberships, and activity.
+- `SLATimer`: Interactive real-time countdown timer with automated color-coded urgency states.
+- `ResidentsSection`: Full searchable directory of all community members with dynamic role filter pills.
 
 ---
 
 ## Running the Application
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
 
-### Backend Setup
+- **Node.js**: v18+ or v20+ LTS
+- **MongoDB**: Local MongoDB instance or MongoDB Atlas URI
+
+### 1. Clone & Install Dependencies
 
 ```bash
+# Clone the repository
+git clone https://github.com/amaan-sid/CivicPulse.git
+cd CivicPulse
+
+# Install backend dependencies
 cd backend
 npm install
-# Create .env file (see .env.example)
-npm run dev
-```
 
-### Frontend Setup
-
-```bash
-cd frontend
+# Install frontend dependencies
+cd ../frontend
 npm install
-npm run dev
 ```
 
-### Environment Variables
+### 2. Configure Environment Variables
+
+Create a `.env` file in the `backend/` folder:
 
 ```env
-# Backend (.env)
 MONGODB_URI=mongodb://localhost:27017/civicpulse
-JWT_SECRET=your-super-secret-key
+JWT_SECRET=your_jwt_secret_key_here
 BACKEND_PORT=4000
 FRONTEND_URL=http://localhost:5173
 NODE_ENV=development
 SALT_ROUNDS=10
 ```
 
+### 3. Run Development Servers
+
+```bash
+# Terminal 1: Start Backend (Port 4000)
+cd backend
+npm run dev
+
+# Terminal 2: Start Frontend (Port 5173)
+cd frontend
+npm run dev
+```
+
+Visit **`http://localhost:5173`** in your browser to access CivicPulse.
