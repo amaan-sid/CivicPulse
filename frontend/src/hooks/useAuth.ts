@@ -12,3 +12,4 @@ export function useAuth() {
     isResident: user?.role === "resident",
   };
 }
+
