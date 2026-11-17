@@ -1,40 +1,74 @@
-import path from 'path';
-import dotenv from 'dotenv';
-import { z } from 'zod';
+import dotenv from "dotenv";
 
-// Load backend/.env first, then fall back to the repository root .env.
-// Values already present in process.env always take precedence.
-dotenv.config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
-dotenv.config({ path: path.resolve(__dirname, '../../../.env'), quiet: true });
+dotenv.config();
 
-const schema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(4000),
-  MONGODB_URI: z.string().min(1).default('mongodb://localhost:27017/civicpulse'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
-});
-
-// Accept legacy variable names (BACKEND_PORT, MONGO_URI) for backwards compatibility.
-const parsed = schema.safeParse({
-  ...process.env,
-  PORT: process.env.PORT ?? process.env.BACKEND_PORT,
-  MONGODB_URI: process.env.MONGODB_URI ?? process.env.MONGO_URI,
-});
-
-if (!parsed.success) {
-  console.error('Invalid environment configuration:');
-  for (const issue of parsed.error.issues) {
-    console.error(`  - ${issue.path.join('.')}: ${issue.message}`);
+const normalizeOrigin = (value: string) => value.trim().replace(/\/$/, "");
+const isHttpOrigin = (value: string) => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
   }
-  process.exit(1);
-}
+};
+
+const defaultCorsOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "https://civic-pulse-ui.vercel.app"
+];
+
+const parseOrigins = (...values: Array<string | undefined>) => {
+  const mergedOrigins = new Set(defaultCorsOrigins.map(normalizeOrigin));
+
+  values
+    .filter(Boolean)
+    .flatMap((value) => value!.split(","))
+    .map(normalizeOrigin)
+    .filter(Boolean)
+    .forEach((origin) => {
+      if (!isHttpOrigin(origin)) {
+        console.warn(`Ignoring invalid CORS origin: ${origin}`);
+        return;
+      }
+
+      mergedOrigins.add(origin);
+    });
+
+  const result = Array.from(mergedOrigins);
+  console.log("CORS Origins loaded:", result);
+  return result;
+};
+
+const parsePort = (value: string | undefined) => {
+  const parsed = Number(value || 4000);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error("BACKEND_PORT must be a valid positive integer.");
+  }
+
+  return parsed;
+};
 
 export const env = {
-  nodeEnv: parsed.data.NODE_ENV,
-  isProduction: parsed.data.NODE_ENV === 'production',
-  port: parsed.data.PORT,
-  mongoUri: parsed.data.MONGODB_URI,
-  corsOrigins: parsed.data.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
-  logLevel: parsed.data.LOG_LEVEL,
-} as const;
+  nodeEnv: process.env.NODE_ENV || "development",
+  port: parsePort(process.env.BACKEND_PORT),
+  mongoUri: process.env.MONGODB_URI || "",
+  jwtSecret: process.env.JWT_SECRET || "",
+  corsOrigins: parseOrigins(process.env.CORS_ORIGINS, process.env.FRONTEND_URL),
+  isProduction: process.env.NODE_ENV === "production"
+};
+
+export const validateEnv = () => {
+  if (!env.mongoUri) {
+    throw new Error("MONGODB_URI is required.");
+  }
+
+  if (!env.jwtSecret) {
+    throw new Error("JWT_SECRET is required.");
+  }
+};

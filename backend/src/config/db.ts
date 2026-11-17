@@ -1,33 +1,28 @@
-import mongoose from 'mongoose';
-import { env } from './env';
-import { logger } from '../utils/logger';
+import mongoose from "mongoose";
+import { env } from "./env";
 
-const states: Record<number, string> = {
-  0: 'disconnected',
-  1: 'connected',
-  2: 'connecting',
-  3: 'disconnecting',
+let connectionPromise: Promise<typeof mongoose> | null = null;
+
+export const db = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  if (connectionPromise) {
+    return connectionPromise;
+  }
+
+  connectionPromise = mongoose
+    .connect(env.mongoUri)
+    .then((connection) => {
+      console.log("MongoDB connected successfully");
+      return connection;
+    })
+    .catch((error: Error) => {
+      connectionPromise = null;
+      console.error("MongoDB connection failed:", error.message);
+      throw error;
+    });
+
+  return connectionPromise;
 };
-
-export async function connectDatabase(): Promise<void> {
-  mongoose.set('strictQuery', true);
-
-  mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
-  mongoose.connection.on('reconnected', () => logger.info('MongoDB reconnected'));
-  mongoose.connection.on('error', (err) => logger.error('MongoDB error', err.message));
-
-  await mongoose.connect(env.mongoUri, { serverSelectionTimeoutMS: 5000 });
-  logger.info(`MongoDB connected (${mongoose.connection.name})`);
-}
-
-export async function disconnectDatabase(): Promise<void> {
-  await mongoose.connection.close();
-}
-
-export function databaseStatus(): string {
-  return states[mongoose.connection.readyState] ?? 'unknown';
-}
-
-export function isDatabaseReady(): boolean {
-  return mongoose.connection.readyState === 1;
-}
