@@ -13,6 +13,7 @@ import { useSelector } from "react-redux"
 import ManageIssues from "@/pages/issues/ManageIssues"
 import IssueDetails from "@/pages/issues/IssueDetails"
 import SuperAdminDashboard from "@/pages/admin/SuperAdminDashboard"
+import NotFound from "@/pages/NotFound"
 
 function App() {
 
@@ -54,6 +55,8 @@ function App() {
               <Route path="/my-societies" element={<ManageSociety />} />
               <Route path="/issuedetails/:id" element={<IssueDetails />} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

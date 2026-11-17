@@ -21,7 +21,13 @@ import {
   Activity,
   HelpCircle,
   Menu,
-  X
+  X,
+  Camera,
+  Cpu,
+  Radio,
+  Map as MapIcon,
+  Award,
+  LayoutDashboard
 } from "lucide-react"
 
 interface DemoMember {
@@ -1310,6 +1316,191 @@ function LandingPage() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* CAPABILITY MATRIX & FUTURE ROADMAP */}
+        <section id="capabilities" className="py-20 px-6 max-w-7xl mx-auto">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Capability Matrix
+            </p>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Comprehensive Government Technology
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
+              Features engineered for national-level innovation standards and secure municipal dispatch
+              integration, pairing live operations with our phased roadmap.
+            </p>
+          </div>
+
+          <div className="mt-10 grid overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-200 dark:bg-slate-800 gap-px sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: LayoutDashboard,
+                title: "Government & Admin Dashboard",
+                desc: "Restricted portals displaying resource allocations, SLA telemetry, and staff or officer assignees.",
+                status: "Available" as const,
+              },
+              {
+                icon: Camera,
+                title: "Smart Issue Reporting",
+                desc: "Capture coordinate pins, upload field imagery, and use speech-to-text voice reporting.",
+                status: "Planned" as const,
+              },
+              {
+                icon: Cpu,
+                title: "AI Civic Intelligence",
+                desc: "Dedicated Gemini models triaging taxonomy, parsing duplicates, and writing resolution windows.",
+                status: "Planned" as const,
+              },
+              {
+                icon: Radio,
+                title: "Real-Time Issue Tracking",
+                desc: "Live WebSocket and collection streams keeping status transitions updated instantaneously.",
+                status: "In Progress" as const,
+              },
+              {
+                icon: Users,
+                title: "Community Engagement",
+                desc: "Public discussions, community verifications, and neighborhood confirmation workflows.",
+                status: "Planned" as const,
+              },
+              {
+                icon: BarChart3,
+                title: "Geospatial Analytics",
+                desc: "Dynamic indicators outlining city telemetry categories, incident density, and dispatch loads.",
+                status: "Planned" as const,
+              },
+              {
+                icon: MapIcon,
+                title: "Digital Twin Mapping",
+                desc: "Obsidian-styled interactive map centerpiece integrating heatmaps and emergency layers.",
+                status: "Planned" as const,
+              },
+              {
+                icon: Award,
+                title: "Leaderboard & Reputation",
+                desc: "Citizen identity scoring tracking levels, verified checks, and community guardian statuses.",
+                status: "Planned" as const,
+              },
+            ].map((cap) => {
+              const CapIcon = cap.icon
+              return (
+                <div
+                  key={cap.title}
+                  className="bg-white dark:bg-slate-900 p-6 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                        <CapIcon size={16} />
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
+                          cap.status === "Available"
+                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800"
+                            : cap.status === "In Progress"
+                              ? "bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800"
+                              : "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            cap.status === "Available"
+                              ? "bg-emerald-600"
+                              : cap.status === "In Progress"
+                                ? "bg-amber-500"
+                                : "bg-slate-400"
+                          }`}
+                        />
+                        {cap.status}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">
+                      {cap.title}
+                    </h3>
+                    <p className="mt-1.5 text-xs leading-5 text-slate-600 dark:text-slate-400">
+                      {cap.desc}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div id="roadmap" className="mt-14">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Future Plans & Improvements
+            </p>
+            <h3 className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Phased roadmap from communities to smart cities
+            </h3>
+            <div className="mt-6 grid gap-6 lg:grid-cols-3">
+              {[
+                {
+                  phase: "Phase 01",
+                  badge: "Live Today",
+                  title: "Core Governance & SLA Engine",
+                  points: [
+                    "Multi-organization support for Societies, Hostels, and Campuses",
+                    "Super Admin, Admin, Staff, and Resident role workspaces with profile modals",
+                    "Automated SLA escalation, staff assignment, and chronological audit trails",
+                  ],
+                },
+                {
+                  phase: "Phase 02",
+                  badge: "Next Up",
+                  title: "AI Triage, Media & Real-Time Streams",
+                  points: [
+                    "Gemini AI Civic Intelligence for taxonomy triage and resolution windows",
+                    "Coordinate pins, photo attachments, and speech-to-text voice reporting",
+                    "Real-time WebSocket streams for live status updates and alerts",
+                  ],
+                },
+                {
+                  phase: "Phase 03",
+                  badge: "Future Vision",
+                  title: "Digital Twin & Citizen Reputation",
+                  points: [
+                    "Obsidian-styled Digital Twin map with heatmaps and emergency layers",
+                    "Geospatial telemetry dashboards for dispatch load balancing",
+                    "Public discussions, verified checks, and community guardian leaderboards",
+                  ],
+                },
+              ].map((step, idx) => (
+                <div
+                  key={step.phase}
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-semibold text-slate-500">
+                      {step.phase}
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
+                        idx === 0
+                          ? "bg-slate-900 text-white ring-slate-900 dark:bg-white dark:text-slate-900"
+                          : "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+                      }`}
+                    >
+                      {step.badge}
+                    </span>
+                  </div>
+                  <h4 className="mt-3 text-base font-bold text-slate-900 dark:text-white">
+                    {step.title}
+                  </h4>
+                  <ul className="mt-3 space-y-2 text-xs leading-5 text-slate-600 dark:text-slate-400">
+                    {step.points.map((pt) => (
+                      <li key={pt} className="flex items-start gap-2">
+                        <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-slate-400" />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

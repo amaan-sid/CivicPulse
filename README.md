@@ -1,476 +1,426 @@
 # CivicPulse
 
-CivicPulse is a real-time, priority-aware community governance and issue resolution platform. Built for **Housing Societies**, **Student Hostels**, and **University Campuses**, CivicPulse automates SLA enforcement, provides live countdown ticket tracking, offers a searchable community member directory, and delivers multi-tier administrative governance from residents to platform Super Admins.
+**Multi-organization civic and community issue resolution, automated SLA governance, and role-based operations platform for housing societies, student hostels, and university campuses.**
+
+CivicPulse provides residents, students, maintenance staff, society administrators, and platform Super Admins with a unified workflow to report issues, deduplicate matching incidents, enforce Service Level Agreements (SLAs), manage multi-community memberships, and audit every status transition.
 
 ---
 
 ## Table of Contents
 
-- [Key Features](#key-features)
-- [Architecture Overview](#architecture-overview)
-- [Tech Stack](#tech-stack)
+- [Overview](#overview)
+- [Capability Matrix](#capability-matrix)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Authentication and Dual-Layer RBAC Flow](#authentication-and-dual-layer-rbac-flow)
+- [Issue Lifecycle and Automated SLA Escalation Flow](#issue-lifecycle-and-automated-sla-escalation-flow)
+- [Frontend Routing Map](#frontend-routing-map)
+- [Data Model](#data-model)
 - [Project Structure](#project-structure)
-- [Database Schema](#database-schema)
-- [API Endpoints](#api-endpoints)
-  - [Authentication](#authentication)
-  - [User Profile Management](#user-profile-management)
-  - [Society & Community Management](#society--community-management)
-  - [Issue Management & Tracking](#issue-management--tracking)
-  - [Super Admin Command Center](#super-admin-command-center)
-  - [Dashboard & Analytics](#dashboard--analytics)
-  - [Audit Logs](#audit-logs)
-- [Authentication & Role-Based Access Control (RBAC)](#authentication--role-based-access-control-rbac)
-- [Priority & Automated SLA Engine](#priority--automated-sla-engine)
-- [Frontend Architecture](#frontend-architecture)
-- [Running the Application](#running-the-application)
+- [API Reference](#api-reference)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Deployment](#deployment)
+- [Phased Engineering Roadmap](#phased-engineering-roadmap)
+- [Contributing](#contributing)
 
 ---
 
-## Key Features
+## Overview
 
-- ⏱️ **Automated SLA Countdown Engine**: Priority-driven resolution countdown timers with real-time status indicators (`On Schedule`, `Approaching Breach`, `Breached`).
-- 🏢 **Multi-Category Organizations**: Natively supports **Housing Societies** (residential flats), **Student Hostels** (rooms/wings with warden workflows), and **University Campuses** (departments and labs).
-- 👥 **Community Member Directory**: Full roster of residents, members, staff, and admins with live search (by name, `@username`, email, flat/room), role filter pills, and custom user avatars.
-- 🛡️ **Single-Owner Super Admin Governance**: Platform-wide ecosystem analytics, category filtering, detail inspection modals (Issues, Organizations, Users), and secure Super Admin ownership transfer.
-- 📜 **Timestamped Audit Timelines**: Detailed historical milestone tracking for every ticket (Logged &rarr; Auto-Assigned &rarr; On-Site Inspection &rarr; Resolved & Confirmed).
-- 👤 **Custom User Profiles**: Profile picture management, default avatars with gender options (`male`, `female`), verified `@username` handles, and password management.
-- 🌓 **Modern Responsive UI**: Dark/Light mode theme toggle, smooth micro-animations, accessible toast feedback, and directional navigation.
+CivicPulse replaces fragmented chat groups and spreadsheets with structured, auditable issue governance:
+
+- **Multi-Category Organizations**: Supports Housing Societies, Student Hostels, and University Campuses under a unified community and membership model.
+- **Dual-Layer RBAC**: Combines platform-level roles (`USER`, `SUPER_ADMIN`) with society-scoped memberships (`resident`, `staff`, `admin`) via `Membership` records and a live `SocietySwitcher`.
+- **Automated Deduplication and SLA Escalation**: Matching open issues merge automatically to boost priority scores, and a 30-second background SLA watcher escalates overdue unresolved tickets with audit entries.
+- **Profile Management and Avatars**: Built-in `UserProfileModal`, gender-aware avatar defaults, and Cloudinary image support.
+- **Cross-Domain Auth Resilience**: Supports `HttpOnly` JWT cookies with automatic `Authorization: Bearer` header fallback for cross-domain deployments (Render and Vercel).
 
 ---
 
-## Architecture Overview
+## Capability Matrix
 
-CivicPulse is architected as a modern, decoupled client-server platform:
+Features engineered for society-scale and municipal dispatch standards, distinguishing live capabilities from upcoming roadmap milestones.
 
-- **Frontend**: React 19 Single Page Application (Vite + TypeScript) powered by Redux Toolkit for centralized state management, TailwindCSS styling, and Lucide React icons.
-- **Backend**: Modular Express.js REST API with TypeScript, controller-service pattern, and Mongoose ODM.
-- **Database**: MongoDB with indexed schema models and referential relationships.
-- **Authentication**: Stateless JWT token authentication delivered securely via HTTP-only cookies.
+| Capability | Description | Status |
+| --- | --- | --- |
+| **Government and Admin Dashboard** | Role-restricted portals displaying resource allocations, SLA telemetry, Super Admin oversight, and staff/officer assignees. | Available |
+| **Multi-Community Governance** | Support for Housing Societies, Student Hostels, and University Campuses with join codes, membership switching, and resident directories. | Available |
+| **Automated SLA and Audit Engine** | Dynamic priority scoring, duplicate merging, periodic 30-second SLA breach escalation, and immutable activity timelines. | Available |
+| **Real-Time Issue Tracking** | Live WebSocket and collection streams keeping status transitions synchronized across connected clients. | In Progress |
+| **Smart Issue Reporting** | GPS coordinate pins, field imagery uploads, and speech-to-text voice reporting. | Planned |
+| **AI Civic Intelligence** | Dedicated Gemini models triaging taxonomy, parsing semantic duplicates, and estimating resolution windows. | Planned |
+| **Community Engagement** | Public discussions, community verifications, and neighborhood confirmation workflows. | Planned |
+| **Geospatial Analytics** | Dynamic telemetry indicators outlining city categories, hot-zone density, and dispatch loads. | Planned |
+| **Digital Twin Mapping** | Obsidian-styled interactive map centerpiece integrating heatmaps and emergency response layers. | Planned |
+| **Leaderboard and Reputation** | Citizen identity scoring tracking levels, verified checks, and community guardian statuses. | Planned |
 
+---
+
+## Technology Stack
+
+| Layer | Technologies |
+| --- | --- |
+| **Frontend** | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, React Router DOM 7, Redux Toolkit 2, Axios, Lucide React, React Hot Toast |
+| **Backend** | Node.js 20+, Express 5, TypeScript 5.9 (`tsconfig-paths` + `tsc-alias`), Cookie Parser, CORS, Cloudinary |
+| **Database** | MongoDB 7+, Mongoose 9 |
+| **Authentication** | JWT (HS256) in `HttpOnly` cookies + `Bearer` token fallback, `bcryptjs` password hashing |
+| **Deployment and Tooling** | ESLint 9, Prettier, Vercel SPA rewrites, Render deployment, Docker multi-stage build |
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client["Frontend SPA (React 19 + Vite + Redux Toolkit)"]
+        UI["Landing, AuthPage, Dashboards, Modals"]
+        Router["BrowserRouter + ProtectedRoute + ErrorBoundary"]
+        Store["Redux Auth Store"]
+        Http["Axios Client (withCredentials + Bearer Interceptor)"]
+    end
+
+    subgraph API["Express 5 REST API (src/server.ts)"]
+        Sec["CORS Allow-List + JSON Parser + Cookie Parser"]
+        AuthMW["JWT Auth Middleware + RBAC Authorize Middleware"]
+        Routes["Centralized /api Router"]
+        Services["Service Layer (Auth, Society, Issue, Dashboard, Audit, User, SuperAdmin)"]
+        SLA["30s Background SLA Escalation Watcher"]
+    end
+
+    subgraph Storage["Persistence and Media"]
+        Mongo[("MongoDB (User, Society, Membership, Issue, AuditLog)")]
+        Cloud["Cloudinary Media Storage"]
+    end
+
+    UI --> Router --> Store --> Http --> Sec --> AuthMW --> Routes --> Services --> Mongo
+    Services --> Cloud
+    SLA --> Services
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Frontend (React 19 + Vite)                      │
-│   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌────────┐ │
-│   │    Pages     │   │  Components  │   │ Redux Store  │   │ Hooks  │ │
-│   └──────┬───────┘   └──────┬───────┘   └──────┬───────┘   └───┬────┘ │
-│          └──────────────────┴──────────────────┴───────────────┘      │
-│                                     │                                  │
-│                               ┌─────▼─────┐                            │
-│                               │ Axios API │                            │
-│                               └─────┬─────┘                            │
-└─────────────────────────────────────┼──────────────────────────────────┘
-                                      │ HTTP + Credentials (JWT Cookie)
-┌─────────────────────────────────────┼──────────────────────────────────┐
-│                               ┌─────▼─────┐     Backend (Express + TS) │
-│                               │  Routes   │                            │
-│                               └─────┬─────┘                            │
-│        ┌────────────────────────────┼───────────────────────────┐      │
-│   ┌────▼─────┐  ┌──────────▼────────┐  ┌──────────▼──────┐ ┌───▼────┐ │
-│   │Auth / RBAC  │Society / Community│  │Issue Controller │ │Super-  │ │
-│   │Middleware│  │   Controller      │  │  & SLA Engine   │ │Admin   │ │
-│   └────┬─────┘  └──────────┬────────┘  └──────────┬──────┘ └───┬────┘ │
-│        └───────────────────┴──────────────────────┴────────────┘      │
-│                                     │                                  │
-│                               ┌─────▼─────┐                            │
-│                               │  MongoDB  │                            │
-│                               └───────────┘                            │
-└────────────────────────────────────────────────────────────────────────┘
+
+---
+
+## Authentication and Dual-Layer RBAC Flow
+
+```mermaid
+sequenceDiagram
+    participant Browser as Browser (React SPA)
+    participant API as Express API (/api/auth)
+    participant DB as MongoDB
+
+    Browser->>API: POST /api/auth/login or /api/auth/signup
+    API->>DB: Verify credentials / create User
+    DB-->>API: User + Memberships
+    API-->>Browser: 200/201 + Set-Cookie (HttpOnly JWT) + { user, token }
+    Browser->>Browser: Store token fallback in localStorage & update Redux auth slice
+
+    Browser->>API: Authenticated Request (Cookie + Authorization: Bearer)
+    API->>DB: Load User and Society Memberships
+    DB-->>API: Platform role (USER | SUPER_ADMIN) + Society role (resident | staff | admin)
+    API-->>Browser: Authorized Response or 401/403
 ```
 
 ---
 
-## Tech Stack
+## Issue Lifecycle and Automated SLA Escalation Flow
 
-### Backend
-| Technology | Purpose |
-|------------|---------|
-| Node.js & Express.js | Core web application framework |
-| TypeScript | Type safety and structured architecture |
-| MongoDB & Mongoose | Document database and object modeling |
-| JSON Web Tokens (JWT) | Secure, stateless authentication |
-| bcryptjs | Salted password hashing |
-| cookie-parser | HTTP-only cookie parsing |
+```mermaid
+flowchart TD
+    Start(["Resident Reports Issue"]) --> DupCheck{"Matching Open Issue in Society and Category?"}
+    DupCheck -- "Yes" --> Merge["Append Reporter, Increment reportCount, Recalculate Priority"]
+    DupCheck -- "No" --> Create["Compute Category SLA Deadline and Priority Score, Create Open Issue"]
 
-### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 19 | UI component library |
-| TypeScript | Type-safe interfaces and state |
-| Vite | Lightning-fast build tooling and HMR |
-| Redux Toolkit | Global application state management |
-| React Router v7 | Client-side routing and guarded routes |
-| TailwindCSS v4 | Modern styling and design system |
-| Lucide React | Modern iconography |
-| react-hot-toast | Non-blocking user feedback notifications |
+    Merge --> Queue["Ranked Society Issue Queue"]
+    Create --> Queue
+
+    Queue --> Assign["Admin Assigns Staff Member"]
+    Assign --> LogAssign["Record Assignment AuditLog"]
+    LogAssign --> Progress["Staff Marks Issue in-progress"]
+    Progress --> LogProgress["Record Status AuditLog"]
+
+    Queue --> Watcher{"30s SLA Watcher: Now > slaDeadline and Unresolved?"}
+    Watcher -- "Yes" --> Escalate["Flag isEscalated = true, Boost Priority, Write Escalation AuditLog"]
+    Watcher -- "No" --> Progress
+    Escalate --> Progress
+
+    Progress --> Resolved["Staff or Admin Marks Issue resolved"]
+    Resolved --> LogResolve["Record Resolution AuditLog"]
+    LogResolve --> Complete(["Reflected in Dashboard and Super Admin Telemetry"])
+```
+
+---
+
+## Frontend Routing Map
+
+```mermaid
+flowchart TB
+    Root["BrowserRouter (App.tsx)"] --> Pub["Public Routes"]
+    Root --> Guard["ProtectedRoute"]
+
+    Pub --> RHome["/ (LandingPage or Role Redirect)"]
+    Pub --> RLand["/landing (LandingPage)"]
+    Pub --> RLogin["/login and /signup (AuthPage)"]
+    Pub --> R404["* (NotFound)"]
+
+    Guard --> SA["Super Admin (/super-admin, /super-admin/organizations, /super-admin/users, /super-admin/issues)"]
+    Guard --> Soc["Communities (/managesociety, /my-societies, /join-society, /society/:id)"]
+    Guard --> Iss["Issues (/issues, /report-issue, /manageissues, /issues/:id, /issuedetails/:id)"]
+```
+
+---
+
+## Data Model
+
+```mermaid
+erDiagram
+    USER {
+        ObjectId _id PK
+        string name
+        string username UK
+        string email UK
+        string password
+        string platformRole "USER | SUPER_ADMIN"
+        string gender "male | female"
+        string profilePic
+        boolean isActive
+        date createdAt
+    }
+
+    SOCIETY {
+        ObjectId _id PK
+        string name UK
+        string joinCode UK
+        string type "SOCIETY | HOSTEL | CAMPUS"
+        string address
+        string city
+        string state
+        number totalFlats
+        ObjectId admin FK
+        object defaultSLAs
+        date createdAt
+    }
+
+    MEMBERSHIP {
+        ObjectId _id PK
+        ObjectId user FK
+        ObjectId society FK
+        string role "resident | staff | admin"
+        string flatNumber
+        date createdAt
+    }
+
+    ISSUE {
+        ObjectId _id PK
+        string title
+        string description
+        string category
+        string status "open | in-progress | resolved"
+        string severity "low | medium | high"
+        number priorityScore
+        number reportCount
+        ObjectId reportedBy FK
+        ObjectId[] reporters
+        ObjectId assignedTo FK
+        ObjectId society FK
+        date slaDeadline
+        boolean isEscalated
+        date createdAt
+    }
+
+    AUDIT_LOG {
+        ObjectId _id PK
+        ObjectId issue FK
+        string action
+        ObjectId performedBy FK
+        string oldValue
+        string newValue
+        date createdAt
+    }
+
+    USER ||--o{ MEMBERSHIP : "holds"
+    SOCIETY ||--o{ MEMBERSHIP : "contains"
+    SOCIETY ||--o{ ISSUE : "tracks"
+    USER ||--o{ ISSUE : "reports / assigned"
+    ISSUE ||--o{ AUDIT_LOG : "records"
+    USER ||--o{ AUDIT_LOG : "performs"
+```
 
 ---
 
 ## Project Structure
 
-```
+```text
 CivicPulse/
 ├── backend/
 │   ├── src/
-│   │   ├── config/
-│   │   │   └── db.ts                   # MongoDB connection lifecycle
-│   │   ├── controllers/
-│   │   │   ├── audit.controller.ts     # Audit log handlers
-│   │   │   ├── auth.controller.ts      # Auth (signup, login, logout, me)
-│   │   │   ├── dashboard.controller.ts # Admin metrics and distribution
-│   │   │   ├── issue.controller.ts     # Issue creation, assignment, resolution
-│   │   │   ├── society.controller.ts   # Society CRUD, directory roster, roles
-│   │   │   ├── superadmin.controller.ts# Ecosystem stats, orgs, users, promote
-│   │   │   └── user.controller.ts      # Profile, password, user lists
-│   │   ├── middlewares/
-│   │   │   ├── auth.middleware.ts       # JWT cookie verification
-│   │   │   └── authorize.middleware.ts  # Role checks (society & platform)
-│   │   ├── models/
-│   │   │   ├── audit.model.ts          # Audit trail schema
-│   │   │   ├── issue.model.ts          # Issue & SLA tracking schema
-│   │   │   ├── membership.model.ts     # Society-User junction schema
-│   │   │   ├── society.model.ts        # Organization/Community schema
-│   │   │   └── user.model.ts           # User account schema
-│   │   ├── routes/
-│   │   │   ├── audit.routes.ts
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── dashboard.routes.ts
-│   │   │   ├── issue.routes.ts
-│   │   │   ├── society.routes.ts
-│   │   │   ├── superadmin.routes.ts
-│   │   │   └── user.routes.ts
-│   │   ├── services/                   # Business logic and query layer
-│   │   ├── utils/                      # SLA calculation, code generation
-│   │   └── server.ts                   # Application server bootstrap
-│   ├── package.json
+│   │   ├── server.ts               # Express bootstrap, CORS, /api/health, 30s SLA escalation loop
+│   │   ├── config/                 # db.ts, env.ts
+│   │   ├── controllers/            # auth, audit, dashboard, issue, society, superadmin, user
+│   │   ├── services/               # Business logic layer for each domain module
+│   │   ├── middlewares/            # auth.middleware.ts, authorize.middleware.ts
+│   │   ├── models/                 # User, Society, Membership, Issue, AuditLog
+│   │   ├── routes/                 # Centralized index.ts and domain routers
+│   │   ├── types/                  # express.d.ts
+│   │   └── utils/                  # codeGenerator, constants, priority, responseHandler
+│   ├── Dockerfile
 │   └── tsconfig.json
-│
-└── frontend/
-    ├── src/
-    │   ├── app/
-    │   │   └── store.ts                # Redux Toolkit store config
-    │   ├── components/
-    │   │   ├── common/                 # UserAvatar, badges, UI elements
-    │   │   ├── layout/                 # Navbar, Sidebar, ProtectedRoute
-    │   │   ├── profile/                # UserProfileModal
-    │   │   └── ui/                     # Card, ConfirmModal, CustomSelect
-    │   ├── features/                   # Redux slices (auth, issue, society)
-    │   ├── pages/
-    │   │   ├── admin/                  # SuperAdminDashboard & Detail Modals
-    │   │   ├── auth/                   # Unified AuthPage (Login/Signup)
-    │   │   ├── dashboard/              # Admin, Member, Resident Dashboards
-    │   │   ├── issues/                 # IssueList, IssueDetails, ReportIssue
-    │   │   ├── landing/                # LandingPage with interactive sandbox
-    │   │   └── society/                # ManageSociety, JoinSociety
-    │   ├── routes/                     # App routing tree
-    │   ├── services/                   # Axios API service clients
-    │   └── types/                      # Frontend TypeScript definitions
-    ├── package.json
-    └── vite.config.ts
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx                 # BrowserRouter, Toaster, ProtectedRoute, NotFound
+│   │   ├── main.tsx                # Redux Provider and ErrorBoundary
+│   │   ├── app/store.ts            # Redux Toolkit store
+│   │   ├── components/
+│   │   │   ├── common/             # UserAvatar
+│   │   │   ├── layout/             # DashboardLayout, Navbar, Sidebar, ProtectedRoute
+│   │   │   ├── profile/            # UserProfileModal
+│   │   │   ├── ui/                 # Badge, Card, ConfirmModal, CustomSelect, Icon, TimeLineItem
+│   │   │   └── ErrorBoundary.tsx
+│   │   ├── features/               # auth, dashboard, issues, society components & slices
+│   │   ├── pages/
+│   │   │   ├── admin/              # SuperAdminDashboard + detail modals
+│   │   │   ├── auth/               # AuthPage (Sign In / Create Account)
+│   │   │   ├── dashboard/          # Dashboard, AdminDashboard, MemberDashboard, ResidentDashboard
+│   │   │   ├── issues/             # IssueList, ReportIssue, ManageIssues, IssueDetails, IssueAssign
+│   │   │   ├── landing/            # LandingPage (Hero, Categories, Roles, Capability Matrix, Roadmap)
+│   │   │   ├── society/            # ManageSociety, JoinSociety, SocietyIssues
+│   │   │   └── NotFound.tsx
+│   │   ├── services/api.ts         # Axios client with credentials and Bearer interceptor
+│   │   └── types/                  # Shared domain TypeScript interfaces
+│   ├── vercel.json
+│   └── vite.config.ts
+├── CONTRIBUTING.md
+└── README.md
 ```
 
 ---
 
-## Database Schema
+## API Reference
 
-### 1. User Model (`User`)
-```typescript
-{
-  _id: ObjectId,
-  name: string,                         // Full Name
-  username: string,                     // Unique, lowercase handle (e.g. @amaan)
-  email: string,                        // Unique, lowercase
-  password: string,                     // Hashed, select: false
-  profilePic?: string,                  // Custom avatar URL / data URI
-  gender: "male" | "female",            // Avatar defaults (male / female)
-  platformRole: "SUPER_ADMIN" | "USER", // Ecosystem-wide permission level
-  currentSocietyId?: ObjectId,          // Currently active community context
-  isActive: boolean,                    // Account status (default: true)
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+Base URL: `/api` (proxied to `http://localhost:4000/api` in local development).
 
-### 2. Society Model (`Society`)
-```typescript
-{
-  _id: ObjectId,
-  name: string,                         // e.g., "Emerald Heights"
-  type: "SOCIETY" | "HOSTEL" | "CAMPUS",// Category of community
-  address: string,
-  city: string,
-  state: string,
-  totalFlats: number,                   // Units/Flats/Rooms count
-  code: string,                         // Unique 6-character joining code
-  isActive: boolean,                    // Status toggle
-  defaultSLAs: {
-    plumbing: number,                   // Hours (default: 24)
-    electricity: number,                // Hours (default: 12)
-    lift: number,                       // Hours (default: 4)
-    security: number,                   // Hours (default: 2)
-    cleanliness: number,                // Hours (default: 48)
-    water: number                       // Hours (default: 6)
-  },
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+### Health and Diagnostics
 
-### 3. Membership Model (`Membership`)
-```typescript
-{
-  _id: ObjectId,
-  userId: ObjectId,                     // Reference -> User
-  societyId: ObjectId,                  // Reference -> Society
-  role: "resident" | "member" | "staff" | "admin", // Organization-scoped role
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Public | Returns service health and uptime |
+| `GET` | `/api/test` | Public | Basic connectivity check |
 
-### 4. Issue Model (`Issue`)
-```typescript
-{
-  _id: ObjectId,
-  title: string,
-  description: string,
-  category: "plumbing" | "electricity" | "lift" | "security" | "cleanliness" | "water",
-  status: "open" | "in-progress" | "resolved",
-  severity: "low" | "medium" | "high",
-  priorityScore: number,                // Computed priority score
-  reportCount: number,                  // Duplicate report accumulator
-  reportedBy: ObjectId,                 // Reference -> User
-  reporters: ObjectId[],                // Users who reported/upvoted
-  assignedTo?: ObjectId,                // Reference -> User (Staff/Admin)
-  assignedBy?: ObjectId,                // Reference -> User
-  assignedAt?: Date,
-  society: ObjectId,                    // Reference -> Society
-  slaDeadline: Date,                    // Computed SLA expiry date
-  isEscalated: boolean,                 // True if SLA target breached
-  breachedAt?: Date,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+### Authentication and Profile
 
-### 5. AuditLog Model (`AuditLog`)
-```typescript
-{
-  _id: ObjectId,
-  issueId: ObjectId,                    // Reference -> Issue
-  action: string,                       // e.g. "status_changed", "assigned"
-  performedBy: ObjectId,                // Reference -> User
-  details: object,                      // State diff / metadata
-  createdAt: Date
-}
-```
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/signup` | Public | Register a new account with username, gender, and optional avatar |
+| `POST` | `/api/auth/login` | Public | Authenticate and receive `HttpOnly` cookie and JWT token |
+| `POST` | `/api/auth/logout` | Public | Clear session cookie |
+| `GET` | `/api/auth/me` | Authenticated | Return current user and memberships |
+| `PATCH` | `/api/users/profile` | Authenticated | Update user profile fields and avatar |
+
+### Societies and Memberships
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/society/create` | Super Admin | Create a new Society, Hostel, or Campus |
+| `POST` | `/api/society/join` | Authenticated | Join an existing community using a join code |
+| `POST` | `/api/society/current` | Authenticated | Switch active society context |
+| `GET` | `/api/society/current` | Authenticated | Get active society details |
+| `GET` | `/api/society/my-joined-societies` | Authenticated | List all communities joined by the current user |
+| `GET` | `/api/society/my-admin-organizations` | Admin | List organizations administered by the current user |
+| `GET` | `/api/society/residents` | Member / Staff / Admin | List members of the active society |
+| `GET` | `/api/society/:id` | Authenticated | Get community metadata by ID |
+| `GET` | `/api/society/:id/issues` | Authenticated | List issues within a specific community |
+
+### Issues, Dashboard, and Audit
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/issues` | Authenticated | List issues for the active community or role |
+| `POST` | `/api/issues` | Resident | Report an issue or merge into an open duplicate |
+| `GET` | `/api/issues/:id` | Authenticated | Fetch issue detail, SLA status, and metadata |
+| `PATCH` | `/api/issues/:id` | Staff, Admin | Update issue workflow status |
+| `PATCH` | `/api/issues/:id/assign` | Admin | Assign maintenance staff to an issue |
+| `GET` | `/api/issues/:id/logs` | Staff, Admin | Retrieve chronological audit logs for an issue |
+| `GET` | `/api/dashboard` | Admin | Aggregated KPI metrics and category stats |
+| `GET` | `/api/super-admin/*` | Super Admin | Platform-wide organizations, users, and issues command center |
 
 ---
 
-## API Endpoints
-
-### Base URL: `http://localhost:4000/api`
-
----
-
-### Authentication
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| POST | `/auth/signup` | ❌ | - | Register new user with username and gender |
-| POST | `/auth/login` | ❌ | - | Authenticate user & set HTTP-only JWT cookie |
-| POST | `/auth/logout` | ✅ | - | Clear authentication cookie |
-| GET | `/auth/me` | ✅ | - | Retrieve currently authenticated user context |
-
----
-
-### User Profile Management
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| GET | `/user/profile` | ✅ | - | Get profile data of authenticated user |
-| PUT | `/user/profile` | ✅ | - | Update name, username, gender, profile avatar |
-| PUT | `/user/change-password` | ✅ | - | Change account password |
-| GET | `/user` | ✅ | admin/member | List users in organization |
-
----
-
-### Society & Community Management
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| POST | `/society/create` | ✅ | - | Create new community (Society, Hostel, Campus) |
-| POST | `/society/join` | ✅ | - | Join organization via unique 6-character code |
-| POST | `/society/current` | ✅ | - | Switch active organization context |
-| GET | `/society/current` | ✅ | - | Fetch details of active organization |
-| GET | `/society/residents` | ✅ | resident+ | Retrieve full community member directory |
-| GET | `/society/:id` | ✅ | - | Get organization details by ID |
-| GET | `/society/:id/issues` | ✅ | - | Fetch all issues filed in organization |
-| PATCH | `/society/update` | ✅ | admin | Update organization parameters and SLAs |
-| PUT | `/society/residents/:id` | ✅ | admin | Update member role (`resident`, `member`, `staff`, `admin`) |
-| DELETE | `/society/residents/:id` | ✅ | admin | Remove member from organization |
-
----
-
-### Issue Management & Tracking
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| GET | `/issues` | ✅ | - | Get issues in user's active community |
-| GET | `/issues/:id` | ✅ | - | Get detailed ticket record with SLA & assignee |
-| POST | `/issues` | ✅ | resident+ | File new issue (calculates SLA deadline & priority) |
-| PATCH | `/issues/:id` | ✅ | staff/member/admin | Update ticket status (`open` &rarr; `in-progress` &rarr; `resolved`) |
-| PATCH | `/issues/:id/assign` | ✅ | admin | Assign ticket to verified staff or admin |
-| PATCH | `/issues/:id/report` | ✅ | - | Report duplicate issue (increments score) |
-
----
-
-### Super Admin Command Center
-
-*(Requires `platformRole: "SUPER_ADMIN"`)*
-
-| Method | Endpoint | Auth | Platform Role | Description |
-|--------|----------|------|---------------|-------------|
-| GET | `/superadmin/stats` | ✅ | SUPER_ADMIN | Platform-wide analytics, totals, breach rate |
-| GET | `/superadmin/organizations` | ✅ | SUPER_ADMIN | List all organizations with category filters |
-| GET | `/superadmin/users` | ✅ | SUPER_ADMIN | List all platform users with society counts |
-| GET | `/superadmin/issues` | ✅ | SUPER_ADMIN | Global issue log with SLA status & organization info |
-| POST | `/superadmin/organizations` | ✅ | SUPER_ADMIN | Directly create organizations with admin |
-| PATCH | `/superadmin/organizations/:id/status` | ✅ | SUPER_ADMIN | Toggle organization active/inactive status |
-| DELETE | `/superadmin/organizations/:id` | ✅ | SUPER_ADMIN | Remove organization and memberships |
-| POST | `/superadmin/promote` | ✅ | SUPER_ADMIN | Securely transfer Super Admin ownership |
-
----
-
-### Dashboard & Analytics
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| GET | `/dashboard` | ✅ | admin | Aggregate statistics, category breakdowns, breach counts |
-
----
-
-### Audit Logs
-
-| Method | Endpoint | Auth | Role | Description |
-|--------|----------|------|------|-------------|
-| GET | `/issues/:id/logs` | ✅ | member+ | Retrieve immutable chronological action history |
-
----
-
-## Authentication & Role-Based Access Control (RBAC)
-
-### Dual-Layer Permission Model
-
-CivicPulse operates on a **two-tier role hierarchy**:
-
-1. **Platform Layer (`platformRole`)**:
-   - `SUPER_ADMIN`: Single-owner platform executive with ecosystem-wide visibility across all organizations, global analytics, and ownership transfer authority.
-   - `USER`: Regular platform user.
-
-2. **Organization Layer (`Membership.role`)**:
-   - `admin`: Full administrative control over the community, assign staff, configure SLAs, manage member roles.
-   - `staff`: Maintenance technicians and operational staff; can receive assignments, update status, and log resolution progress.
-   - `member`: Committee members with permissions to update statuses and review audit trails.
-   - `resident`: Regular resident/student; can report issues, join organizations, track SLAs, view community directory, and customize profiles.
-
----
-
-## Priority & Automated SLA Engine
-
-### Dynamic Priority Score
-
-Priority is recalculated dynamically using the formula:
-
-$$\text{Priority Score} = \text{Category Weight} + (\text{Report Count} \times 2) + (\text{isBreached} \times 15)$$
-
-#### Category Weights
-
-| Category | Weight | Default SLA Window |
-|----------|--------|-------------------|
-| 🚨 Security | 9 | 2 hours |
-| 🛗 Lift | 10 | 4 hours |
-| 💧 Water | 8 | 6 hours |
-| ⚡ Electricity | 7 | 12 hours |
-| 🔧 Plumbing | 6 | 24 hours |
-| 🧹 Cleanliness | 4 | 48 hours |
-
-#### Escalation & Pre-Breach Warning
-
-- **Pre-Breach Warning**: As tickets approach their SLA window, visual timers enter critical state (`Approaching Breach`).
-- **Breach Escalation**: When `slaDeadline < Date.now()` and status is not `resolved`:
-  - `isEscalated` is set to `true`.
-  - `breachedAt` timestamp is recorded.
-  - An additional **+15 points** is added to the priority score.
-  - Ticket is flagged in Super Admin and Admin dashboards for urgent intervention.
-
----
-
-## Frontend Architecture
-
-### Core Slices (`src/features/`)
-
-- `authSlice`: Handles user session, credentials, `@username`, avatars, and active organization context.
-- `issueSlice`: Handles ticket fetching, filtering, creation, assignment, and status transitions.
-- `societySlice`: Manages active community data, directory roster, and role changes.
-
-### Key Interactive Modals & Components
-
-- `UserProfileModal`: Drawer/modal for profile picture upload, gender selection, handle, and password updates.
-- `UserAvatar`: Universal avatar component supporting custom pictures, initials fallback, and gender defaults.
-- `IssueDetailModal`: Deep-dive modal inspecting tickets, category, SLA countdown, and audit logs.
-- `OrganizationDetailModal`: Inspects community details, admins, address, and category.
-- `UserDetailModal`: Inspects user profile details, memberships, and activity.
-- `SLATimer`: Interactive real-time countdown timer with automated color-coded urgency states.
-- `ResidentsSection`: Full searchable directory of all community members with dynamic role filter pills.
-
----
-
-## Running the Application
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js**: v18+ or v20+ LTS
-- **MongoDB**: Local MongoDB instance or MongoDB Atlas URI
-
-### 1. Clone & Install Dependencies
-
-```bash
-# Clone the repository
-git clone https://github.com/amaan-sid/CivicPulse.git
-cd CivicPulse
-
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-```
-
-### 2. Configure Environment Variables
-
-Create a `.env` file in the `backend/` folder:
-
-```env
-MONGODB_URI=mongodb://localhost:27017/civicpulse
-JWT_SECRET=your_jwt_secret_key_here
-BACKEND_PORT=4000
-FRONTEND_URL=http://localhost:5173
-NODE_ENV=development
-SALT_ROUNDS=10
-```
-
-### 3. Run Development Servers
+- Node.js 20+
+- npm 9+
+- MongoDB 6+ (local instance, Docker/Podman container, or MongoDB Atlas)
 
 ```bash
-# Terminal 1: Start Backend (Port 4000)
+docker run -d --name civicpulse-mongo -p 27017:27017 mongo:7
+```
+
+### 1. Backend Setup
+
+```bash
 cd backend
+cp .env.example .env
+npm install
 npm run dev
+```
 
-# Terminal 2: Start Frontend (Port 5173)
+Verify the backend:
+
+```bash
+curl http://localhost:4000/api/health
+```
+
+### 2. Frontend Setup
+
+```bash
 cd frontend
+npm install
 npm run dev
 ```
 
-Visit **`http://localhost:5173`** in your browser to access CivicPulse.
+Open `http://localhost:5173`. Vite proxies `/api` requests directly to `http://localhost:4000`.
+
+---
+
+## Environment Configuration
+
+### Backend (`backend/.env`)
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `MONGODB_URI` | Yes | -- | MongoDB connection URI (use `127.0.0.1` for local Docker/Podman containers) |
+| `JWT_SECRET` | Yes | `default_jwt_secret` | Signing secret for JWT authentication tokens |
+| `PORT` / `BACKEND_PORT` | No | `4000` | HTTP server port |
+| `FRONTEND_URL` | No | `http://localhost:5173` | Primary allowed frontend origin |
+| `CORS_ORIGINS` | No | Localhost defaults | Optional comma-separated additional CORS origins |
+
+### Frontend (`frontend/.env.development`)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | `/api` | Base URL for Axios requests (use `/api` locally for Vite proxy; full API URL in production) |
+| `VITE_PROXY_TARGET` | `http://localhost:4000` | Target backend URL for the Vite dev proxy |
+
+---
+
+## Deployment
+
+- **Frontend (Vercel)**: Root directory `frontend`, build command `npm run build`, output `dist`. `frontend/vercel.json` handles SPA rewrites. Set `VITE_API_URL=https://<backend-domain>/api`.
+- **Backend (Render / Docker)**: Build with `npm run build` (`tsc && tsc-alias`), start with `npm start` (`node dist/server.js`), or deploy with `backend/Dockerfile`. Set `MONGODB_URI`, `JWT_SECRET`, and `FRONTEND_URL`.
+
+---
+
+## Phased Engineering Roadmap
+
+| Phase | Scope | Deliverables |
+| --- | --- | --- |
+| **Phase 01 (Live)** | Multi-Community Governance and SLA Engine | Societies/Hostels/Campuses, Super Admin command center, multi-society memberships, automated 30-second SLA escalation, profile/avatar modals, audit logs. |
+| **Phase 02 (Next Up)** | AI Triage, Rich Media, and Live Streams | Gemini AI Civic Intelligence for taxonomy and ETA estimation; GPS coordinate pins, imagery uploads, voice-to-text reporting; WebSocket live updates. |
+| **Phase 03 (Future Vision)** | Digital Twin and Citizen Ecosystem | Obsidian-styled interactive map with heatmaps and emergency layers; geospatial telemetry dashboards; public discussions, citizen verification, and reputation leaderboards. |
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, code standards, verification commands, and pull request guidelines.

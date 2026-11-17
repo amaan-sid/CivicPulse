@@ -9,9 +9,26 @@ import { protect } from "@/middlewares/auth.middleware";
 
 const app = express();
 
+const allowedOrigins = new Set(
+  [
+    ENV.FRONTEND_URL,
+    ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : []),
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+  ]
+    .map((o) => o?.trim().replace(/\/$/, ""))
+    .filter(Boolean)
+);
+
 app.use(
   cors({
-    origin: ENV.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin.replace(/\/$/, ""))) return callback(null, true);
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
@@ -27,6 +44,13 @@ app.get("/api/profile", protect, (req, res) => {
   res.json({
     message: "Protected route accessed",
     user: req.user,
+  });
+});
+
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptimeSeconds: Math.round(process.uptime()),
   });
 });
 

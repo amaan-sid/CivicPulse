@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Camera,
   Trash2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  X
 } from "lucide-react"
 
 function AuthPage() {
@@ -179,6 +180,16 @@ function AuthPage() {
             title="Toggle Theme"
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            aria-label="Close and return to home"
+            title="Close"
+            className="p-2.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+          >
+            <X size={18} />
           </button>
         </div>
       </header>
