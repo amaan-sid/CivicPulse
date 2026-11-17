@@ -1,39 +1,38 @@
-import type { RequestHandler } from 'express';
-import { HttpError } from './error.middleware';
+import { NextFunction, Request, Response } from "express";
 
-type Options = { windowMs: number; max: number };
+type RateLimitOptions = {
+  limit: number;
+  windowMs: number;
+  message?: string;
+};
 
-/**
- * Minimal fixed-window, in-memory rate limiter keyed by client IP.
- * Suitable for a single instance; move to Redis when running multiple replicas.
- */
-export const rateLimit = ({ windowMs, max }: Options): RequestHandler => {
-  const hits = new Map<string, { count: number; resetAt: number }>();
+const requestLog = new Map<string, number[]>();
 
-  setInterval(() => {
+const getClientKey = (req: Request) =>
+  `${req.ip || req.socket.remoteAddress || "unknown"}:${req.originalUrl}`;
+
+export const rateLimitMiddleware = ({
+  limit,
+  windowMs,
+  message = "Too many requests. Please try again later."
+}: RateLimitOptions) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const now = Date.now();
-    for (const [key, entry] of hits) if (entry.resetAt <= now) hits.delete(key);
-  }, windowMs).unref();
+    const key = getClientKey(req);
+    const recentRequests = (requestLog.get(key) || []).filter(
+      (timestamp) => now - timestamp < windowMs
+    );
 
-  return (req, res, next) => {
-    const key = req.ip ?? 'unknown';
-    const now = Date.now();
-    let entry = hits.get(key);
+    if (recentRequests.length >= limit) {
+      const retryAfterSeconds = Math.ceil(windowMs / 1000);
+      res.setHeader("Retry-After", retryAfterSeconds.toString());
 
-    if (!entry || entry.resetAt <= now) {
-      entry = { count: 0, resetAt: now + windowMs };
-      hits.set(key, entry);
+      return res.status(429).json({ message });
     }
 
-    entry.count += 1;
-    res.setHeader('RateLimit-Limit', String(max));
-    res.setHeader('RateLimit-Remaining', String(Math.max(0, max - entry.count)));
-    res.setHeader('RateLimit-Reset', String(Math.ceil((entry.resetAt - now) / 1000)));
+    recentRequests.push(now);
+    requestLog.set(key, recentRequests);
 
-    if (entry.count > max) {
-      res.setHeader('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
-      return next(new HttpError(429, 'Too many requests, please try again later'));
-    }
-    next();
+    return next();
   };
 };
