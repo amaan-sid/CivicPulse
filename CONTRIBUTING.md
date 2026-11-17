@@ -13,10 +13,9 @@
 
 ## Prerequisites
 
-- Node.js 18.x or higher
+- Node.js 20.x or higher
 - npm 9.x or higher
 - MongoDB 6.x or higher
-- Redis 7.x or higher
 - Git
 
 ## Getting Started
@@ -37,15 +36,17 @@ cd backend
 npm install
 ```
 
-Create `.env` file:
+Create `.env` from the template (see the README for every variable):
+```bash
+cp .env.example .env
+```
+
 ```env
 NODE_ENV=development
-PORT=5000
+PORT=4000
 MONGODB_URI=mongodb://localhost:27017/civicpulse
-REDIS_HOST=localhost
-REDIS_PORT=6379
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:5173
+LOG_LEVEL=info
 ```
 
 Start server:
@@ -60,10 +61,9 @@ cd frontend
 npm install
 ```
 
-Create `.env` file:
+Optionally create `.env` (defaults work with the dev proxy):
 ```env
-VITE_API_URL=http://localhost:5000/api
-VITE_SOCKET_URL=http://localhost:5000
+VITE_API_URL=/api
 ```
 
 Start server:
@@ -81,11 +81,12 @@ npm run dev
 - `src/utils/` - Utility functions
 
 ### Frontend
-- `src/app/` - Redux store configuration
+- `src/app/` - State management (planned)
 - `src/components/` - Reusable components
-- `src/features/` - Redux slices and API integration
+- `src/features/` - Feature types and API bindings
 - `src/pages/` - Page components
-- `src/services/` - API clients
+- `src/services/` - API client
+- `src/hooks/` - Shared React hooks
 
 ## Development Workflow
 
@@ -125,9 +126,10 @@ git rebase upstream/main
 
 ### Frontend
 - Use functional components with hooks
-- Implement prop types
+- Type component props
 - Keep components focused
-- Use Redux for state management
+- Reuse primitives from `src/components/ui`
+- Keep the visual language minimal: neutral palette, no gradients
 - Follow accessibility best practices
 - Use Tailwind CSS for styling
 
@@ -160,7 +162,7 @@ docs: update setup instructions
 ### Before Submitting
 
 1. Ensure code follows coding standards
-2. Run tests and linting
+2. Run `npm run lint` (frontend) and `npm run typecheck` (backend)
 3. Rebase on latest main branch
 4. Test changes thoroughly
 
