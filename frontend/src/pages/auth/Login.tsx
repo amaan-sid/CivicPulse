@@ -73,6 +73,18 @@ function Login() {
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-xs font-medium text-zinc-500">Credentials</span>
+            <Link
+              to="/"
+              aria-label="Close and return to home"
+              title="Back to home"
+              className="-mr-1.5 -mt-1 rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-900"
+            >
+              <Icon name="x" className="size-4" />
+            </Link>
+          </div>
+
           {error && (
             <div
               role="alert"
