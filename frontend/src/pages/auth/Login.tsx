@@ -57,7 +57,16 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-zinc-50 px-4 py-12 sm:px-6">
+    <div className="relative flex min-h-screen flex-col justify-center bg-zinc-50 px-4 py-12 sm:px-6">
+      <Link
+        to="/"
+        aria-label="Close and return to home"
+        title="Back to home"
+        className="fixed right-5 top-5 inline-flex size-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 transition hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-900"
+      >
+        <Icon name="x" className="size-4" />
+      </Link>
+
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <Link to="/" className="mb-4 inline-flex items-center gap-2.5">
@@ -73,18 +82,6 @@ function Login() {
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-500">Credentials</span>
-            <Link
-              to="/"
-              aria-label="Close and return to home"
-              title="Back to home"
-              className="-mr-1.5 -mt-1 rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              <Icon name="x" className="size-4" />
-            </Link>
-          </div>
-
           {error && (
             <div
               role="alert"
