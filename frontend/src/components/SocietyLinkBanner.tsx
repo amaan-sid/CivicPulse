@@ -109,3 +109,4 @@ function SocietyLinkBanner({ onLinked }: { onLinked?: () => void }) {
 }
 
 export default SocietyLinkBanner;
+

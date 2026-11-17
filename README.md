@@ -1,429 +1,554 @@
 # CivicPulse
 
-**Priority-aware issue reporting and resolution for campuses, hostels, and residential communities.**
+**Priority-aware civic and residential society issue resolution, SLA tracking, and role-based operations platform.**
 
-CivicPulse gives residents a single place to report problems such as broken lights, water leaks, or unsafe wiring, and gives maintainers a ranked queue to work from. Every issue gets an automatic **severity score** and a **response deadline (SLA)**, so the most urgent problems rise to the top and nothing quietly goes stale.
+CivicPulse provides residential societies, campuses, and municipal communities with a unified system to report maintenance problems, merge duplicate reports automatically, enforce Service Level Agreement (SLA) deadlines, assign staff, and maintain a complete audit trail across every status transition.
 
 ---
 
-## Table of contents
+## Table of Contents
 
-- [Features](#features)
-- [Tech stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project structure](#project-structure)
-- [Getting started](#getting-started)
-- [Configuration](#configuration)
-- [Available scripts](#available-scripts)
-- [API reference](#api-reference)
-- [Severity and SLA model](#severity-and-sla-model)
-- [Data model](#data-model)
-- [Frontend design system](#frontend-design-system)
+- [Overview](#overview)
+- [Capability Matrix](#capability-matrix)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Authentication and Session Flow](#authentication-and-session-flow)
+- [Issue Lifecycle and SLA Escalation Flow](#issue-lifecycle-and-sla-escalation-flow)
+- [Role-Based Access Control and Routing](#role-based-access-control-and-routing)
+- [Data Model](#data-model)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Demo Accounts (Local Development)](#demo-accounts-local-development)
+- [Environment Configuration](#environment-configuration)
+- [API Reference](#api-reference)
+- [Priority Scoring and SLA Model](#priority-scoring-and-sla-model)
 - [Deployment](#deployment)
-- [Security notes and known limitations](#security-notes-and-known-limitations)
-- [Roadmap](#roadmap)
+- [Security Controls](#security-controls)
+- [Phased Engineering Roadmap](#phased-engineering-roadmap)
 - [Contributing](#contributing)
 
 ---
 
-## Features
+## Overview
 
-| Area | What it does |
+Community maintenance commonly fails in two ways: urgent safety hazards get buried behind minor requests, and open tickets silently stall without ownership or deadlines. CivicPulse resolves both through:
+
+- **Role-Based Workspaces**: Dedicated views and permissions for Residents, Maintenance Staff, and Administrators.
+- **Automatic Deduplication and Priority Scoring**: Matching open reports in the same society and category merge into one issue, incrementing the report counter and raising the priority score.
+- **Category-Driven SLA Enforcement**: Every issue receives a deadline based on its category and society SLA configuration; overdue unresolved issues escalate automatically and log an escalation event.
+- **Immutable Audit Trail**: Assignments, status transitions, and SLA breaches are recorded in MongoDB and rendered in a chronological activity timeline.
+- **Minimal, High-Signal Interface**: Restrained monochrome design system reserving semantic color strictly for severity, SLA risk, and resolution state.
+
+---
+
+## Capability Matrix
+
+Features engineered for society-scale and municipal dispatch standards, distinguishing live production capabilities from upcoming roadmap milestones.
+
+| Capability | Description | Status |
+| --- | --- | --- |
+| **Government and Admin Dashboard** | Role-restricted portals displaying issue metrics, SLA breach counts, category breakdowns, society directory, and staff assignees. | Available |
+| **Role-Based Issue Workflow** | Resident issue submission, Kanban workflow board (`open`, `in-progress`, `resolved`), staff assignment, and full audit timeline. | Available |
+| **Automatic Priority and SLA Engine** | Duplicate report merging, weighted category priority scoring, live countdown timers, and automatic SLA breach escalation. | Available |
+| **Real-Time Issue Tracking** | WebSocket and collection streams keeping status transitions and escalations synchronized live across connected clients. | In Progress |
+| **Smart Issue Reporting** | GPS coordinate pins, field imagery uploads, and speech-to-text voice reporting. | Planned |
+| **AI Civic Intelligence** | Dedicated Gemini models triaging taxonomy, parsing semantic duplicates, and estimating resolution windows. | Planned |
+| **Community Engagement** | Public issue discussions, neighborhood verifications, and community confirmation workflows. | Planned |
+| **Geospatial Analytics** | Dynamic telemetry indicators outlining ward-level categories, hot-zone density, and dispatch loads. | Planned |
+| **Digital Twin Mapping** | Obsidian-styled interactive map centerpiece integrating incident heatmaps and emergency response layers. | Planned |
+| **Leaderboard and Reputation** | Citizen identity scoring tracking trust tiers, verified checks, and community guardian statuses. | Planned |
+
+---
+
+## Technology Stack
+
+| Layer | Technologies |
 | --- | --- |
-| **Issue reporting** | A guided form with inline validation, character counters, and an impact selector ("Just me", "A group", "Everyone"). Reporters can stay anonymous. |
-| **Automatic triage** | Each issue gets a 0–100 severity score from its category, impact, and community upvotes. The score sets its priority: Critical, High, Medium, or Low. |
-| **SLA tracking** | Each priority has a response deadline. The UI shows a live countdown and marks overdue issues. |
-| **Issue queue** | Search, filter (status, category, priority), sort (severity, newest, upvotes, due date) and paginate. Filters are stored in the URL, so views can be bookmarked and shared. |
-| **Community upvotes** | Upvotes raise an issue's severity and can tighten its deadline. Each browser can upvote an issue once. |
-| **Status workflow** | `open → in_progress → resolved / closed`, with the resolution time recorded. |
-| **Overview stats** | Counts of open, in-progress, and resolved issues, plus the number past their SLA. |
-| **Health monitoring** | `/api/health` reports API and database status. The footer shows live system status. |
+| **Frontend** | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, React Router DOM 7, Redux Toolkit 2, Axios |
+| **Backend** | Node.js 20+, Express 5, TypeScript 5.9, Cookie Parser, CORS |
+| **Database** | MongoDB 7+, Mongoose 9 |
+| **Authentication** | JWT (HS256) in `HttpOnly` cookies, `bcryptjs` password hashing, role-based authorization middleware |
+| **Quality and Tooling** | ESLint 9, TypeScript Compiler (`tsc`), Prettier, Docker (multi-stage build), Vercel SPA/Serverless support |
 
-## Tech stack
+---
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router |
-| Backend | Node.js 20+, Express 5, TypeScript (strict) |
-| Database | MongoDB 6+ with Mongoose 9 |
-| Validation | Zod (request schemas), Mongoose schema validation |
-| Security | Helmet, CORS allow-list, JSON body size limit, per-IP rate limiting on writes |
-| Tooling | ESLint, Prettier, Docker (multi-stage build) |
-
-## Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
-    subgraph Browser
-        UI[React SPA<br/>Vite + Tailwind]
+    subgraph Client["Frontend SPA (React 19 + Vite + Redux Toolkit)"]
+        UI["Minimal Monochrome UI"]
+        Router["BrowserRouter + Role Guards"]
+        Store["Redux Auth Store"]
+        Http["Axios Client (/api, withCredentials)"]
     end
 
-    subgraph API[Express API]
-        MW[Helmet · CORS · JSON · Rate limit]
-        V[Zod validation]
-        C[Controllers]
-        S[Services<br/>severity · SLA]
-        E[Error handler]
+    subgraph Proxy["Dev Proxy / Edge Rewrite"]
+        Edge["Vite Proxy (/api -> :4000) / Vercel"]
     end
 
-    DB[(MongoDB)]
+    subgraph API["Express 5 REST API"]
+        Sec["Security Headers + CORS + JSON Parser + Cookie Parser"]
+        AuthMW["JWT Cookie Auth + RBAC Middleware + Rate Limiter"]
+        Ctrl["Controllers (Auth, Society, Issue, Dashboard, Audit, User)"]
+        Logic["Priority Calculator + SLA Escalation + Auto-Linking"]
+        Err["Centralized Error and 404 Middleware"]
+    end
 
-    UI -- "/api (proxied in dev)" --> MW --> V --> C --> S --> DB
-    C -. errors .-> E
+    subgraph Data["Persistence Layer"]
+        Mongo[("MongoDB 7 (Users, Societies, Issues, AuditLogs)")]
+    end
+
+    UI --> Router --> Store --> Http --> Edge --> Sec --> AuthMW --> Ctrl --> Logic --> Mongo
+    Ctrl -. "Unhandled / Domain Errors" .-> Err
 ```
 
-The backend is split into **feature modules**. Each module has `routes → controller → service → model`:
+---
 
-- **Routes** declare the endpoints and attach validation and rate-limiting middleware.
-- **Controllers** stay thin. They read validated input from `res.locals` and shape the HTTP response.
-- **Services** hold the business logic (queries, severity scoring, SLA rules).
-- **Models** define the Mongoose schema, indexes, and JSON serialisation.
+## Authentication and Session Flow
 
-Express 5 forwards errors from `async` handlers to the central error middleware automatically. That middleware turns Zod, Mongoose, and JSON-parse errors into one consistent error format.
+CivicPulse uses signed JSON Web Tokens stored inside `HttpOnly` cookies so session credentials are never exposed to client-side JavaScript. On every application load or browser refresh, the frontend hydrates session state before evaluating protected routes.
 
-## Project structure
+```mermaid
+sequenceDiagram
+    participant Browser as Browser (React SPA)
+    participant Store as Redux Auth Slice
+    participant API as Express API (/api/auth)
+    participant DB as MongoDB
 
+    Browser->>Store: App mount -> dispatch(fetchCurrentUser)
+    Store->>API: GET /api/auth/me (HttpOnly cookie)
+    alt Valid session cookie
+        API->>DB: User.findById(decoded.id)
+        DB-->>API: Active user record
+        API-->>Store: 200 OK { user }
+        Store-->>Browser: initialized = true, render workspace
+    else Missing or expired cookie
+        API-->>Store: 401 Unauthorized
+        Store-->>Browser: initialized = true, user = null (Landing or Login)
+    end
+
+    Browser->>API: POST /api/auth/login { email, password }
+    API->>DB: Verify bcrypt hash and active status
+    DB-->>API: User document
+    API-->>Browser: 200 OK + Set-Cookie (HttpOnly JWT) + { user }
+    Browser->>Store: dispatch(setUser) -> Navigate to /dashboard or saved origin
 ```
+
+---
+
+## Issue Lifecycle and SLA Escalation Flow
+
+```mermaid
+flowchart TD
+    Start(["Resident Submits Issue"]) --> Linked{"Account Linked to Society?"}
+    Linked -- "No" --> LinkBanner["Prompt Society Link via PATCH /api/auth/society"]
+    LinkBanner --> Start
+    Linked -- "Yes" --> DupCheck{"Matching Open Issue in Same Society and Category?"}
+
+    DupCheck -- "Yes (Already Reported by User)" --> Already["Return Existing Issue Notice"]
+    DupCheck -- "Yes (New Reporter)" --> Merge["Append Reporter, Increment reportCount, Recalculate Priority"]
+    DupCheck -- "No" --> Create["Calculate SLA Deadline and Priority Score, Create Issue (status: open)"]
+
+    Merge --> Queue["Ranked Issue Queue and Kanban Board"]
+    Create --> Queue
+
+    Queue --> Assign["Admin Assigns Maintenance Staff"]
+    Assign --> AuditAssign["Write Assignment AuditLog"]
+    AuditAssign --> Work["Staff Transitions Status to in-progress"]
+    Work --> AuditWork["Write Status Change AuditLog"]
+
+    Queue --> SLACheck{"Current Time > slaDeadline and Unresolved?"}
+    SLACheck -- "Yes" --> Escalate["Set isEscalated = true, Boost Priority Score, Write Escalation AuditLog"]
+    SLACheck -- "No" --> Work
+    Escalate --> Work
+
+    Work --> Resolve["Staff or Admin Marks Status as resolved"]
+    Resolve --> AuditResolve["Write Resolution AuditLog"]
+    AuditResolve --> Done(["Closed in SLA Metrics and Dashboard"])
+```
+
+---
+
+## Role-Based Access Control and Routing
+
+```mermaid
+flowchart TB
+    Entry["BrowserRouter (App.tsx)"] --> Public["Public Routes"]
+    Entry --> Guest["GuestRoute (Redirects Signed-In Users to /dashboard)"]
+    Entry --> Auth["ProtectedRoute (Requires Valid Session)"]
+
+    Public --> P1["/ (Landing Page or Redirect to /dashboard)"]
+    Public --> P2["* (404 Not Found)"]
+
+    Guest --> G1["/login"]
+    Guest --> G2["/signup"]
+
+    Auth --> AllRoles["All Authenticated Roles"]
+    Auth --> ResOnly["Resident Only"]
+    Auth --> AdminOnly["Admin Only"]
+
+    AllRoles --> A1["/dashboard (Role-Dispatched Overview)"]
+    AllRoles --> A2["/issues (Searchable and Filterable Queue)"]
+    AllRoles --> A3["/issue-board (3-Column Workflow Board)"]
+    AllRoles --> A4["/issues/:id (Role-Aware Detail and Audit Timeline)"]
+    AllRoles --> A5["/profile (Account and Society Link Status)"]
+
+    ResOnly --> R1["/create-issue and /report"]
+
+    AdminOnly --> M1["/societies"]
+    AdminOnly --> M2["/create-society"]
+    AdminOnly --> M3["/society/:id"]
+    AdminOnly --> M4["/users (User and Staff Directory)"]
+```
+
+### Permission Matrix
+
+| Capability / Route | Resident | Staff | Admin |
+| --- | --- | --- | --- |
+| View Landing, Login, Signup | Yes | Yes | Yes |
+| Access `/dashboard` and `/profile` | Yes (Resident view) | Yes (Staff view) | Yes (Admin view) |
+| View society issues (`/issues`, `/issue-board`, `/issues/:id`) | Society-wide | Assigned issues | All societies |
+| Report new issue (`POST /api/issues`) | Yes | No | No |
+| Update issue status (`PATCH /api/issues/:id`) | No | Yes | Yes |
+| View issue audit timeline (`GET /api/issues/:id/logs`) | No | Yes | Yes |
+| Assign staff (`PATCH /api/issues/:id/assign`) | No | No | Yes |
+| Manage societies (`GET/POST /api/society`) | No | No | Yes |
+| View dashboard analytics (`GET /api/dashboard`) | No | No | Yes |
+| View users directory (`GET /api/users`) | No | No | Yes |
+
+---
+
+## Data Model
+
+```mermaid
+erDiagram
+    USER {
+        ObjectId _id PK
+        string name
+        string email UK
+        string password
+        string role "resident | staff | admin"
+        string flatNumber
+        string societyLabel
+        ObjectId society FK
+        boolean isActive
+        date createdAt
+    }
+
+    SOCIETY {
+        ObjectId _id PK
+        string name UK
+        string code UK
+        string address
+        string city
+        string state
+        number totalFlats
+        ObjectId admin FK
+        object defaultSLAs
+        date createdAt
+    }
+
+    ISSUE {
+        ObjectId _id PK
+        string title
+        string description
+        string category "plumbing | electricity | lift | security | cleanliness | water"
+        string status "open | in-progress | resolved"
+        string severity "low | medium | high"
+        number priorityScore
+        number reportCount
+        ObjectId reportedBy FK
+        ObjectId[] reporters
+        ObjectId assignedTo FK
+        ObjectId assignedBy FK
+        ObjectId society FK
+        date slaDeadline
+        boolean isEscalated
+        date breachedAt
+        date createdAt
+    }
+
+    AUDIT_LOG {
+        ObjectId _id PK
+        ObjectId issue FK
+        string action "assignment | status_change | escalation"
+        ObjectId performedBy FK
+        string oldValue
+        string newValue
+        date createdAt
+    }
+
+    SOCIETY ||--o{ USER : "has members"
+    USER ||--o{ SOCIETY : "administers"
+    SOCIETY ||--o{ ISSUE : "contains"
+    USER ||--o{ ISSUE : "reports"
+    USER ||--o{ ISSUE : "assigned to"
+    ISSUE ||--o{ AUDIT_LOG : "records"
+    USER ||--o{ AUDIT_LOG : "performs"
+```
+
+---
+
+## Project Structure
+
+```text
 CivicPulse/
 ├── backend/
+│   ├── api/                        # Vercel serverless entrypoints
 │   ├── src/
-│   │   ├── app.ts                    # Express app: security, parsers, routes, error handling
-│   │   ├── server.ts                 # Bootstrap: DB connect, listen, graceful shutdown
-│   │   ├── routes.ts                 # /api router (health + module routers)
+│   │   ├── app.ts                  # Express app, security headers, CORS, routes, error handler
+│   │   ├── server.ts               # Database bootstrap, dev demo seeding, HTTP server
 │   │   ├── config/
-│   │   │   ├── env.ts                # Typed, validated environment config
-│   │   │   └── db.ts                 # MongoDB connection lifecycle and status
+│   │   │   ├── db.ts               # Cached Mongoose connection helper
+│   │   │   └── env.ts              # Environment parser, CORS origin allow-list, validation
+│   │   ├── controllers/
+│   │   │   ├── audit.controller.ts
+│   │   │   ├── auth.controller.ts  # Signup, login, logout, /me, society linking, demo seeding
+│   │   │   ├── dashboard.controller.ts
+│   │   │   ├── issue.controller.ts # Deduplication, SLA escalation, status, assignment
+│   │   │   ├── society.controller.ts
+│   │   │   └── user.controller.ts
 │   │   ├── middlewares/
-│   │   │   ├── error.middleware.ts   # HttpError, 404 handler, central error handler
-│   │   │   ├── validate.middleware.ts# Zod request validation
-│   │   │   └── rateLimit.middleware.ts
-│   │   ├── modules/
-│   │   │   └── issues/
-│   │   │       ├── issues.routes.ts
-│   │   │       ├── issues.controller.ts
-│   │   │       ├── issues.service.ts
-│   │   │       ├── issues.model.ts
-│   │   │       ├── issues.validation.ts
-│   │   │       ├── issues.types.ts
-│   │   │       └── severity.service.ts
-│   │   └── utils/                    # logger, shared validators
-│   ├── Dockerfile
-│   └── .env.example
+│   │   │   ├── auth.middleware.ts      # JWT cookie verification
+│   │   │   ├── authorize.middleware.ts # Role enforcement
+│   │   │   ├── error.middleware.ts     # Centralized 404 and error formatting
+│   │   │   └── rateLimit.middleware.ts # Fixed-window IP rate limiter
+│   │   ├── models/                 # User, Society, Issue, AuditLog Mongoose schemas
+│   │   ├── routes/                 # Modular Express routers (/auth, /society, /issues, /dashboard, /users)
+│   │   ├── types/express.d.ts      # Express Request user augmentation
+│   │   └── utils/priority.ts       # Priority score calculation
+│   ├── Dockerfile                  # Multi-stage production container build
+│   ├── .env.example
+│   └── tsconfig.json
 ├── frontend/
 │   ├── src/
-│   │   ├── components/               # Layout, IssueCard, IssueList, SLAClock, filters…
-│   │   │   └── ui/                   # Button, Field, Badge, Icon, feedback states
-│   │   ├── features/issues/          # Types and API bindings for issues
-│   │   ├── hooks/                    # useQuery (data fetching), useNow
-│   │   ├── pages/                    # Home, ReportIssue, IssueDetail, NotFound
-│   │   ├── routes/                   # Router configuration
-│   │   ├── services/apiClient.ts     # Typed fetch wrapper with ApiError
-│   │   └── utils/                    # constants, formatters, severity styles, validators
-│   ├── vite.config.ts                # Dev proxy for /api
+│   │   ├── App.tsx                 # BrowserRouter, session hydration, route tree
+│   │   ├── main.tsx                # Redux Provider and ErrorBoundary root
+│   │   ├── index.css               # Tailwind CSS 4 base typography and monochrome tokens
+│   │   ├── app/store.ts            # Redux Toolkit store configuration
+│   │   ├── components/
+│   │   │   ├── DashboardStats.tsx  # Admin KPI cards and category distribution bars
+│   │   │   ├── ErrorBoundary.tsx   # Global React render error fallback
+│   │   │   ├── Navbar.tsx          # Sticky topbar, quick actions, async sign out
+│   │   │   ├── ProtectedRoute.tsx  # Auth guard, role guard, GuestRoute, loading screen
+│   │   │   ├── SLATimer.tsx        # Live SLA deadline countdown and breach indicator
+│   │   │   ├── Sidebar.tsx         # Role-filtered navigation and mobile drawer
+│   │   │   ├── SocietyLinkBanner.tsx
+│   │   │   └── ui/                 # Badge, Button, Card, Icon, TimeLineItem
+│   │   ├── features/auth/          # authSlice (fetchCurrentUser, signOutUser, setUser)
+│   │   ├── hooks/                  # useAppDispatch, useAppSelector, useAuth
+│   │   ├── layouts/DashboardLayout.tsx
+│   │   ├── pages/
+│   │   │   ├── LandingPage.tsx     # Hero, live triage preview, Capability Matrix, Roadmap
+│   │   │   ├── Profile.tsx         # User profile and society linking
+│   │   │   ├── NotFound.tsx        # 404 and route error fallback
+│   │   │   ├── admin/Users.tsx     # Admin user and staff directory
+│   │   │   ├── auth/               # Login (with dev demo shortcuts) and Signup
+│   │   │   ├── dashboard/          # Dashboard dispatcher, Admin, Resident, Staff dashboards
+│   │   │   ├── issues/             # IssueList, IssueBoard, CreateIssue, IssueDetails
+│   │   │   └── society/            # SocietyList, SocietyIssues, CreateSociety
+│   │   ├── services/api.ts         # Credentialed Axios client with 10s timeout
+│   │   └── types/                  # User, Issue, Society TypeScript interfaces
+│   ├── vercel.json                 # SPA rewrite configuration
+│   ├── vite.config.ts              # Vite dev server and /api proxy
 │   └── .env.example
 ├── CONTRIBUTING.md
 └── README.md
 ```
 
-> Files such as `auth.*`, `comments.*`, `reports.*`, `sockets/*`, `config/redis.ts`, and the Redux placeholders in `frontend/src/app` are **scaffolding for planned modules** (see [Roadmap](#roadmap)). They are not wired into the app yet.
+---
 
-## Getting started
+## Getting Started
 
 ### Prerequisites
 
 - **Node.js** 20 or newer (`node -v`)
-- **npm** 9 or newer
-- **MongoDB** 6 or newer, installed locally or run in Docker:
+- **npm** 9 or newer (`npm -v`)
+- **MongoDB** 6 or newer (local service, MongoDB Atlas, or container):
 
 ```bash
 docker run -d --name civicpulse-mongo -p 27017:27017 mongo:7
+# or using Podman:
+podman run -d --name civicpulse-mongo -p 27017:27017 docker.io/library/mongo:7
 ```
 
-### 1. Clone
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/codxbrexx/CivicPulse.git
 cd CivicPulse
 ```
 
-### 2. Start the API
+### 2. Configure and Start the Backend
 
 ```bash
 cd backend
-cp .env.example .env        # adjust values if needed
+cp .env.example .env
 npm install
-npm run dev                 # http://localhost:4000
+npm run dev
 ```
 
-Check that it's up:
+On local Linux containers (Docker/Podman), use `MONGODB_URI=mongodb://127.0.0.1:27017/civicpulse` in `backend/.env` to avoid IPv6 localhost resolution issues.
+
+Verify the API is running:
 
 ```bash
 curl http://localhost:4000/api/health
-# {"status":"ok","uptime":3,"database":"connected","timestamp":"..."}
 ```
 
-### 3. Start the web app
+### 3. Configure and Start the Frontend
 
 In a second terminal:
 
 ```bash
 cd frontend
 npm install
-npm run dev                 # http://localhost:5173
+npm run dev
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:4000`, so no CORS setup is needed during development.
+Open `http://localhost:5173` in your browser. In development, Vite automatically proxies `/api/*` requests to `http://localhost:4000`, keeping authentication cookies first-party.
 
-## Configuration
+---
 
-### Backend: `backend/.env`
+## Demo Accounts (Local Development)
 
-The API loads `backend/.env` first, then a root-level `.env` as a fallback. Variables already set in the shell take precedence. Every value is validated at startup. Invalid configuration stops the process with a clear message.
+When `NODE_ENV` is not `production`, the backend automatically seeds a default society (**CivicPulse Residency**, code `CP101`) and three accounts for immediate testing (also accessible via the one-click **Quick demo access** buttons on `/login`):
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `NODE_ENV` | `development` | `development`, `test`, or `production`. In production, stack traces are hidden from error responses. |
-| `PORT` | `4000` | HTTP port. `BACKEND_PORT` is also accepted for backwards compatibility. |
-| `MONGODB_URI` | `mongodb://localhost:27017/civicpulse` | MongoDB connection string. `MONGO_URI` is also accepted. |
-| `CORS_ORIGIN` | `http://localhost:5173` | Comma-separated list of allowed browser origins. |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error`. `debug` logs every request with its timing. |
-
-### Frontend: `frontend/.env`
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `VITE_API_URL` | `/api` | Base URL of the API. Keep `/api` in development to use the proxy. Set a full URL (e.g. `https://api.example.com/api`) when the API is on another origin. |
-| `VITE_PROXY_TARGET` | `http://localhost:4000` | *(dev server only)* Where the `/api` proxy forwards requests. |
-
-## Available scripts
-
-### Backend (`backend/`)
-
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the API with hot reload (ts-node-dev) |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm start` | Run the compiled server (`dist/server.js`) |
-| `npm run typecheck` | Type-check without emitting files |
-| `npm run format` | Format sources with Prettier |
-
-### Frontend (`frontend/`)
-
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build for production into `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run lint` | Run ESLint |
-
-## API reference
-
-Base URL: `http://localhost:4000/api`
-
-All responses are JSON. Successful responses wrap their payload in `data`. Errors use one consistent format:
-
-```json
-{
-  "error": {
-    "message": "Validation failed",
-    "details": [{ "field": "title", "message": "Title must be at least 5 characters" }]
-  }
-}
-```
-
-| Status | Meaning |
-| --- | --- |
-| `400` | Invalid input: validation failure, malformed JSON, or invalid ID |
-| `404` | Resource or route not found |
-| `413` | Request body larger than 100 KB |
-| `429` | Rate limit exceeded (30 writes per minute per IP). See the `Retry-After` header. |
-| `500` | Unexpected server error |
-| `503` | Health check: the database is unavailable |
-
-### Endpoints
-
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/health` | API and database health |
-| `GET` | `/issues` | List issues (filter, search, sort, paginate) |
-| `GET` | `/issues/stats` | Counts by status and number of overdue issues |
-| `GET` | `/issues/:id` | Get a single issue |
-| `POST` | `/issues` | Report a new issue |
-| `POST` | `/issues/:id/upvote` | Upvote an issue (recalculates severity) |
-| `PATCH` | `/issues/:id/status` | Change an issue's status |
-
-#### `GET /issues`
-
-| Query param | Type | Default | Notes |
+| Role | Email | Password | Linked Society |
 | --- | --- | --- | --- |
-| `status` | `open` \| `in_progress` \| `resolved` \| `closed` | — | |
-| `category` | `safety` \| `electricity` \| `water` \| `sanitation` \| `infrastructure` \| `internet` \| `other` | — | |
-| `priority` | `critical` \| `high` \| `medium` \| `low` | — | |
-| `q` | string (≤ 100 chars) | — | Case-insensitive search across title, description, and location |
-| `sort` | `severity` \| `newest` \| `upvotes` \| `due` | `severity` | |
-| `page` | integer ≥ 1 | `1` | |
-| `limit` | integer 1–100 | `20` | |
+| Admin | `admin@civicpulse.local` | `Password123!` | All societies |
+| Staff | `staff@civicpulse.local` | `Password123!` | `CP101` (CivicPulse Residency) |
+| Resident | `resident@civicpulse.local` | `Password123!` | `CP101` (CivicPulse Residency, Flat B-304) |
 
-```bash
-curl "http://localhost:4000/api/issues?status=open&sort=due&limit=5"
-```
+---
 
-```json
-{
-  "data": [ { "id": "6afc…", "title": "Exposed wiring near staircase", "severity": 76, "priority": "critical", "...": "..." } ],
-  "meta": { "page": 1, "limit": 5, "total": 12, "totalPages": 3 }
-}
-```
+## Environment Configuration
 
-#### `POST /issues`
+### Backend (`backend/.env`)
 
-| Field | Type | Rules |
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `MONGODB_URI` | Yes | -- | MongoDB connection string |
+| `JWT_SECRET` | Yes | -- | Secret key used to sign JWT session cookies |
+| `BACKEND_PORT` | No | `4000` | HTTP listen port |
+| `NODE_ENV` | No | `development` | Runtime mode (`development`, `test`, `production`) |
+| `CORS_ORIGINS` | No | Localhost + Vercel defaults | Comma-separated allowed browser origins |
+| `FRONTEND_URL` | No | -- | Additional allowed frontend origin |
+
+### Frontend (`frontend/.env.development` / `frontend/.env`)
+
+| Variable | Default | Description |
 | --- | --- | --- |
-| `title` | string | 5–120 characters, required |
-| `description` | string | 10–2000 characters, required |
-| `category` | enum | required (see categories above) |
-| `location` | string | 2–120 characters, required |
-| `impact` | `individual` \| `group` \| `community` | default `individual` |
-| `reporterName` | string | ≤ 60 characters, optional |
+| `VITE_API_BASE_URL` | `/api` | Base URL for Axios requests. Keep `/api` in development to use Vite proxying; set the full API URL in cross-origin production deployments. |
+| `VITE_PROXY_TARGET` | `http://localhost:4000` | Upstream backend target for the Vite dev server proxy. |
 
-```bash
-curl -X POST http://localhost:4000/api/issues \
-  -H "Content-Type: application/json" \
-  -d '{
-        "title": "Exposed wiring near staircase",
-        "description": "Live wires hanging from the ceiling on floor 2 of Hostel B.",
-        "category": "safety",
-        "impact": "community",
-        "location": "Hostel B, Floor 2"
-      }'
-```
+---
 
-Returns `201 Created` with a `Location` header and the created issue. Severity, priority, and SLA are calculated by the server and cannot be set by the client.
+## API Reference
 
-#### `PATCH /issues/:id/status`
+All endpoints are served under `/api`. Authenticated routes read the `token` cookie (`HttpOnly`).
 
-```bash
-curl -X PATCH http://localhost:4000/api/issues/<id>/status \
-  -H "Content-Type: application/json" \
-  -d '{ "status": "resolved" }'
-```
+### Health
 
-Setting `resolved` or `closed` records `resolvedAt`. Re-opening the issue clears it.
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Public | Returns API status, environment, and uptime in seconds |
+| `GET` | `/api/cors-config` | Public | Exposes active CORS origin configuration for diagnostics |
 
-#### `GET /issues/stats`
+### Authentication
 
-```json
-{ "data": { "total": 12, "open": 6, "in_progress": 3, "resolved": 2, "closed": 1, "overdue": 1 } }
-```
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/signup` | Public (Rate-limited) | Register a `resident`, `staff`, or `admin` account and issue an `HttpOnly` session cookie |
+| `POST` | `/api/auth/login` | Public (Rate-limited) | Authenticate credentials and issue an `HttpOnly` session cookie |
+| `POST` | `/api/auth/logout` | Public | Clear the session cookie |
+| `GET` | `/api/auth/me` | Authenticated | Return the currently authenticated user profile |
+| `PATCH` | `/api/auth/society` | Authenticated | Link a resident or staff account to a registered society by ID, code, or name |
 
-## Severity and SLA model
+### Societies
 
-Severity is a transparent, deterministic score from **0 to 100**, implemented in [`severity.service.ts`](backend/src/modules/issues/severity.service.ts):
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/society/public` | Public | List registered societies (`_id`, `name`, `code`, `city`, `state`) for signup and linking |
+| `POST` | `/api/society` | Admin | Create a new society and auto-link matching pending users |
+| `GET` | `/api/society` | Admin | List all societies with admin details |
+| `GET` | `/api/society/:id` | Admin | Retrieve a single society by ID |
+| `GET` | `/api/society/:id/issues` | Authenticated | List issues belonging to a specific society |
 
-```
-severity = category weight + impact weight + vote score    (capped at 100)
-```
+### Issues and Audit Logs
 
-| Category | Weight | | Impact | Weight |
-| --- | --- | --- | --- | --- |
-| Safety | 40 | | Individual | 0 |
-| Electricity | 30 | | Group | 15 |
-| Water | 30 | | Community | 30 |
-| Sanitation | 25 | | | |
-| Infrastructure | 20 | | | |
-| Internet | 15 | | | |
-| Other | 10 | | | |
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/issues` | Authenticated | List issues scoped to the caller's role (society-wide for residents, assigned for staff, all for admin) |
+| `POST` | `/api/issues` | Resident | Create a new issue or merge into an existing open duplicate in the same society and category |
+| `GET` | `/api/issues/:id` | Authenticated | Retrieve full issue details, priority score, SLA deadline, reporter, and assignee |
+| `PATCH` | `/api/issues/:id` | Staff, Admin | Update issue workflow status (`open`, `in-progress`, `resolved`) and append an audit log |
+| `PATCH` | `/api/issues/:id/assign` | Admin | Assign a staff user to an issue and append an assignment audit log |
+| `GET` | `/api/issues/:id/logs` | Staff, Admin | Retrieve chronological audit trail entries for an issue |
 
-**Vote score** is `min(30, round(log2(upvotes + 1) × 6))`. Because it's logarithmic, the first few upvotes count the most and no issue can climb on votes alone.
+### Dashboard and Users
 
-| Severity | Priority | Response target (SLA) |
-| --- | --- | --- |
-| 70 – 100 | Critical | 4 hours |
-| 50 – 69 | High | 24 hours |
-| 30 – 49 | Medium | 3 days |
-| 0 – 29 | Low | 7 days |
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/dashboard` | Admin | Aggregated counts (`totalIssues`, `openIssues`, `inProgressIssues`, `resolvedIssues`, `breachedIssues`, `highPriorityIssues`, `totalSocieties`, `categoryDistribution`) |
+| `GET` | `/api/users` | Admin | List users with optional `?role=resident\|staff\|admin` filter |
 
-The SLA deadline is measured from when the issue was created. When upvotes push an issue into a higher priority, the deadline **only ever tightens**. It is never extended.
+---
 
-## Data model
+## Priority Scoring and SLA Model
 
-`Issue` collection:
+Each issue is prioritized dynamically using three signals:
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `title` | string | trimmed, 5–120 |
-| `description` | string | trimmed, 10–2000 |
-| `category` | enum | see above |
-| `impact` | enum | `individual`, `group`, `community` |
-| `location` | string | free text, e.g. "Hostel B, Floor 2" |
-| `reporterName` | string? | optional |
-| `status` | enum | default `open` |
-| `upvotes` | number | ≥ 0, incremented atomically |
-| `severity` | number | 0–100, server-computed |
-| `priority` | enum | derived from severity |
-| `slaDueAt` | Date | deadline for a response |
-| `resolvedAt` | Date? | set when resolved or closed |
-| `createdAt` / `updatedAt` | Date | Mongoose timestamps |
+1. **Category Weight**: Safety-critical utilities (`water`, `electricity`, `lift`, `security`) start with higher base urgency than routine maintenance (`cleanliness`, `plumbing`).
+2. **Duplicate Report Volume**: When multiple residents report the same open problem, the backend merges the report into the existing ticket, increments `reportCount`, and recalculates `priorityScore`.
+3. **SLA Breach Escalation**: Every society defines default SLA hours per category. When an unresolved issue passes `slaDeadline`, the API flags `isEscalated = true`, boosts `priorityScore`, and writes an `escalation` audit log entry.
 
-Indexes: `{status, severity}`, `{category, status}`, `{createdAt}`. In API responses, `_id` is exposed as `id` and `__v` is removed.
-
-## Frontend design system
-
-The interface aims to be calm, minimal, and readable:
-
-- **Neutral palette.** Zinc greys on an off-white background. Near-black (`zinc-900`) is the only accent for primary actions.
-- **No gradients or decoration.** Flat surfaces, 1px borders, and very light shadows.
-- **Colour carries meaning.** Colour is used only for status and priority: red = critical, orange = high, amber = medium, grey = low. Blue, violet, green, and grey mark the statuses.
-- **Typography.** Inter with tabular numbers for counts and timers, and a tight heading scale.
-- **Every state is designed.** Loading skeletons, empty states (with and without filters), inline error states with retry, and success confirmations.
-- **Accessibility.** Semantic landmarks, a skip link, labelled controls, `aria-invalid` and error descriptions on form fields, visible focus rings, and focus moves to the first invalid field on submit.
-- **Responsive.** Single-column layouts on phones. Filters reflow into a two-column grid.
-
-Shared building blocks are in [`frontend/src/components/ui`](frontend/src/components/ui): `Button`, `ButtonLink`, `Field`, `TextInput`, `TextArea`, `Select`, `StatusBadge`, `PriorityBadge`, `Card`, `Alert`, `EmptyState`, `ErrorState`, `Skeleton`, `Icon`.
+---
 
 ## Deployment
 
-### API with Docker
+### Frontend (Vercel)
 
-The backend image is a multi-stage build. TypeScript is compiled in a build stage, and the runtime image contains only production dependencies and `dist/`. It runs as a non-root user and includes a health check.
+- Root directory: `frontend`
+- Build command: `npm run build`
+- Output directory: `dist`
+- SPA routing: Configured via `frontend/vercel.json` to rewrite all routes to `/index.html`
+- Environment variable: `VITE_API_BASE_URL=https://your-backend-domain.vercel.app/api`
+
+### Backend (Vercel Serverless or Docker)
+
+- **Vercel**: Set root directory to `backend` (serverless entrypoints in `backend/api/`). Set `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`, and `CORS_ORIGINS`.
+- **Docker**: A multi-stage, non-root production build is provided in `backend/Dockerfile`:
 
 ```bash
 cd backend
-docker build -t civicpulse-api .
-docker run -d -p 4000:4000 \
-  -e MONGODB_URI="mongodb://host.docker.internal:27017/civicpulse" \
-  -e CORS_ORIGIN="https://your-frontend.example.com" \
-  civicpulse-api
+docker build -t civicpulse-backend .
+docker run -p 4000:4000 --env-file .env civicpulse-backend
 ```
 
-### Frontend
+---
 
-```bash
-cd frontend
-VITE_API_URL=https://api.example.com/api npm run build
-```
+## Security Controls
 
-Serve `frontend/dist/` from any static host (Nginx, Netlify, Vercel, S3 + CloudFront). Configure the host to fall back to `index.html` so client-side routes like `/issues/:id` work on refresh.
+- **Password Storage**: Salted `bcryptjs` hashing (`password` field excluded from queries by default via `select: false`).
+- **Session Transport**: `HttpOnly` cookies with `SameSite=Lax` in development and `SameSite=None; Secure` in production.
+- **HTTP Hardening**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`, `x-powered-by` disabled, and `1mb` JSON payload limit.
+- **Abuse Prevention**: Fixed-window IP rate limiting on authentication routes (`/api/auth/login`, `/api/auth/signup`).
+- **Strict CORS**: Explicit origin allow-list validation with credential support.
 
-## Security notes and known limitations
+---
 
-- **No authentication yet.** Anyone with network access can change an issue's status. Put the API behind an authenticated gateway, or finish the planned auth module, before exposing it publicly.
-- **Upvote de-duplication is per browser.** It uses `localStorage`. The server-side rate limit reduces abuse but does not prevent it. Per-user votes come with authentication.
-- **The rate limiter is in-memory.** It is correct for a single instance. Use a Redis-backed store when running several replicas.
-- `trust proxy` is set to `1` so client IPs are read correctly behind one reverse proxy. Change this if your setup is different.
+## Phased Engineering Roadmap
 
-## Roadmap
+| Phase | Target Scope | Key Deliverables |
+| --- | --- | --- |
+| **Phase 01 (Current Release)** | Core Society Operations and SLA Engine | Role-based dashboards, deduplication, SLA escalation, Kanban workflow board, staff assignment, audit timeline, society directory. |
+| **Phase 02 (Next Up)** | AI Triage, Rich Media, and Live Streams | Gemini AI Civic Intelligence for taxonomy and ETA generation; photo uploads, GPS pins, voice-to-text reporting; WebSocket real-time updates. |
+| **Phase 03 (Future Vision)** | Geospatial Digital Twin and Citizen Ecosystem | Obsidian-styled interactive map with heatmaps and emergency layers; ward-level geospatial analytics; public discussions, citizen verification, and reputation leaderboards. |
 
-- [ ] Authentication and roles (resident, maintainer, admin) with JWT
-- [ ] Maintainer and admin dashboards, assignment of issues to staff
-- [ ] Duplicate detection and clustering of similar reports
-- [ ] Real-time updates over WebSockets
-- [ ] Comments and activity timeline per issue
-- [ ] Analytics: resolution times, SLA compliance, hotspots
-- [ ] Map view for location-based browsing
-- [ ] Redis for rate limiting, caching, and background jobs (SLA breach notifications)
-- [ ] Automated test suites (API integration tests, component tests)
+---
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, coding standards, and commit conventions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, verification steps, and pull request guidelines.

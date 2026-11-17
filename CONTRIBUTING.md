@@ -1,174 +1,129 @@
 # Contributing to CivicPulse
 
-## Stack
+Thank you for contributing to CivicPulse. This document outlines the local development workflow, code quality standards, verification steps, and pull request expectations.
 
-- `backend/`: Express, Mongoose, TypeScript
-- `frontend/`: React, Vite, Redux Toolkit, Tailwind CSS
+---
 
-## Requirements
+## Repository Layout
 
-- Node.js 18+
+- `backend/` -- Express 5, TypeScript, Mongoose 9, JWT cookie authentication, and REST controllers
+- `frontend/` -- React 19, TypeScript, Vite 7, Redux Toolkit, React Router DOM 7, Axios, and Tailwind CSS 4
+
+---
+
+## Prerequisites
+
+- Node.js 20+
 - npm 9+
-- MongoDB connection string
+- MongoDB 6+ (local instance, container, or MongoDB Atlas)
 - Git
 
-## Local Setup
+---
 
-### Backend
+## Local Development Setup
+
+### 1. Backend
 
 ```bash
 cd backend
+cp .env.example .env
 npm install
+npm run dev
 ```
 
-Create `backend/.env` from `backend/.env.example`:
+Update `backend/.env` with your local MongoDB URI and a development `JWT_SECRET`:
 
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/civicpulse
-PORT=4000
+MONGODB_URI=mongodb://127.0.0.1:27017/civicpulse
+BACKEND_PORT=4000
 JWT_SECRET=replace-with-a-long-random-secret
 NODE_ENV=development
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+CORS_ORIGINS=http://localhost:5173,http://localhost:5174
 ```
 
-Run:
+Verify the API:
 
 ```bash
-npm run dev
+curl http://localhost:4000/api/health
 ```
 
-Backend:
-
-```text
-http://localhost:4000
-```
-
-Health check:
-
-```text
-http://localhost:4000/api/health
-```
-
-### Frontend
+### 2. Frontend
 
 ```bash
 cd frontend
 npm install
-```
-
-Create or update `frontend/.env.development`:
-
-```env
-VITE_API_BASE_URL=http://localhost:4000/api
-```
-
-Run:
-
-```bash
 npm run dev
 ```
 
-Frontend:
+`frontend/.env.development` defaults to `VITE_API_BASE_URL=/api`, which Vite proxies to `http://localhost:4000`. Open `http://localhost:5173` in your browser.
 
-```text
-http://localhost:5173
+---
+
+## Contribution Workflow
+
+```mermaid
+flowchart LR
+    Sync["Sync main Branch"] --> Branch["Create Feature Branch"]
+    Branch --> Code["Implement Scoped Changes"]
+    Code --> Check["Run Build and Lint Checks"]
+    Check --> Commit["Commit with Conventional Messages"]
+    Commit --> PR["Open Pull Request"]
 ```
 
-## Useful Commands
-
-### Backend
-
-```bash
-cd backend
-npm run dev
-npm run build
-npm run start
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm run dev
-npm run build
-npm run lint
-```
-
-## Deployment
-
-### Backend
-
-- Vercel project root: `backend`
-- serverless entrypoints live in `backend/api/`
-
-Required production env:
-
-```env
-MONGODB_URI=...
-JWT_SECRET=...
-NODE_ENV=production
-CORS_ORIGINS=https://your-frontend-domain.vercel.app
-```
-
-### Frontend
-
-Set:
-
-```env
-VITE_API_BASE_URL=https://your-backend-domain.vercel.app/api
-```
-
-## Workflow
-
-- Create a focused branch:
+1. Create a focused branch from `main`:
 
 ```bash
 git checkout -b feat/short-description
 ```
 
-- Keep it updated:
+Preferred branch prefixes: `feat/`, `fix/`, `docs/`, `refactor/`, `style/`, `chore/`.
+
+2. Follow **Conventional Commits** (`feat:`, `fix:`, `style:`, `refactor:`, `docs:`, `chore:`) with clear, imperative commit subjects.
+
+3. Keep changes scoped to a single concern and avoid mixing unrelated formatting changes with functional edits.
+
+---
+
+## Engineering Standards
+
+- **TypeScript**: Maintain clean types across both backend and frontend; avoid introducing untyped `any` where domain types exist (`frontend/src/types/`).
+- **API Access**: Use the shared Axios instance in `frontend/src/services/api.ts` rather than creating ad-hoc HTTP clients.
+- **UI Discipline**: Preserve the minimal monochrome design system (`zinc` neutral palette, hairline borders, restrained semantic colors only for severity, SLA risk, and resolution states). Do not use browser `alert()` or `confirm()` dialogs.
+- **Configuration**: Never hardcode secrets, credentials, or deployment hostnames in source code.
+
+---
+
+## Pre-PR Verification Checklist
+
+Run all checks locally before opening a pull request:
 
 ```bash
-git fetch upstream
-git rebase upstream/main
+npm --prefix backend run build
+npm --prefix frontend run lint
+npm --prefix frontend run build
 ```
 
-Preferred branch prefixes:
+Verify manually against a running backend and MongoDB instance:
 
-- `feat/`
-- `fix/`
-- `docs/`
-- `refactor/`
-- `chore/`
+- Login, Signup, Logout, and browser reload session persistence (`/api/auth/me`)
+- Role-based route guards (`resident`, `staff`, `admin`)
+- Issue creation, filtering, workflow transitions, staff assignment, and audit timeline rendering
 
-## Quality Bar
+---
 
-- Use TypeScript consistently
-- Keep changes scoped and readable
-- Do not hardcode secrets, ports, or deployment URLs
-- Use env variables for configuration
-- Reuse the shared frontend API client in `frontend/src/services/api.ts`
+## Pull Request Guidelines
 
-Before opening a PR, run:
+Include the following in your pull request description:
 
-```bash
-cd backend && npm run build
-cd frontend && npm run build
-cd frontend && npm run lint
-```
+- Summary of what changed and why
+- Verification steps and test results
+- Screenshots or recordings for UI updates
+- Any new environment variables or deployment considerations
 
-## Pull Requests
+---
 
-Include:
+## Security Policy
 
-- what changed
-- why it changed
-- how it was tested
-- screenshots for UI changes
-- env or deployment notes if relevant
-
-## Security
-
-- Never commit `.env` files or real secrets
-- Rotate any exposed credential immediately
-- Report security issues privately
+- Never commit `.env` files, database credentials, API keys, or JWT secrets.
+- Rotate any accidentally exposed secret immediately.
+- Report security vulnerabilities privately to the repository maintainers rather than opening a public issue.
