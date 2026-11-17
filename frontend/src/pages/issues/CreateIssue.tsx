@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../../services/api";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import SocietyLinkBanner from "../../components/SocietyLinkBanner";
 import Card from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
 import { Spinner } from "../../components/ui/Button";
@@ -84,6 +85,8 @@ function CreateIssue() {
           Duplicate reports in the same category merge automatically and raise priority.
         </p>
       </div>
+
+      <SocietyLinkBanner />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">

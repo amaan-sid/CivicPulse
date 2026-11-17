@@ -266,3 +266,102 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to fetch current user." });
   }
 };
+
+export const linkSociety = async (req: Request, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Not authorized." });
+    }
+
+    const societyInput = normalizeString(req.body?.society);
+    const flatNumber = normalizeString(req.body?.flatNumber);
+
+    if (!societyInput) {
+      return res.status(400).json({ message: "Please select or enter a society." });
+    }
+
+    const societyId = await resolveSocietyId(societyInput);
+    if (!societyId) {
+      return res.status(404).json({
+        message: "No registered society matched that name or code. Ask an admin to create it first."
+      });
+    }
+
+    const societyDoc = await Society.findById(societyId);
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    user.society = societyDoc!._id;
+    user.societyLabel = societyDoc!.name;
+    if (flatNumber) user.flatNumber = flatNumber;
+    await user.save();
+
+    setAuthCookie(res, user);
+
+    return res.status(200).json({
+      message: `Linked to ${societyDoc!.name}.`,
+      user: toSafeUser(user)
+    });
+  } catch (error) {
+    console.error("LINK SOCIETY ERROR:", error);
+    return res.status(500).json({ message: "Failed to link society." });
+  }
+};
+
+export const ensureDemoData = async () => {
+  if (env.isProduction) return;
+
+  try {
+    let adminUser = await User.findOne({ email: "admin@civicpulse.local" });
+    if (!adminUser) {
+      adminUser = await User.create({
+        name: "Rohan Verma",
+        email: "admin@civicpulse.local",
+        password: await bcrypt.hash("Password123!", 10),
+        role: "admin"
+      });
+    }
+
+    let defaultSociety = await Society.findOne({ code: "CP101" });
+    if (!defaultSociety) {
+      defaultSociety = await Society.create({
+        name: "CivicPulse Residency",
+        code: "CP101",
+        address: "100 Civic Center Road",
+        city: "Bengaluru",
+        state: "Karnataka",
+        totalFlats: 120,
+        admin: adminUser._id
+      });
+    }
+
+    const staffExists = await User.exists({ email: "staff@civicpulse.local" });
+    if (!staffExists) {
+      await User.create({
+        name: "Vikram Nair",
+        email: "staff@civicpulse.local",
+        password: await bcrypt.hash("Password123!", 10),
+        role: "staff",
+        society: defaultSociety._id,
+        societyLabel: defaultSociety.name
+      });
+    }
+
+    const residentExists = await User.exists({ email: "resident@civicpulse.local" });
+    if (!residentExists) {
+      await User.create({
+        name: "Ananya Patel",
+        email: "resident@civicpulse.local",
+        password: await bcrypt.hash("Password123!", 10),
+        role: "resident",
+        flatNumber: "B-304",
+        society: defaultSociety._id,
+        societyLabel: defaultSociety.name
+      });
+    }
+  } catch (error) {
+    console.warn("Demo seed skipped:", (error as Error).message);
+  }
+};

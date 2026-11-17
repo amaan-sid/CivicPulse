@@ -15,6 +15,8 @@ import IssueBoard from "./pages/issues/IssueBoard";
 import CreateSociety from "./pages/society/CreateSociety";
 import SocietyList from "./pages/society/SocietyList";
 import SocietyIssues from "./pages/society/SocietyIssues";
+import Users from "./pages/admin/Users";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import IssueRoute from "./routes/IssueRoutes";
 import ProtectedRoute, { AuthLoadingScreen, GuestRoute } from "./components/ProtectedRoute";
@@ -135,6 +137,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <SocietyIssues />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

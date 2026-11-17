@@ -119,10 +119,11 @@ export const createIssue = async (req: Request, res: Response) => {
 export const getSocietyIssues = async (req: Request, res: Response) => {
   try {
     const { role, id, society } = req.user!;
-    const userSociety = role === "admin" ? society || null : ensureLinkedSociety(req, res);
+    const userSociety = society || null;
 
+    // If a resident/staff has not linked a society yet, return an empty list instead of crashing pages.
     if (role !== "admin" && !userSociety) {
-      return;
+      return res.json([]);
     }
 
     const societyScope = userSociety ? { society: userSociety } : {};
@@ -155,11 +156,7 @@ export const getSocietyIssues = async (req: Request, res: Response) => {
       await issue.save();
     }
 
-    let filter: any = { ...societyScope };
-
-    if (role === "resident") {
-      filter.reporters = id;
-    }
+    const filter: any = { ...societyScope };
 
     if (role === "staff") {
       filter.assignedTo = id;
@@ -279,15 +276,6 @@ export const getIssueById = async (req: Request, res: Response) => {
 
     if (userSociety && issue.society.toString() !== userSociety) {
       return res.status(403).json({ message: "Access denied" });
-    }
-
-    if (role === "resident") {
-      const isReporter = issue.reporters.some(
-        (r) => r.toString() === id
-      );
-      if (!isReporter) {
-        return res.status(403).json({ message: "Not allowed to view this issue" });
-      }
     }
 
     if (role === "staff") {

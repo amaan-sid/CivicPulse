@@ -6,6 +6,7 @@ import API from "../../services/api";
 import type { Issue } from "../../types/issue";
 import { getIssueSeverity } from "../../types/issue";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import SocietyLinkBanner from "../../components/SocietyLinkBanner";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import SLATimer from "../../components/SLATimer";
@@ -61,6 +62,15 @@ function ResidentDashboard() {
           </Link>
         </div>
       </div>
+
+      <SocietyLinkBanner
+        onLinked={() => {
+          setNotice("");
+          API.get<Issue[]>("/issues")
+            .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
+            .catch(() => {});
+        }}
+      />
 
       {notice && (
         <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900">

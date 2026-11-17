@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Society } from "../models/society.model";
 import { Issue } from "../models/issue.model";
+import { User } from "../models/user.model";
 
 const normalizeString = (value: unknown) =>
   typeof value === "string" ? value.trim() : "";
@@ -45,8 +46,23 @@ export const createSociety = async (req: Request, res: Response) => {
       city,
       state,
       totalFlats,
-      admin: req.user.id 
+      admin: req.user.id
     });
+
+    // Automatically link pending users who signed up with this society's name or code.
+    const escapeRegex = (val: string) => val.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    await User.updateMany(
+      {
+        society: { $exists: false },
+        societyLabel: {
+          $in: [
+            new RegExp(`^${escapeRegex(name)}$`, "i"),
+            new RegExp(`^${escapeRegex(code)}$`, "i")
+          ]
+        }
+      },
+      { $set: { society: society._id, societyLabel: society.name } }
+    );
 
     res.status(201).json(society);
 

@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
-import { Link, type LinkProps } from "react-router";
+import { Link, type LinkProps } from "react-router-dom";
 
 type Variant = "primary" | "secondary" | "ghost";
 type Size = "sm" | "md";

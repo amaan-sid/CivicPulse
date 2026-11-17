@@ -18,6 +18,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/create-issue", label: "Report Issue", icon: "plus", roles: ["resident"] },
   { to: "/societies", label: "Societies", icon: "building", roles: ["admin"] },
   { to: "/create-society", label: "Create Society", icon: "plus", roles: ["admin"] },
+  { to: "/users", label: "Users & Staff", icon: "users", roles: ["admin"] },
+  { to: "/profile", label: "Account", icon: "user" },
 ];
 
 interface SidebarProps {

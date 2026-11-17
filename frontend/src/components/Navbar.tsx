@@ -16,6 +16,8 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string }> = 
   { match: (p) => p === "/societies", title: "Societies" },
   { match: (p) => p === "/create-society", title: "Create Society" },
   { match: (p) => p.startsWith("/society/"), title: "Society Issues" },
+  { match: (p) => p === "/users", title: "Users & Staff" },
+  { match: (p) => p === "/profile", title: "Account" },
 ];
 
 interface NavbarProps {

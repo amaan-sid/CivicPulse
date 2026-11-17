@@ -6,6 +6,12 @@ import { setUser } from "../../features/auth/authSlice";
 import { Icon, Logo } from "../../components/ui/Icon";
 import { Spinner } from "../../components/ui/Button";
 
+const DEMO_ACCOUNTS = [
+  { label: "Admin", email: "admin@civicpulse.local", password: "Password123!" },
+  { label: "Staff", email: "staff@civicpulse.local", password: "Password123!" },
+  { label: "Resident", email: "resident@civicpulse.local", password: "Password123!" },
+];
+
 function Login() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -18,12 +24,10 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
     setError("");
-
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail || !loginPassword) {
       setError("Please enter both your email address and password.");
       return;
     }
@@ -32,7 +36,7 @@ function Login() {
     try {
       const res = await API.post("/auth/login", {
         email: trimmedEmail,
-        password,
+        password: loginPassword,
       });
 
       dispatch(setUser(res.data.user));
@@ -47,6 +51,11 @@ function Login() {
     }
   };
 
+  const handleLogin = (e: FormEvent) => {
+    e.preventDefault();
+    void performLogin(email, password);
+  };
+
   return (
     <div className="flex min-h-screen flex-col justify-center bg-zinc-50 px-4 py-12 sm:px-6">
       <div className="mx-auto w-full max-w-sm">
@@ -55,8 +64,12 @@ function Login() {
             <Logo className="size-8" />
             <span className="text-base font-semibold tracking-tight text-zinc-900">CivicPulse</span>
           </Link>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sign in to your account</h1>
-          <p className="mt-1 text-sm text-zinc-500">Enter your credentials to access your workspace.</p>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+            Sign in to your account
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Enter your credentials to access your workspace.
+          </p>
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6">
@@ -88,7 +101,10 @@ function Login() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-zinc-700">
+              <label
+                htmlFor="login-password"
+                className="mb-1.5 block text-xs font-medium text-zinc-700"
+              >
                 Password
               </label>
               <div className="relative">
@@ -122,11 +138,39 @@ function Login() {
               {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
+
+          {import.meta.env.DEV && (
+            <div className="mt-5 border-t border-zinc-100 pt-4">
+              <p className="mb-2.5 text-center text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                Quick demo access
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.label}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => {
+                      setEmail(acc.email);
+                      setPassword(acc.password);
+                      void performLogin(acc.email, acc.password);
+                    }}
+                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
+                  >
+                    {acc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="mt-5 text-center text-xs text-zinc-500">
           Don&apos;t have an account?{" "}
-          <Link to="/signup" className="font-medium text-zinc-900 underline-offset-4 hover:underline">
+          <Link
+            to="/signup"
+            className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+          >
             Create an account
           </Link>
         </p>
