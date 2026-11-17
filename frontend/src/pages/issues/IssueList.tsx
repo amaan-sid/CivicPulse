@@ -1,234 +1,192 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../app/store";
-import API from "../../services/api";
-import DashboardLayout from "../../layouts/DashboardLayout";
-import type { Issue, IssueSeverity, IssueStatusType } from "../../types/issue";
-import { getIssueSeverity } from "../../types/issue";
-import Card from "../../components/ui/Card";
-import Badge from "../../components/ui/Badge";
-import SLATimer from "../../components/SLATimer";
-import { Icon } from "../../components/ui/Icon";
+import { useEffect, useState } from "react"
+import API from "@/services/api"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import { Link } from "react-router-dom"
+import type { Issue } from "@/types"
+import Card from "@/components/ui/Card"
+import Badge from "@/components/ui/Badge"
+import SLATimer from "@/features/issues/components/SLATimer"
+import { AlertTriangle, AlertCircle, Filter } from "lucide-react"
+import { isIssueBreached, isIssueExpired } from "@/utils/issueHelpers"
 
 function IssueList() {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [issues, setIssues] = useState<Issue[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | IssueStatusType>("all");
-  const [severityFilter, setSeverityFilter] = useState<"all" | IssueSeverity>("all");
+  const [issues, setIssues] = useState<Issue[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [statusFilter, setStatusFilter] = useState("ALL")
 
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const res = await API.get<Issue[]>("/issues");
-        setIssues(Array.isArray(res.data) ? res.data : []);
-      } catch (err: unknown) {
-        const msg =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Failed to fetch issues.";
-        setError(msg);
+        const res = await API.get("/issues")
+        setIssues(res.data)
+      } catch (err: any) {
+        setError(err.response?.data?.message || "Failed to fetch issues")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    void fetchIssues();
-  }, []);
+    fetchIssues()
+  }, [])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return issues.filter((issue) => {
-      const sev = getIssueSeverity(issue);
-      if (statusFilter !== "all" && issue.status !== statusFilter) return false;
-      if (severityFilter !== "all" && sev !== severityFilter) return false;
-      if (
-        q &&
-        !issue.title.toLowerCase().includes(q) &&
-        !issue.description.toLowerCase().includes(q) &&
-        !(issue.category || "").toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [issues, search, statusFilter, severityFilter]);
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <p className="text-gray-500">Loading issues...</p>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <p className="text-red-500">{error}</p>
+      </DashboardLayout>
+    )
+  }
+
+  const unexpired = issues.filter((i) => !isIssueExpired(i))
+
+  const filterTabs = [
+    { label: "All Issues", value: "ALL" },
+    { label: "Open", value: "open" },
+    { label: "In Progress", value: "in-progress" },
+    { label: "Resolved", value: "resolved" },
+    { label: "Breached Issues", value: "escalated" }
+  ]
+
+  const filteredIssues = unexpired.filter((issue) => {
+    const breached = isIssueBreached(issue)
+    if (statusFilter === "escalated") return breached
+    if (statusFilter === "open") return issue.status === "open" && !breached
+    if (statusFilter === "in-progress") return issue.status === "in-progress" && !breached
+    if (statusFilter === "resolved") return issue.status === "resolved"
+    if (statusFilter === "ALL") return !breached
+    return !breached
+  })
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Issues</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Search, filter, and inspect issues ranked by priority and SLA deadline.
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+            Community Issues
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Browse and track community issues.
           </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to="/issue-board"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-          >
-            <Icon name="kanban" className="size-4" />
-            Board
-          </Link>
-          {user?.role === "resident" && (
-            <Link
-              to="/create-issue"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
-            >
-              <Icon name="plus" className="size-4" />
-              Report Issue
-            </Link>
-          )}
         </div>
       </div>
 
-      <Card className="mb-6 p-3.5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div className="relative flex-1">
-            <Icon
-              name="search"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, description, or category…"
-              className="block w-full rounded-lg border border-zinc-300 bg-white py-1.5 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
-            />
-          </div>
+      {/* Filter Tabs with counts */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4">
+        <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
+          <Filter size={14} /> Filter:
+        </span>
+        {filterTabs.map((tab) => {
+          const count = unexpired.filter((issue) => {
+            const breached = isIssueBreached(issue)
+            if (tab.value === "escalated") return breached
+            if (tab.value === "open") return issue.status === "open" && !breached
+            if (tab.value === "in-progress") return issue.status === "in-progress" && !breached
+            if (tab.value === "resolved") return issue.status === "resolved"
+            if (tab.value === "ALL") return !breached
+            return !breached
+          }).length
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(["all", "open", "in-progress", "resolved"] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium capitalize transition ${
-                  statusFilter === st
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+          const isActive = statusFilter === tab.value
+          const isBreachedTab = tab.value === "escalated"
+
+          return (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                isActive
+                  ? isBreachedTab
+                    ? "bg-rose-600 text-white shadow-sm"
+                    : "bg-sky-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
                 }`}
               >
-                {st === "all" ? "All" : st.replace("-", " ")}
-              </button>
-            ))}
-
-            <select
-              aria-label="Filter by severity"
-              value={severityFilter}
-              onChange={(e) => setSeverityFilter(e.target.value as "all" | IssueSeverity)}
-              className="ml-1 rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 focus:border-zinc-900 focus:outline-none"
-            >
-              <option value="all">All severities</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-        </div>
-      </Card>
-
-      {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-40 animate-pulse rounded-xl border border-zinc-200 bg-white" />
-          ))}
-        </div>
-      ) : error ? (
-        <Card className="border-red-200 bg-red-50/50">
-          <div className="flex items-start gap-2.5 text-red-700">
-            <Icon name="alert" className="mt-0.5 size-4 shrink-0" />
-            <p className="text-sm">{error}</p>
-          </div>
-        </Card>
-      ) : filtered.length === 0 ? (
-        <Card className="py-14 text-center">
-          <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
-            <Icon name={issues.length > 0 ? "search" : "inbox"} className="size-5" />
-          </div>
-          <h3 className="text-sm font-semibold text-zinc-900">
-            {issues.length > 0 ? "No matching issues" : "No issues reported yet"}
-          </h3>
-          <p className="mt-1 text-xs text-zinc-500">
-            {issues.length > 0
-              ? "Try adjusting your search query or filters."
-              : "New community issues will appear here once reported."}
-          </p>
-          {issues.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setStatusFilter("all");
-                setSeverityFilter("all");
-              }}
-              className="mt-4 rounded-lg border border-zinc-300 bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-            >
-              Clear filters
+                {count}
+              </span>
             </button>
-          )}
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((issue) => {
-            const sev = getIssueSeverity(issue);
-            return (
-              <Link key={issue._id} to={`/issues/${issue._id}`} className="group block">
-                <Card hover className="flex h-full flex-col justify-between">
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-zinc-900 line-clamp-2 group-hover:underline group-hover:underline-offset-2">
-                        {issue.title}
-                      </h3>
-                      {issue.category && (
-                        <span className="shrink-0 text-xs capitalize text-zinc-400">
-                          {issue.category}
-                        </span>
-                      )}
-                    </div>
+          )
+        })}
+      </div>
 
-                    <p className="mt-2 text-xs leading-5 text-zinc-600 line-clamp-2">
+      {filteredIssues.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800 rounded-md p-12 text-center shadow-sm">
+          <AlertCircle size={36} className="mx-auto text-slate-400 mb-3" />
+          <h3 className="text-lg font-bold text-slate-700 dark:text-white">No issues found</h3>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+            There are no issues matching the selected filter.
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredIssues.map((issue) => {
+            const breached = isIssueBreached(issue)
+            return (
+              <Link key={issue._id} to={`/issues/${issue._id}`}>
+                <Card className="h-full flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-slate-800 dark:text-white">
+                      {issue.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-slate-300 text-sm mb-4 line-clamp-2">
                       {issue.description}
                     </p>
                   </div>
 
-                  <div className="mt-4 space-y-3 border-t border-zinc-100 pt-3">
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span className="tabular-nums">
-                        {issue.reportCount}{" "}
-                        {Number(issue.reportCount) === 1 ? "report" : "reports"}
-                      </span>
-                      {issue.assignedTo?.name && (
-                        <span className="truncate text-zinc-600">{issue.assignedTo.name}</span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <Badge text={sev} variant={sev} />
-                        <Badge text={issue.status} variant={issue.status} />
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-700 mt-auto">
+                    {breached ? (
+                      <div className="flex justify-start items-center">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-sm bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm">
+                          <AlertTriangle size={12} /> SLA Breached
+                        </span>
                       </div>
-                      <SLATimer
-                        createdAt={issue.createdAt}
-                        priority={sev}
-                        slaDeadline={issue.slaDeadline}
-                        status={issue.status}
-                      />
-                    </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">
+                          Reported by <span className="font-semibold text-gray-800 dark:text-slate-200">{issue.reportCount}</span> residents
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <div className="flex gap-2">
+                            <Badge text={issue.severity} variant={issue.severity} />
+                            <Badge text={issue.status} variant={issue.status} />
+                          </div>
+                          {issue.status !== "resolved" && (
+                            <SLATimer
+                              createdAt={issue.createdAt}
+                              priority={issue.severity}
+                              slaDeadline={issue.slaDeadline}
+                              isEscalated={issue.isEscalated}
+                              status={issue.status}
+                            />
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Card>
               </Link>
-            );
+            )
           })}
         </div>
       )}
     </DashboardLayout>
-  );
+  )
 }
 
-export default IssueList;
+export default IssueList

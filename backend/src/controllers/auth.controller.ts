@@ -1,367 +1,103 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import { User, type IUser } from "../models/user.model";
-import { Society } from "../models/society.model";
-import { env } from "../config/env";
+import { AuthService } from "@/services/auth.service";
+import { ENV } from "@/config/env";
 
-const JWT_COOKIE_NAME = "token";
-const JWT_EXPIRES_IN = "7d";
-const JWT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-const ALLOWED_ROLES = new Set(["resident", "staff", "admin"]);
-
-type SafeUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: IUser["role"];
-  flatNumber?: string;
-  societyLabel?: string;
-  society?: string;
-  societyResolved: boolean;
-};
-
-const normalizeEmail = (email: unknown) =>
-  typeof email === "string" ? email.trim().toLowerCase() : "";
-
-const normalizeString = (value: unknown) =>
-  typeof value === "string" ? value.trim() : "";
-
-const getJwtSecret = () => {
-  if (!env.jwtSecret) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
-  return env.jwtSecret;
-};
-
-const toSafeUser = (user: IUser): SafeUser => ({
-  id: user._id.toString(),
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  flatNumber: user.flatNumber,
-  societyLabel: user.societyLabel,
-  society: user.society?.toString(),
-  societyResolved: Boolean(user.society)
-});
-
-const setAuthCookie = (res: Response, user: IUser) => {
-  const token = jwt.sign(
-    {
-      id: user._id.toString(),
-      role: user.role,
-      society: user.society?.toString()
-    },
-    getJwtSecret(),
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-
-  res.cookie(JWT_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: env.isProduction,
-    sameSite: env.isProduction ? "none" : "lax",
-    maxAge: JWT_MAX_AGE_MS
-  });
-};
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof mongoose.Error.ValidationError) {
-    const firstValidationError = Object.values(error.errors)[0];
-    return firstValidationError?.message || fallback;
-  }
-
-  if (error instanceof mongoose.Error.CastError) {
-    return `Invalid ${error.path} value.`;
-  }
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === 11000
-  ) {
-    return "An account with this email already exists.";
-  }
-
-  return fallback;
-};
-
-const getErrorStatus = (error: unknown) => {
-  if (
-    error instanceof mongoose.Error.ValidationError ||
-    error instanceof mongoose.Error.CastError
-  ) {
-    return 400;
-  }
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === 11000
-  ) {
-    return 409;
-  }
-
-  return 500;
-};
-
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const resolveSocietyId = async (societyInput: string) => {
-  if (!societyInput) {
-    return null;
-  }
-
-  if (mongoose.Types.ObjectId.isValid(societyInput)) {
-    const societyById = await Society.findById(societyInput).select("_id");
-
-    if (societyById) {
-      return societyById._id.toString();
-    }
-  }
-
-  const exactMatchPattern = new RegExp(`^${escapeRegex(societyInput)}$`, "i");
-  const societyByCodeOrName = await Society.findOne({
-    $or: [{ code: exactMatchPattern }, { name: exactMatchPattern }]
-  }).select("_id");
-
-  return societyByCodeOrName?._id.toString() ?? null;
-};
+const isProd = process.env.NODE_ENV === "production";
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const name = normalizeString(req.body?.name);
-    const email = normalizeEmail(req.body?.email);
-    const password = typeof req.body?.password === "string" ? req.body.password : "";
-    const role = normalizeString(req.body?.role) || "resident";
-    const flatNumber = normalizeString(req.body?.flatNumber);
-    const society = normalizeString(req.body?.society);
+    const { name, username, email, password, profilePic, gender } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required." });
+    if (!name || !username || !email || !password) {
+      return res.status(400).json({ message: "Missing required fields (name, username, email, password)" });
     }
 
-    if (!ALLOWED_ROLES.has(role)) {
-      return res.status(400).json({ message: "Invalid role supplied." });
-    }
+    const { newUser, token } = await AuthService.signup({ name, username, email, password, profilePic, gender });
 
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters long." });
-    }
-
-    if ((role === "resident" || role === "staff") && !society) {
-      return res.status(400).json({ message: "Society ID is required for resident and staff accounts." });
-    }
-
-    if (role === "resident" && !flatNumber) {
-      return res.status(400).json({ message: "Flat number is required for resident accounts." });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: "An account with this email already exists." });
-    }
-
-    let resolvedSocietyId = "";
-
-    if (society) {
-      const societyId = await resolveSocietyId(society);
-
-      if (!societyId) {
-        resolvedSocietyId = "";
-      }
-      else {
-        resolvedSocietyId = societyId;
-      }
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-      ...(flatNumber ? { flatNumber } : {}),
-      ...(society ? { societyLabel: society } : {}),
-      ...(resolvedSocietyId ? { society: resolvedSocietyId } : {})
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    setAuthCookie(res, newUser);
-
-    return res.status(201).json({
-      message: resolvedSocietyId
-        ? "User created successfully."
-        : "User created successfully. Your society will need to be linked before society-specific features are available.",
-      user: toSafeUser(newUser)
+    res.status(201).json({
+      message: "User created successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        username: newUser.username,
+        email: newUser.email,
+        profilePic: newUser.profilePic || "",
+        gender: newUser.gender || "male",
+        platformRole: newUser.platformRole,
+      },
+      token,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("SIGNUP ERROR:", error);
-    return res
-      .status(getErrorStatus(error))
-      .json({ message: getErrorMessage(error, "Signup failed.") });
+    res.status(400).json({ message: error.message || "Signup failed" });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const email = normalizeEmail(req.body?.email);
-    const password = typeof req.body?.password === "string" ? req.body.password : "";
+    const { email, username, identifier, password } = req.body;
+    const loginIdentifier = identifier || email || username;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ message: "Missing credentials" });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const { authUser, token } = await AuthService.login({ identifier: loginIdentifier, password });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Invalid email or password." });
-    }
-
-    if (!user.isActive) {
-      return res.status(403).json({ message: "This account is inactive." });
-    }
-
-    setAuthCookie(res, user);
-
-    return res.status(200).json({
-      message: "Login successful.",
-      user: toSafeUser(user)
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-  } catch (error) {
+
+    res.json({
+      message: "Login successful",
+      user: authUser,
+      token,
+    });
+  } catch (error: any) {
     console.error("LOGIN ERROR:", error);
-    return res.status(500).json({ message: "Login failed." });
+    res.status(400).json({ message: error.message || "Login failed" });
   }
 };
 
-export const logout = (_req: Request, res: Response) => {
-  res.clearCookie(JWT_COOKIE_NAME, {
+export const me = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const decoded = jwt.verify(token, ENV.JWT_SECRET) as { id: string };
+    const authUser = await AuthService.buildAuthUser(decoded.id);
+
+    if (!authUser) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    res.json({ user: authUser });
+  } catch (error) {
+    console.error("ME ERROR:", error);
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  res.clearCookie("token", {
     httpOnly: true,
-    sameSite: env.isProduction ? "none" : "lax",
-    secure: env.isProduction
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
   });
 
-  return res.status(200).json({ message: "Logout successful." });
-};
-
-export const getCurrentUser = async (req: Request, res: Response) => {
-  try {
-    if (!req.user?.id) {
-      return res.status(401).json({ message: "Not authorized." });
-    }
-
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    return res.status(200).json({
-      user: toSafeUser(user)
-    });
-  } catch (error) {
-    console.error("GET CURRENT USER ERROR:", error);
-    return res.status(500).json({ message: "Failed to fetch current user." });
-  }
-};
-
-export const linkSociety = async (req: Request, res: Response) => {
-  try {
-    if (!req.user?.id) {
-      return res.status(401).json({ message: "Not authorized." });
-    }
-
-    const societyInput = normalizeString(req.body?.society);
-    const flatNumber = normalizeString(req.body?.flatNumber);
-
-    if (!societyInput) {
-      return res.status(400).json({ message: "Please select or enter a society." });
-    }
-
-    const societyId = await resolveSocietyId(societyInput);
-    if (!societyId) {
-      return res.status(404).json({
-        message: "No registered society matched that name or code. Ask an admin to create it first."
-      });
-    }
-
-    const societyDoc = await Society.findById(societyId);
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    user.society = societyDoc!._id;
-    user.societyLabel = societyDoc!.name;
-    if (flatNumber) user.flatNumber = flatNumber;
-    await user.save();
-
-    setAuthCookie(res, user);
-
-    return res.status(200).json({
-      message: `Linked to ${societyDoc!.name}.`,
-      user: toSafeUser(user)
-    });
-  } catch (error) {
-    console.error("LINK SOCIETY ERROR:", error);
-    return res.status(500).json({ message: "Failed to link society." });
-  }
-};
-
-export const ensureDemoData = async () => {
-  if (env.isProduction) return;
-
-  try {
-    let adminUser = await User.findOne({ email: "admin@civicpulse.local" });
-    if (!adminUser) {
-      adminUser = await User.create({
-        name: "Rohan Verma",
-        email: "admin@civicpulse.local",
-        password: await bcrypt.hash("Password123!", 10),
-        role: "admin"
-      });
-    }
-
-    let defaultSociety = await Society.findOne({ code: "CP101" });
-    if (!defaultSociety) {
-      defaultSociety = await Society.create({
-        name: "CivicPulse Residency",
-        code: "CP101",
-        address: "100 Civic Center Road",
-        city: "Bengaluru",
-        state: "Karnataka",
-        totalFlats: 120,
-        admin: adminUser._id
-      });
-    }
-
-    const staffExists = await User.exists({ email: "staff@civicpulse.local" });
-    if (!staffExists) {
-      await User.create({
-        name: "Vikram Nair",
-        email: "staff@civicpulse.local",
-        password: await bcrypt.hash("Password123!", 10),
-        role: "staff",
-        society: defaultSociety._id,
-        societyLabel: defaultSociety.name
-      });
-    }
-
-    const residentExists = await User.exists({ email: "resident@civicpulse.local" });
-    if (!residentExists) {
-      await User.create({
-        name: "Ananya Patel",
-        email: "resident@civicpulse.local",
-        password: await bcrypt.hash("Password123!", 10),
-        role: "resident",
-        flatNumber: "B-304",
-        society: defaultSociety._id,
-        societyLabel: defaultSociety.name
-      });
-    }
-  } catch (error) {
-    console.warn("Demo seed skipped:", (error as Error).message);
-  }
+  res.json({ message: "Logout successful" });
 };

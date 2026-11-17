@@ -1,12 +1,17 @@
 import axios from "axios";
 
-const apiBaseUrl =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "/api";
-
 const API = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "/api",
   withCredentials: true,
-  timeout: 10_000,
+  timeout: 15_000,
+});
+
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default API;

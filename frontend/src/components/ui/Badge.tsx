@@ -1,68 +1,26 @@
-import type { IssuePriority, IssueStatus } from "../../features/issues/types";
-import { PRIORITY_LABELS, STATUS_LABELS } from "../../utils/constants";
-import { PRIORITY_STYLES, STATUS_STYLES } from "../../utils/severity";
-
-type BadgeVariant =
-  | "low"
-  | "medium"
-  | "high"
-  | "critical"
-  | "open"
-  | "in-progress"
-  | "in_progress"
-  | "resolved"
-  | "closed"
-  | "admin"
-  | "staff"
-  | "resident";
-
 interface Props {
-  text: string;
-  variant?: BadgeVariant;
-  dot?: boolean;
+  text: string
+  variant?: "low" | "medium" | "high" | "open" | "in-progress" | "resolved"
 }
 
-const VARIANT_CLASSES: Record<BadgeVariant, { pill: string; dot: string }> = {
-  critical: { pill: "bg-red-50 text-red-700 ring-red-200/80", dot: "bg-red-600" },
-  high: { pill: "bg-red-50 text-red-700 ring-red-200/80", dot: "bg-red-500" },
-  medium: { pill: "bg-amber-50 text-amber-800 ring-amber-200/80", dot: "bg-amber-500" },
-  low: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" },
-  open: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-zinc-900" },
-  "in-progress": { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-amber-500" },
-  in_progress: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-amber-500" },
-  resolved: { pill: "bg-emerald-50 text-emerald-700 ring-emerald-200/80", dot: "bg-emerald-600" },
-  closed: { pill: "bg-zinc-100 text-zinc-500 ring-zinc-200", dot: "bg-zinc-400" },
-  admin: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-zinc-900" },
-  staff: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-600" },
-  resident: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" },
-};
+function Badge({ text, variant }: Props) {
+  const getColor = () => {
+    switch(variant) {
+      case "high": return "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
+      case "medium": return "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300"
+      case "low": return "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+      case "resolved": return "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+      case "in-progress": return "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300"
+      case "open": return "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+      default: return "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+    }
+  }
 
-const badgeBase =
-  "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize ring-1 ring-inset whitespace-nowrap";
-
-function Badge({ text, variant, dot = true }: Props) {
-  const style = variant
-    ? VARIANT_CLASSES[variant]
-    : { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" };
   return (
-    <span className={`${badgeBase} ${style.pill}`}>
-      {dot && <span className={`size-1.5 rounded-full ${style.dot}`} aria-hidden="true" />}
-      {text.replace("-", " ")}
+    <span className={`text-[11px] px-2.5 py-1 rounded-sm font-bold uppercase tracking-wider ${getColor()}`}>
+      {text}
     </span>
-  );
+  )
 }
 
-export function StatusBadge({ status }: { status: IssueStatus }) {
-  return <span className={`${badgeBase} ${STATUS_STYLES[status]}`}>{STATUS_LABELS[status]}</span>;
-}
-
-export function PriorityBadge({ priority }: { priority: IssuePriority }) {
-  return (
-    <span className={`${badgeBase} ${PRIORITY_STYLES[priority].badge}`}>
-      <span className={`size-1.5 rounded-full ${PRIORITY_STYLES[priority].dot}`} />
-      {PRIORITY_LABELS[priority]}
-    </span>
-  );
-}
-
-export default Badge;
+export default Badge

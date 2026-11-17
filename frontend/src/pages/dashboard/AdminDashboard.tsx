@@ -1,83 +1,56 @@
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../app/store";
-import DashboardLayout from "../../layouts/DashboardLayout";
-import DashboardStats from "../../components/DashboardStats";
-import Card from "../../components/ui/Card";
-import { Icon } from "../../components/ui/Icon";
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import DashboardStats from "@/features/dashboard/components/DashboardStats"
+import API from "@/services/api"
+import { useEffect, useState } from "react"
+import { Hash } from "lucide-react"
 
-function AdminDashboard() {
-  const user = useSelector((state: RootState) => state.auth.user);
+function AdminDashboard(){
+  const [societyCode,setsocietyCode] = useState<string>("")
+  
+  useEffect(()=>{
+    const fetchsociety=async ()=>{
+      try {
+        const res=await API.get("/society/current")
+        setsocietyCode(res.data.code)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    fetchsociety()
+  },[])
 
-  return (
+  return(
     <DashboardLayout>
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Welcome back, {user?.name?.split(" ")[0] || "Admin"}
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+            Admin Dashboard
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Overview of society SLA compliance, open issues, and communities.
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Overview of all community activities and issue resolutions.</p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to="/societies"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-          >
-            <Icon name="building" className="size-4" />
-            Societies
-          </Link>
-          <Link
-            to="/create-society"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
-          >
-            <Icon name="plus" className="size-4" />
-            Create Society
-          </Link>
-        </div>
+        {societyCode && (
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-md shadow-sm">
+            <div className="w-8 h-8 rounded-md bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
+              <Hash size={18} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">Organization Code</p>
+              <p className="font-bold text-slate-800 dark:text-white tracking-widest">{societyCode}</p>
+            </div>
+          </div>
+        )}
       </div>
+      
+      <DashboardStats/>
 
-      <DashboardStats />
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {[
-          {
-            to: "/issues",
-            icon: "list" as const,
-            title: "All Issues",
-            desc: "Review reported issues, assign staff, and audit activity logs.",
-          },
-          {
-            to: "/issue-board",
-            icon: "kanban" as const,
-            title: "Workflow Board",
-            desc: "Track progress across Open, In Progress, and Resolved stages.",
-          },
-          {
-            to: "/societies",
-            icon: "building" as const,
-            title: "Societies",
-            desc: "Manage residential communities and view society-level queues.",
-          },
-        ].map((item) => (
-          <Link key={item.to} to={item.to}>
-            <Card hover className="h-full">
-              <div className="flex items-center justify-between">
-                <div className="flex size-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-700">
-                  <Icon name={item.icon} className="size-4" />
-                </div>
-                <Icon name="arrowRight" className="size-4 text-zinc-400" />
-              </div>
-              <h3 className="mt-4 text-sm font-semibold text-zinc-900">{item.title}</h3>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">{item.desc}</p>
-            </Card>
-          </Link>
-        ))}
+      {/* Placeholder for future sections */}
+      <div className="bg-white dark:bg-slate-800 rounded-md p-8 shadow-sm text-center mt-6">
+        <h3 className="text-lg font-semibold text-slate-700 dark:text-white mb-2">Detailed Analytics Coming Soon</h3>
+        <p className="text-slate-500 dark:text-slate-400">We are currently gathering data to generate comprehensive reports.</p>
       </div>
     </DashboardLayout>
-  );
+  )
 }
 
-export default AdminDashboard;
+export default AdminDashboard

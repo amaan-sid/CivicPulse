@@ -1,39 +1,36 @@
-export type IssueSeverity = "low" | "medium" | "high";
-export type IssueStatusType = "open" | "in-progress" | "resolved";
-
 export interface Issue {
   _id: string;
   title: string;
   description: string;
-  category?: string;
-  reportCount: number | string;
-  severity?: IssueSeverity;
-  priority?: IssueSeverity;
-  priorityScore?: number;
-  status: IssueStatusType;
-  slaDeadline?: string;
-  isEscalated?: boolean;
-  reportedBy?: {
-    _id?: string;
+  category: "plumbing" | "electricity" | "lift" | "security" | "cleanliness" | "water";
+  status: "open" | "in-progress" | "resolved";
+  severity: "low" | "medium" | "high";
+  priorityScore: number;
+  reportCount: number;
+  
+  reportedBy: {
+    _id: string;
     name: string;
-    flatNumber?: string;
+    email?: string;
+    profilePic?: string;
+    gender?: "male" | "female";
   };
-  assignedTo?: {
-    _id?: string;
-    name: string;
-    role?: string;
-  };
-  society?:
-    | string
-    | {
-        _id: string;
-        name: string;
-        code?: string;
-      };
-  createdAt: string;
-  updatedAt?: string;
-}
 
-export function getIssueSeverity(issue: Pick<Issue, "severity" | "priority">): IssueSeverity {
-  return issue.severity ?? issue.priority ?? "low";
+  reporters: string[];
+
+  assignedTo?: {
+    _id: string;
+    name: string;
+    role: string;
+    email?: string;
+    profilePic?: string;
+    gender?: "male" | "female";
+  };
+
+  isEscalated: boolean;
+  slaDeadline?: string;
+  breachedAt?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
 }

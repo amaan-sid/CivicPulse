@@ -2,12 +2,13 @@ import mongoose, { Document } from "mongoose";
 
 export interface ISociety extends Document {
   name: string;
-  code?: string;
+  type: "SOCIETY" | "HOSTEL" | "CAMPUS";
   address: string;
   city: string;
   state: string;
   totalFlats: number;
-  admin: mongoose.Types.ObjectId;
+  code: string;
+  isActive: boolean;
   defaultSLAs: {
     plumbing: number;
     electricity: number;
@@ -28,12 +29,10 @@ const societySchema = new mongoose.Schema<ISociety>(
       trim: true
     },
 
-    code: {
+    type: {
       type: String,
-      trim: true,
-      uppercase: true,
-      unique: true,
-      sparse: true
+      enum: ["SOCIETY", "HOSTEL", "CAMPUS"],
+      default: "SOCIETY"
     },
 
     address: {
@@ -56,10 +55,15 @@ const societySchema = new mongoose.Schema<ISociety>(
       required: true
     },
 
-    admin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
+    code: {
+      type: String,
+      required: true,
+      unique: true
+    },    
+
+    isActive: {
+      type: Boolean,
+      default: true
     },
 
     // SLA in hours for each category

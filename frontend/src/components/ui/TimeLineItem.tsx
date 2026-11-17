@@ -1,56 +1,187 @@
+import {
+  Clock,
+  UserCheck,
+  RefreshCw,
+  PlusCircle,
+  ArrowRight,
+  ShieldAlert,
+  Activity
+} from "lucide-react"
+
 interface Props {
-  action: string;
-  performedBy?: string;
-  oldValue?: string;
-  newValue?: string;
-  createdAt: string;
+  action: string
+  performedBy?: string
+  oldValue?: string
+  newValue?: string
+  createdAt: string
 }
 
-function TimelineItem({ action, performedBy, oldValue, newValue, createdAt }: Props) {
-  const isEscalation = action.toLowerCase().includes("escalat");
+function TimelineItem({
+  action,
+  performedBy,
+  oldValue,
+  newValue,
+  createdAt
+}: Props) {
+  // Format action text into human readable title
+  const formatActionTitle = (act: string) => {
+    const lower = act.toLowerCase()
+    if (lower === "status_change" || lower === "status_changed") return "Status Updated"
+    if (lower === "escalation") return "SLA Escalated"
+    if (lower === "assignment" || lower === "assigned") return "Issue Assigned"
+    if (lower === "report_count_increased" || lower === "reported") return "Report Count Increased"
+    if (lower === "created" || lower === "created_issue") return "Issue Created"
+    return act
+      .replace(/_/g, " ")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase())
+  }
+
+  // Determine icon & theme style based on action type
+  const getActionTheme = (act: string) => {
+    const lower = act.toLowerCase()
+    if (lower.includes("escalat") || lower.includes("breach")) {
+      return {
+        icon: <ShieldAlert size={14} />,
+        bg: "bg-rose-500 text-white",
+        badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
+        ring: "ring-rose-100 dark:ring-rose-950/40"
+      }
+    }
+    if (lower.includes("assign")) {
+      return {
+        icon: <UserCheck size={14} />,
+        bg: "bg-indigo-600 text-white",
+        badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300",
+        ring: "ring-indigo-100 dark:ring-indigo-950/40"
+      }
+    }
+    if (lower.includes("status")) {
+      return {
+        icon: <RefreshCw size={14} />,
+        bg: "bg-sky-600 text-white",
+        badge: "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300",
+        ring: "ring-sky-100 dark:ring-sky-950/40"
+      }
+    }
+    if (lower.includes("report")) {
+      return {
+        icon: <PlusCircle size={14} />,
+        bg: "bg-amber-500 text-white",
+        badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",
+        ring: "ring-amber-100 dark:ring-amber-950/40"
+      }
+    }
+    return {
+      icon: <Activity size={14} />,
+      bg: "bg-emerald-600 text-white",
+      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
+      ring: "ring-emerald-100 dark:ring-emerald-950/40"
+    }
+  }
+
+  const theme = getActionTheme(action)
+  const formattedTitle = formatActionTitle(action)
+
+  // Format timestamp nicely
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr)
+      return d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    } catch {
+      return dateStr
+    }
+  }
+
+  // Format value badges nicely (e.g. status pills)
+  const renderValueBadge = (val: string) => {
+    const v = val.toLowerCase()
+    if (v === "open") {
+      return (
+        <span className="px-2.5 py-0.5 rounded-sm text-xs font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
+          Open
+        </span>
+      )
+    }
+    if (v === "in-progress" || v === "in progress") {
+      return (
+        <span className="px-2.5 py-0.5 rounded-sm text-xs font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300">
+          In Progress
+        </span>
+      )
+    }
+    if (v === "resolved") {
+      return (
+        <span className="px-2.5 py-0.5 rounded-sm text-xs font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+          Resolved
+        </span>
+      )
+    }
+    return (
+      <span className="px-2.5 py-0.5 rounded-sm text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+        {val}
+      </span>
+    )
+  }
 
   return (
-    <div className="relative">
-      <span
-        className={`absolute -left-[25px] top-1.5 size-2.5 rounded-full ring-4 ring-white ${
-          isEscalation ? "bg-red-600" : "bg-zinc-900"
-        }`}
-        aria-hidden="true"
-      />
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-4 py-3">
+    <div className="relative group">
+      {/* Node icon dot centered on parent border-l line */}
+      <div className={`absolute -left-[39px] top-1.5 w-7 h-7 rounded-md ${theme.bg} shadow-sm flex items-center justify-center transition-transform group-hover:scale-105`}>
+        {theme.icon}
+      </div>
+
+      {/* Log Details Card */}
+      <div className="bg-slate-50/80 dark:bg-slate-900/60 rounded-md p-4 shadow-sm transition-all space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium capitalize text-zinc-900">
-            {action.replace(/[-_]/g, " ")}
-          </p>
-          <span className="text-xs tabular-nums text-zinc-400">
-            {new Date(createdAt).toLocaleString()}
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-sm ${theme.badge}`}>
+              {formattedTitle}
+            </span>
+            {performedBy && (
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                by <strong className="text-slate-700 dark:text-slate-200 font-semibold">{performedBy}</strong>
+              </span>
+            )}
+          </div>
+
+          <span className="text-[11px] text-slate-400 dark:text-slate-400 flex items-center gap-1 font-medium ml-auto">
+            <Clock size={12} />
+            {formatDate(createdAt)}
           </span>
         </div>
 
-        {performedBy && (
-          <p className="mt-1 text-xs text-zinc-500">
-            By <span className="font-medium text-zinc-800">{performedBy}</span>
-          </p>
-        )}
-
+        {/* Diffs (Old ➔ New) */}
         {(oldValue || newValue) && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
             {oldValue && (
-              <span className="rounded bg-white px-2 py-0.5 text-zinc-600 ring-1 ring-zinc-200">
-                {oldValue}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 text-[11px] font-medium">From:</span>
+                {renderValueBadge(oldValue)}
+              </div>
             )}
-            {oldValue && newValue && <span className="text-zinc-400">→</span>}
+
+            {oldValue && newValue && (
+              <ArrowRight size={14} className="text-slate-400 shrink-0 mx-0.5" />
+            )}
+
             {newValue && (
-              <span className="rounded bg-zinc-900 px-2 py-0.5 font-medium text-white">
-                {newValue}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 text-[11px] font-medium">{oldValue ? "To:" : "New:"}</span>
+                {renderValueBadge(newValue)}
+              </div>
             )}
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default TimelineItem;
+export default TimelineItem

@@ -1,28 +1,17 @@
 import mongoose from "mongoose";
-import { env } from "./env";
-
-let connectionPromise: Promise<typeof mongoose> | null = null;
+import { ENV } from "@/config/env";
 
 export const db = async () => {
-  if (mongoose.connection.readyState === 1) {
-    return mongoose;
+  try {
+    if (!ENV.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined in .env file");
+    }
+
+    await mongoose.connect(ENV.MONGODB_URI);
+
+    console.log("MongoDB Connected Successfully");
+  } catch (error) {
+    console.error("MongoDB Connection Failed:", error.message);
+    process.exit(1); 
   }
-
-  if (connectionPromise) {
-    return connectionPromise;
-  }
-
-  connectionPromise = mongoose
-    .connect(env.mongoUri)
-    .then((connection) => {
-      console.log("MongoDB connected successfully");
-      return connection;
-    })
-    .catch((error: Error) => {
-      connectionPromise = null;
-      console.error("MongoDB connection failed:", error.message);
-      throw error;
-    });
-
-  return connectionPromise;
 };
