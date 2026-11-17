@@ -1,32 +1,37 @@
-import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
+import { env } from './config/env';
+import { connectDatabase, disconnectDatabase } from './config/db';
+import { app } from './app';
+import { logger } from './utils/logger';
 
-// Load env vars
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+async function bootstrap() {
+  try {
+    await connectDatabase();
+  } catch (err) {
+    logger.error(`Could not connect to MongoDB at ${env.mongoUri}`, (err as Error).message);
+    process.exit(1);
+  }
 
-const app = express();
-const PORT = process.env.BACKEND_PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/civicpulse';
+  const server = app.listen(env.port, () => {
+    logger.info(`API listening on http://localhost:${env.port} (${env.nodeEnv})`);
+  });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    logger.error(err.code === 'EADDRINUSE' ? `Port ${env.port} is already in use` : err.message);
+    process.exit(1);
+  });
 
-// Database Connection
-mongoose
-    .connect(MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error('MongoDB connection error:', err));
+  const shutdown = (signal: string) => {
+    logger.info(`${signal} received, shutting down`);
+    server.close(async () => {
+      await disconnectDatabase();
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 10_000).unref();
+  };
 
-// Routes
-app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', message: 'Backend is running' });
-});
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('unhandledRejection', (reason) => logger.error('Unhandled promise rejection', reason));
+}
 
-// Start Server
-export const server = app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+void bootstrap();
