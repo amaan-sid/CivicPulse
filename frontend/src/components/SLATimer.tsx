@@ -32,8 +32,8 @@ function SLATimer({ createdAt, priority = "low", slaDeadline, status }: Props) {
 
   if (status === "resolved") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-        <Icon name="check" className="size-3" />
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+        <Icon name="check" className="size-3.5" />
         Resolved
       </span>
     );
@@ -41,9 +41,9 @@ function SLATimer({ createdAt, priority = "low", slaDeadline, status }: Props) {
 
   if (timeLeft <= 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">
-        <Icon name="alert" className="size-3" />
-        SLA Breached
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+        <Icon name="alert" className="size-3.5" />
+        SLA breached
       </span>
     );
   }
@@ -58,13 +58,11 @@ function SLATimer({ createdAt, priority = "low", slaDeadline, status }: Props) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ring-1 ring-inset ${
-        urgent
-          ? "bg-amber-50 text-amber-800 ring-amber-600/20"
-          : "bg-slate-100 text-slate-600 ring-slate-500/15"
+      className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${
+        urgent ? "text-amber-700" : "text-zinc-500"
       }`}
     >
-      <Icon name="clock" className="size-3" />
+      <Icon name="clock" className="size-3.5" />
       {label}
     </span>
   );

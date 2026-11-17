@@ -39,7 +39,7 @@ export function Icon({ name, className = "size-4", ...props }: { name: IconName 
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -51,21 +51,15 @@ export function Icon({ name, className = "size-4", ...props }: { name: IconName 
   );
 }
 
-export function Logo({ className = "size-8" }: { className?: string }) {
+export function Logo({ className = "size-7" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="cp-brand" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#4f46e5" />
-          <stop offset="100%" stopColor="#3730a3" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="8" fill="url(#cp-brand)" />
+      <rect width="32" height="32" rx="7" fill="#18181b" />
       <path
         d="M6 16h5l2.5-6 5 12 2.5-6h5"
         fill="none"
         stroke="white"
-        strokeWidth="2.4"
+        strokeWidth="2.3"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

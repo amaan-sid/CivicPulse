@@ -15,10 +15,10 @@ const CATEGORIES = [
   { value: "water", label: "Water Supply" },
 ];
 
-const SEVERITIES: Array<{ value: "low" | "medium" | "high"; label: string; hint: string; ring: string }> = [
-  { value: "low", label: "Low", hint: "Minor inconvenience · 48h SLA", ring: "border-emerald-500 bg-emerald-50/70 text-emerald-800" },
-  { value: "medium", label: "Medium", hint: "Disruptive · 24h SLA", ring: "border-amber-500 bg-amber-50/70 text-amber-800" },
-  { value: "high", label: "High", hint: "Urgent / safety risk · 12h SLA", ring: "border-rose-500 bg-rose-50/70 text-rose-800" },
+const SEVERITIES: Array<{ value: "low" | "medium" | "high"; label: string; hint: string }> = [
+  { value: "low", label: "Low", hint: "Minor · 48h SLA" },
+  { value: "medium", label: "Medium", hint: "Disruptive · 24h SLA" },
+  { value: "high", label: "High", hint: "Urgent · 12h SLA" },
 ];
 
 function CreateIssue() {
@@ -29,13 +29,11 @@ function CreateIssue() {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState<"low" | "medium" | "high">("medium");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (title.trim().length < 4) {
       setError("Please provide a clear title (at least 4 characters).");
@@ -56,10 +54,6 @@ function CreateIssue() {
       });
 
       const created = res.data?.issue ?? res.data;
-      if (res.data?.message) {
-        setSuccess(res.data.message);
-      }
-
       if (created?._id) {
         navigate(`/issues/${created._id}`);
       } else {
@@ -80,14 +74,14 @@ function CreateIssue() {
       <div className="mb-6">
         <Link
           to="/issues"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-indigo-600"
+          className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-900"
         >
           <Icon name="chevronLeft" className="size-3.5" />
           Back to issues
         </Link>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Report a New Issue</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Duplicate issues in the same category automatically merge and increase priority score.
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Report an issue</h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Duplicate reports in the same category merge automatically and raise priority.
         </p>
       </div>
 
@@ -96,46 +90,36 @@ function CreateIssue() {
           {error && (
             <div
               role="alert"
-              className="mb-5 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700"
             >
-              <Icon name="alert" className="mt-0.5 size-4 shrink-0" />
+              <Icon name="alert" className="mt-0.5 size-3.5 shrink-0" />
               <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div
-              role="status"
-              className="mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-            >
-              <Icon name="check" className="mt-0.5 size-4 shrink-0" />
-              <span>{success}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
-              <label htmlFor="issue-title" className="mb-1.5 block text-sm font-semibold text-slate-800">
-                Issue Title
+              <label htmlFor="issue-title" className="mb-1.5 block text-xs font-medium text-zinc-700">
+                Title
               </label>
               <input
                 id="issue-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Water leakage near Tower B 3rd floor corridor"
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20"
+                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
               />
             </div>
 
             <div>
-              <label htmlFor="issue-category" className="mb-1.5 block text-sm font-semibold text-slate-800">
+              <label htmlFor="issue-category" className="mb-1.5 block text-xs font-medium text-zinc-700">
                 Category
               </label>
               <select
                 id="issue-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20"
+                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>
@@ -146,8 +130,8 @@ function CreateIssue() {
             </div>
 
             <div>
-              <span className="mb-2 block text-sm font-semibold text-slate-800">Severity Level</span>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <span className="mb-1.5 block text-xs font-medium text-zinc-700">Severity</span>
+              <div className="grid gap-2.5 sm:grid-cols-3">
                 {SEVERITIES.map((s) => {
                   const selected = severity === s.value;
                   return (
@@ -155,14 +139,16 @@ function CreateIssue() {
                       key={s.value}
                       type="button"
                       onClick={() => setSeverity(s.value)}
-                      className={`rounded-xl border p-3 text-left transition ${
+                      className={`rounded-lg border px-3.5 py-2.5 text-left transition ${
                         selected
-                          ? `${s.ring} ring-1`
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                          ? "border-zinc-900 bg-zinc-900 text-white"
+                          : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300"
                       }`}
                     >
-                      <p className="text-sm font-bold">{s.label}</p>
-                      <p className="mt-0.5 text-xs opacity-80">{s.hint}</p>
+                      <p className="text-xs font-semibold">{s.label}</p>
+                      <p className={`mt-0.5 text-[11px] ${selected ? "text-zinc-300" : "text-zinc-500"}`}>
+                        {s.hint}
+                      </p>
                     </button>
                   );
                 })}
@@ -170,7 +156,7 @@ function CreateIssue() {
             </div>
 
             <div>
-              <label htmlFor="issue-description" className="mb-1.5 block text-sm font-semibold text-slate-800">
+              <label htmlFor="issue-description" className="mb-1.5 block text-xs font-medium text-zinc-700">
                 Description
               </label>
               <textarea
@@ -178,60 +164,50 @@ function CreateIssue() {
                 rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Include the exact location, when the problem started, and any immediate safety impact…"
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20"
+                placeholder="Include the exact location, when it started, and any safety concerns…"
+                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-end gap-2.5 border-t border-zinc-100 pt-4">
               <Link
                 to="/issues"
-                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-3.5 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-700 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
               >
                 {submitting && <Spinner className="size-4" />}
-                {submitting ? "Submitting…" : "Submit Issue"}
+                {submitting ? "Submitting…" : "Submit issue"}
               </button>
             </div>
           </form>
         </Card>
 
-        <div className="space-y-4">
+        <aside className="space-y-4">
           <Card>
-            <h2 className="text-sm font-bold text-slate-900">How Automatic Triage Works</h2>
-            <p className="mt-2 text-xs leading-relaxed text-slate-600">
-              CivicPulse assigns a priority score using your chosen category, total resident reports,
-              and SLA urgency. If another resident already reported the same problem, your report
-              automatically increments the counter and elevates its priority.
+            <h2 className="text-sm font-semibold text-zinc-900">Automatic triage</h2>
+            <p className="mt-2 text-xs leading-5 text-zinc-600">
+              Each issue receives a priority score based on category, report count, and SLA
+              urgency. Matching open reports merge automatically so urgent problems escalate faster.
             </p>
           </Card>
 
           <Card>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Tips for Faster Resolution
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Guidelines
             </h3>
-            <ul className="mt-3 space-y-2 text-xs text-slate-600">
-              <li className="flex items-start gap-2">
-                <Icon name="check" className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                Include block, floor, or nearest flat number.
-              </li>
-              <li className="flex items-start gap-2">
-                <Icon name="check" className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                Pick the most accurate category so the right staff team is assigned.
-              </li>
-              <li className="flex items-start gap-2">
-                <Icon name="check" className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                Mark safety hazards (sparks, flooding, stuck lift) as High severity.
-              </li>
+            <ul className="mt-3 space-y-2 text-xs text-zinc-600">
+              <li>• Mention exact tower, floor, or nearest unit.</li>
+              <li>• Choose the category matching the maintenance team.</li>
+              <li>• Mark safety risks as High severity.</li>
             </ul>
           </Card>
-        </div>
+        </aside>
       </div>
     </DashboardLayout>
   );

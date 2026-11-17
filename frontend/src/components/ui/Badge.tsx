@@ -23,25 +23,27 @@ interface Props {
 }
 
 const VARIANT_CLASSES: Record<BadgeVariant, { pill: string; dot: string }> = {
-  critical: { pill: "bg-rose-50 text-rose-700 ring-rose-600/20", dot: "bg-rose-600" },
-  high: { pill: "bg-red-50 text-red-700 ring-red-600/20", dot: "bg-red-500" },
-  medium: { pill: "bg-amber-50 text-amber-800 ring-amber-600/20", dot: "bg-amber-500" },
-  low: { pill: "bg-emerald-50 text-emerald-700 ring-emerald-600/20", dot: "bg-emerald-500" },
-  open: { pill: "bg-indigo-50 text-indigo-700 ring-indigo-600/20", dot: "bg-indigo-500" },
-  "in-progress": { pill: "bg-sky-50 text-sky-700 ring-sky-600/20", dot: "bg-sky-500" },
-  in_progress: { pill: "bg-sky-50 text-sky-700 ring-sky-600/20", dot: "bg-sky-500" },
-  resolved: { pill: "bg-emerald-50 text-emerald-700 ring-emerald-600/20", dot: "bg-emerald-500" },
-  closed: { pill: "bg-slate-100 text-slate-600 ring-slate-500/20", dot: "bg-slate-400" },
-  admin: { pill: "bg-violet-50 text-violet-700 ring-violet-600/20", dot: "bg-violet-500" },
-  staff: { pill: "bg-sky-50 text-sky-700 ring-sky-600/20", dot: "bg-sky-500" },
-  resident: { pill: "bg-teal-50 text-teal-700 ring-teal-600/20", dot: "bg-teal-500" },
+  critical: { pill: "bg-red-50 text-red-700 ring-red-200/80", dot: "bg-red-600" },
+  high: { pill: "bg-red-50 text-red-700 ring-red-200/80", dot: "bg-red-500" },
+  medium: { pill: "bg-amber-50 text-amber-800 ring-amber-200/80", dot: "bg-amber-500" },
+  low: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" },
+  open: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-zinc-900" },
+  "in-progress": { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-amber-500" },
+  in_progress: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-amber-500" },
+  resolved: { pill: "bg-emerald-50 text-emerald-700 ring-emerald-200/80", dot: "bg-emerald-600" },
+  closed: { pill: "bg-zinc-100 text-zinc-500 ring-zinc-200", dot: "bg-zinc-400" },
+  admin: { pill: "bg-zinc-100 text-zinc-800 ring-zinc-200", dot: "bg-zinc-900" },
+  staff: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-600" },
+  resident: { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" },
 };
 
 const badgeBase =
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset whitespace-nowrap";
+  "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize ring-1 ring-inset whitespace-nowrap";
 
 function Badge({ text, variant, dot = true }: Props) {
-  const style = variant ? VARIANT_CLASSES[variant] : { pill: "bg-slate-100 text-slate-700 ring-slate-500/20", dot: "bg-slate-400" };
+  const style = variant
+    ? VARIANT_CLASSES[variant]
+    : { pill: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-400" };
   return (
     <span className={`${badgeBase} ${style.pill}`}>
       {dot && <span className={`size-1.5 rounded-full ${style.dot}`} aria-hidden="true" />}

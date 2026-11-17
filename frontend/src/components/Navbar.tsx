@@ -9,9 +9,9 @@ import Badge from "./ui/Badge";
 
 const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string }> = [
   { match: (p) => p === "/dashboard", title: "Dashboard" },
-  { match: (p) => p === "/issues", title: "Community Issues" },
-  { match: (p) => p === "/issue-board", title: "Issue Workflow Board" },
-  { match: (p) => p === "/create-issue" || p === "/report", title: "Report an Issue" },
+  { match: (p) => p === "/issues", title: "Issues" },
+  { match: (p) => p === "/issue-board", title: "Issue Board" },
+  { match: (p) => p === "/create-issue" || p === "/report", title: "Report Issue" },
   { match: (p) => p.startsWith("/issues/"), title: "Issue Details" },
   { match: (p) => p === "/societies", title: "Societies" },
   { match: (p) => p === "/create-society", title: "Create Society" },
@@ -40,30 +40,28 @@ function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-zinc-200 bg-white/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
       <div className="flex items-center gap-3">
         {onMenuClick && (
           <button
             type="button"
             onClick={onMenuClick}
-            className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 lg:hidden"
+            className="rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 lg:hidden"
             aria-label="Open navigation menu"
           >
-            <Icon name="menu" className="size-5" />
+            <Icon name="menu" className="size-4" />
           </button>
         )}
-        <div>
-          <h1 className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
-            {pageTitle}
-          </h1>
-        </div>
+        <h1 className="text-sm font-semibold tracking-tight text-zinc-900 sm:text-base">
+          {pageTitle}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {user?.role === "resident" && (
           <Link
             to="/create-issue"
-            className="hidden items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700 sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 sm:inline-flex"
           >
             <Icon name="plus" className="size-3.5" />
             Report Issue
@@ -73,7 +71,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
         {user?.role === "admin" && (
           <Link
             to="/create-society"
-            className="hidden items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700 sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 sm:inline-flex"
           >
             <Icon name="plus" className="size-3.5" />
             New Society
@@ -81,8 +79,8 @@ function Navbar({ onMenuClick }: NavbarProps) {
         )}
 
         {user && (
-          <div className="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-slate-50 py-1 pl-3 pr-1.5 md:flex">
-            <span className="text-xs font-medium text-slate-700">{user.name}</span>
+          <div className="hidden items-center gap-2 border-l border-zinc-200 pl-3 md:flex">
+            <span className="text-xs font-medium text-zinc-700">{user.name}</span>
             <Badge text={user.role} variant={user.role} dot={false} />
           </div>
         )}
@@ -91,10 +89,10 @@ function Navbar({ onMenuClick }: NavbarProps) {
           type="button"
           onClick={handleLogout}
           disabled={signingOut}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
         >
           <Icon name="logout" className="size-3.5" />
-          <span>{signingOut ? "Signing out…" : "Logout"}</span>
+          <span>{signingOut ? "Signing out…" : "Sign out"}</span>
         </button>
       </div>
     </header>

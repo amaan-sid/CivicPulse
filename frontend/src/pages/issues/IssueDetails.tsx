@@ -29,10 +29,10 @@ interface AuditLog {
   createdAt: string;
 }
 
-const STATUS_ACTIONS: Array<{ value: IssueStatusType; label: string; activeClass: string }> = [
-  { value: "open", label: "Open", activeClass: "bg-indigo-600 text-white border-indigo-600" },
-  { value: "in-progress", label: "In Progress", activeClass: "bg-sky-600 text-white border-sky-600" },
-  { value: "resolved", label: "Resolved", activeClass: "bg-emerald-600 text-white border-emerald-600" },
+const STATUS_ACTIONS: Array<{ value: IssueStatusType; label: string }> = [
+  { value: "open", label: "Open" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "resolved", label: "Resolved" },
 ];
 
 function IssueDetails() {
@@ -113,7 +113,7 @@ function IssueDetails() {
     try {
       const res = await API.patch<{ issue?: Issue } & Issue>(`/issues/${id}/assign`, { staffId });
       setIssue(res.data.issue ?? res.data);
-      setFeedback("Staff member assigned successfully.");
+      setFeedback("Staff member assigned.");
       await loadLogs();
     } catch (err: unknown) {
       const msg =
@@ -129,8 +129,8 @@ function IssueDetails() {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div className="h-8 w-1/3 animate-pulse rounded-xl bg-slate-200" />
-          <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+          <div className="h-7 w-1/3 animate-pulse rounded-lg bg-zinc-200" />
+          <div className="h-56 animate-pulse rounded-xl border border-zinc-200 bg-white" />
         </div>
       </DashboardLayout>
     );
@@ -139,9 +139,9 @@ function IssueDetails() {
   if (error && !issue) {
     return (
       <DashboardLayout>
-        <Card className="border-rose-200 bg-rose-50/70">
-          <p className="text-sm font-medium text-rose-700">{error}</p>
-          <Link to="/issues" className="mt-4 inline-block text-xs font-semibold text-indigo-600 hover:underline">
+        <Card className="border-red-200 bg-red-50/50">
+          <p className="text-sm text-red-700">{error}</p>
+          <Link to="/issues" className="mt-3 inline-block text-xs font-medium text-zinc-700 hover:underline">
             ← Back to issues
           </Link>
         </Card>
@@ -158,7 +158,7 @@ function IssueDetails() {
       <div className="mb-5">
         <Link
           to="/issues"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-indigo-600"
+          className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-900"
         >
           <Icon name="chevronLeft" className="size-3.5" />
           Back to issues
@@ -166,15 +166,15 @@ function IssueDetails() {
       </div>
 
       {feedback && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <Icon name="check" className="size-4 shrink-0" />
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-2.5 text-xs font-medium text-emerald-800">
+          <Icon name="check" className="size-3.5 shrink-0" />
           <span>{feedback}</span>
         </div>
       )}
 
       {error && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <Icon name="alert" className="size-4 shrink-0" />
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50/70 px-4 py-2.5 text-xs font-medium text-red-700">
+          <Icon name="alert" className="size-3.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -186,33 +186,33 @@ function IssueDetails() {
               <Badge text={sev} variant={sev} />
               <Badge text={issue.status} variant={issue.status} />
               {issue.category && (
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold capitalize text-slate-600">
+                <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium capitalize text-zinc-600">
                   {issue.category}
                 </span>
               )}
               {issue.isEscalated && (
-                <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                <span className="rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-200">
                   Escalated
                 </span>
               )}
             </div>
 
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="mt-3 text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">
               {issue.title}
             </h1>
 
-            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">
+            <p className="mt-4 whitespace-pre-line text-sm leading-6 text-zinc-700">
               {issue.description}
             </p>
           </Card>
 
           {canUpdateStatus && (
             <Card className="p-6">
-              <h2 className="text-sm font-bold text-slate-900">Update Workflow Status</h2>
-              <p className="mt-1 text-xs text-slate-500">
-                Transitions are recorded automatically in the audit timeline.
+              <h2 className="text-sm font-semibold text-zinc-900">Workflow status</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Status updates are logged automatically in the activity timeline.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {STATUS_ACTIONS.map((btn) => {
                   const active = issue.status === btn.value;
                   return (
@@ -221,10 +221,10 @@ function IssueDetails() {
                       type="button"
                       disabled={saving || active}
                       onClick={() => updateStatus(btn.value)}
-                      className={`rounded-xl border px-4 py-2 text-xs font-semibold transition disabled:cursor-default ${
+                      className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition disabled:cursor-default ${
                         active
-                          ? btn.activeClass
-                          : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                          ? "border-zinc-900 bg-zinc-900 text-white"
+                          : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
                       }`}
                     >
                       {btn.label}
@@ -237,11 +237,11 @@ function IssueDetails() {
 
           {canUpdateStatus && (
             <Card className="p-6">
-              <h2 className="text-base font-bold text-slate-900">Activity Timeline</h2>
+              <h2 className="text-sm font-semibold text-zinc-900">Activity timeline</h2>
               {logs.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No audit activity recorded yet.</p>
+                <p className="mt-3 text-xs text-zinc-500">No audit activity recorded yet.</p>
               ) : (
-                <div className="relative mt-5 space-y-5 border-l-2 border-slate-200 pl-6">
+                <div className="relative mt-5 space-y-4 border-l border-zinc-200 pl-6">
                   {logs.map((log) => (
                     <TimelineItem
                       key={log._id}
@@ -260,10 +260,10 @@ function IssueDetails() {
 
         <div className="space-y-6">
           <Card className="p-6">
-            <h2 className="text-sm font-bold text-slate-900">Issue Metadata</h2>
-            <dl className="mt-4 space-y-3.5 text-sm">
+            <h2 className="text-sm font-semibold text-zinc-900">Details</h2>
+            <dl className="mt-4 space-y-3 text-xs">
               <div className="flex items-center justify-between">
-                <dt className="text-xs font-medium text-slate-500">SLA Status</dt>
+                <dt className="text-zinc-500">SLA</dt>
                 <dd>
                   <SLATimer
                     createdAt={issue.createdAt}
@@ -274,31 +274,31 @@ function IssueDetails() {
                 </dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-xs font-medium text-slate-500">Priority Score</dt>
-                <dd className="font-bold tabular-nums text-slate-900">{issue.priorityScore ?? 0}</dd>
+                <dt className="text-zinc-500">Priority score</dt>
+                <dd className="font-semibold tabular-nums text-zinc-900">{issue.priorityScore ?? 0}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-xs font-medium text-slate-500">Reports</dt>
-                <dd className="font-semibold tabular-nums text-slate-900">{issue.reportCount}</dd>
+                <dt className="text-zinc-500">Reports</dt>
+                <dd className="font-medium tabular-nums text-zinc-900">{issue.reportCount}</dd>
               </div>
               {issue.reportedBy?.name && (
                 <div className="flex items-center justify-between">
-                  <dt className="text-xs font-medium text-slate-500">Reported By</dt>
-                  <dd className="font-medium text-slate-800">
+                  <dt className="text-zinc-500">Reported by</dt>
+                  <dd className="font-medium text-zinc-800">
                     {issue.reportedBy.name}
                     {issue.reportedBy.flatNumber ? ` (${issue.reportedBy.flatNumber})` : ""}
                   </dd>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <dt className="text-xs font-medium text-slate-500">Assigned Staff</dt>
-                <dd className="font-medium text-slate-800">
+                <dt className="text-zinc-500">Assigned staff</dt>
+                <dd className="font-medium text-zinc-800">
                   {issue.assignedTo?.name || "Unassigned"}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-xs font-medium text-slate-500">Created</dt>
-                <dd className="text-xs text-slate-600">
+                <dt className="text-zinc-500">Created</dt>
+                <dd className="tabular-nums text-zinc-600">
                   {new Date(issue.createdAt).toLocaleString()}
                 </dd>
               </div>
@@ -307,10 +307,10 @@ function IssueDetails() {
 
           {isAdmin && (
             <Card className="p-6">
-              <label htmlFor="assign-staff" className="block text-sm font-bold text-slate-900">
-                Assign Staff Member
+              <label htmlFor="assign-staff" className="block text-sm font-semibold text-zinc-900">
+                Assign staff
               </label>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-zinc-500">
                 Route this issue to a maintenance staff member.
               </p>
               <select
@@ -318,9 +318,9 @@ function IssueDetails() {
                 disabled={saving}
                 defaultValue={issue.assignedTo?._id || ""}
                 onChange={(e) => assignIssue(e.target.value)}
-                className="mt-3 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20"
+                className="mt-3 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
               >
-                <option value="">Select staff member…</option>
+                <option value="">Select staff…</option>
                 {staff.map((s) => (
                   <option key={s._id} value={s._id}>
                     {s.name}

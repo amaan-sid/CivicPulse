@@ -23,15 +23,14 @@ const STAT_CARDS: Array<{
   key: keyof DashboardResponse;
   label: string;
   icon: IconName;
-  accent: string;
   danger?: boolean;
 }> = [
-  { key: "totalIssues", label: "Total Issues", icon: "inbox", accent: "bg-indigo-50 text-indigo-600" },
-  { key: "openIssues", label: "Open", icon: "alert", accent: "bg-amber-50 text-amber-600" },
-  { key: "inProgressIssues", label: "In Progress", icon: "clock", accent: "bg-sky-50 text-sky-600" },
-  { key: "resolvedIssues", label: "Resolved", icon: "check", accent: "bg-emerald-50 text-emerald-600" },
-  { key: "breachedIssues", label: "SLA Breached", icon: "shield", accent: "bg-rose-50 text-rose-600", danger: true },
-  { key: "totalSocieties", label: "Societies", icon: "building", accent: "bg-violet-50 text-violet-600" },
+  { key: "totalIssues", label: "Total Issues", icon: "inbox" },
+  { key: "openIssues", label: "Open", icon: "alert" },
+  { key: "inProgressIssues", label: "In Progress", icon: "clock" },
+  { key: "resolvedIssues", label: "Resolved", icon: "check" },
+  { key: "breachedIssues", label: "SLA Breached", icon: "shield", danger: true },
+  { key: "totalSocieties", label: "Societies", icon: "building" },
 ];
 
 function DashboardStats() {
@@ -61,7 +60,7 @@ function DashboardStats() {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white p-5" />
+          <div key={i} className="h-24 animate-pulse rounded-xl border border-zinc-200 bg-white" />
         ))}
       </div>
     );
@@ -69,8 +68,8 @@ function DashboardStats() {
 
   if (error || !stats) {
     return (
-      <Card className="border-rose-200 bg-rose-50/70">
-        <p className="text-sm font-medium text-rose-700">{error || "Stats unavailable."}</p>
+      <Card className="border-red-200 bg-red-50/50">
+        <p className="text-sm text-red-700">{error || "Stats unavailable."}</p>
       </Card>
     );
   }
@@ -81,25 +80,23 @@ function DashboardStats() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {STAT_CARDS.map(({ key, label, icon, accent, danger }) => {
+        {STAT_CARDS.map(({ key, label, icon, danger }) => {
           const val = Number(stats[key] ?? 0);
           return (
-            <Card key={key} hover>
+            <Card key={key}>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    {label}
-                  </p>
+                  <p className="text-xs font-medium text-zinc-500">{label}</p>
                   <p
-                    className={`mt-2 text-3xl font-bold tabular-nums tracking-tight ${
-                      danger && val > 0 ? "text-rose-600" : "text-slate-900"
+                    className={`mt-1.5 text-2xl font-semibold tabular-nums tracking-tight ${
+                      danger && val > 0 ? "text-red-600" : "text-zinc-900"
                     }`}
                   >
                     {val}
                   </p>
                 </div>
-                <div className={`flex size-10 items-center justify-center rounded-xl ${accent}`}>
-                  <Icon name={icon} className="size-5" />
+                <div className="flex size-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-600">
+                  <Icon name={icon} className="size-4" />
                 </div>
               </div>
             </Card>
@@ -111,10 +108,10 @@ function DashboardStats() {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Issues by Category</h2>
-              <p className="text-xs text-slate-500">Distribution across maintenance categories</p>
+              <h2 className="text-sm font-semibold text-zinc-900">Issues by category</h2>
+              <p className="text-xs text-zinc-500">Breakdown across reported categories</p>
             </div>
-            <span className="text-xs font-semibold text-slate-500">
+            <span className="text-xs font-medium text-zinc-500 tabular-nums">
               {stats.highPriorityIssues} high priority
             </span>
           </div>
@@ -124,12 +121,12 @@ function DashboardStats() {
               return (
                 <div key={item._id}>
                   <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="font-medium capitalize text-slate-700">{item._id}</span>
-                    <span className="font-semibold tabular-nums text-slate-900">{item.count}</span>
+                    <span className="font-medium capitalize text-zinc-700">{item._id}</span>
+                    <span className="font-medium tabular-nums text-zinc-900">{item.count}</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
                     <div
-                      className="h-full rounded-full bg-indigo-600 transition-all"
+                      className="h-full rounded-full bg-zinc-900 transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

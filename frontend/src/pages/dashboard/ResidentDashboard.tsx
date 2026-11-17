@@ -35,61 +35,63 @@ function ResidentDashboard() {
     <DashboardLayout>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">
-            Resident Portal
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             Hello, {user?.name?.split(" ")[0] || "Resident"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {user?.flatNumber ? `Flat ${user.flatNumber}` : "Track and report maintenance issues in your society."}
+          <p className="mt-1 text-sm text-zinc-500">
+            {user?.flatNumber ? `Flat ${user.flatNumber}` : "Track and report society issues."}
             {user?.societyLabel ? ` · ${user.societyLabel}` : ""}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-2">
           <Link
             to="/issue-board"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
           >
             <Icon name="kanban" className="size-4" />
             Issue Board
           </Link>
           <Link
             to="/create-issue"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
           >
             <Icon name="plus" className="size-4" />
-            Report an Issue
+            Report Issue
           </Link>
         </div>
       </div>
 
       {notice && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
+        <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900">
           <Icon name="alert" className="mt-0.5 size-4 shrink-0" />
           <span>{notice}</span>
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-zinc-200 bg-white lg:grid-cols-4">
         {[
-          { label: "Total Reported", value: issues.length, tone: "text-slate-900" },
-          { label: "Open", value: openCount, tone: "text-indigo-600" },
-          { label: "In Progress", value: inProgressCount, tone: "text-sky-600" },
-          { label: "Resolved", value: resolvedCount, tone: "text-emerald-600" },
-        ].map((stat) => (
-          <Card key={stat.label}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{stat.label}</p>
-            <p className={`mt-2 text-3xl font-bold tabular-nums ${stat.tone}`}>{stat.value}</p>
-          </Card>
+          { label: "Total Reported", value: issues.length },
+          { label: "Open", value: openCount },
+          { label: "In Progress", value: inProgressCount },
+          { label: "Resolved", value: resolvedCount },
+        ].map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`px-5 py-4 ${i % 2 === 1 ? "border-l border-zinc-200" : ""} ${
+              i >= 2 ? "border-t border-zinc-200 lg:border-t-0" : ""
+            } ${i === 2 ? "lg:border-l" : ""}`}
+          >
+            <dt className="text-xs font-medium text-zinc-500">{stat.label}</dt>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">{stat.value}</dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
       <div className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900">Your Recent Issues</h2>
-          <Link to="/issues" className="text-xs font-semibold text-indigo-600 hover:underline">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900">Recent issues</h2>
+          <Link to="/issues" className="text-xs font-medium text-zinc-600 hover:text-zinc-900">
             View all →
           </Link>
         </div>
@@ -97,24 +99,24 @@ function ResidentDashboard() {
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {[1, 2].map((i) => (
-              <div key={i} className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+              <div key={i} className="h-28 animate-pulse rounded-xl border border-zinc-200 bg-white" />
             ))}
           </div>
         ) : issues.length === 0 ? (
           <Card className="py-12 text-center">
-            <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+            <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
               <Icon name="inbox" className="size-5" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900">No issues reported yet</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Spotted a broken light, water leak, or elevator problem? Report it so maintenance can act fast.
+            <h3 className="text-sm font-semibold text-zinc-900">No issues reported yet</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Report maintenance problems to get them tracked against society SLA targets.
             </p>
             <Link
               to="/create-issue"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-zinc-800"
             >
-              <Icon name="plus" className="size-4" />
-              Report your first issue
+              <Icon name="plus" className="size-3.5" />
+              Report an issue
             </Link>
           </Card>
         ) : (
@@ -125,16 +127,20 @@ function ResidentDashboard() {
                 <Link key={issue._id} to={`/issues/${issue._id}`}>
                   <Card hover className="h-full">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-semibold text-slate-900 line-clamp-1">{issue.title}</h3>
+                      <h3 className="text-sm font-semibold text-zinc-900 line-clamp-1">
+                        {issue.title}
+                      </h3>
                       {issue.category && (
-                        <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium capitalize text-slate-600">
+                        <span className="shrink-0 text-xs capitalize text-zinc-500">
                           {issue.category}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-sm text-slate-600 line-clamp-2">{issue.description}</p>
+                    <p className="mt-1.5 text-xs leading-5 text-zinc-600 line-clamp-2">
+                      {issue.description}
+                    </p>
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <Badge text={sev} variant={sev} />
                         <Badge text={issue.status} variant={issue.status} />
                       </div>

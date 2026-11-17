@@ -3,28 +3,26 @@ import { Icon, Logo } from "../components/ui/Icon";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center">
-      <Logo className="mb-6 size-11" />
-      <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">404 · Not Found</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-        We couldn&apos;t find that page
-      </h1>
-      <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-        The link may be broken or the page may have moved. Head back to your workspace to continue managing community issues.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-6 text-center">
+      <Logo className="mb-6 size-9" />
+      <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">404</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Page not found</h1>
+      <p className="mt-2 max-w-sm text-sm text-zinc-500">
+        The page you requested does not exist or has been moved.
       </p>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <div className="mt-6 flex items-center gap-3">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-700"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
         >
-          Go to Dashboard
-          <Icon name="arrowRight" className="size-4" />
+          Dashboard
+          <Icon name="arrowRight" className="size-3.5" />
         </Link>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50"
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
         >
-          Back to Home
+          Home
         </Link>
       </div>
     </div>
@@ -33,17 +31,17 @@ export default function NotFound() {
 
 export function RouteError() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center">
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-        <Icon name="alert" className="size-6" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-6 text-center">
+      <div className="mb-4 flex size-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-600">
+        <Icon name="alert" className="size-5" />
       </div>
-      <h1 className="text-xl font-bold text-slate-900">Something went wrong</h1>
-      <p className="mt-2 max-w-md text-sm text-slate-600">
-        An unexpected error occurred while rendering this route.
+      <h1 className="text-lg font-semibold text-zinc-900">Something went wrong</h1>
+      <p className="mt-1.5 max-w-sm text-sm text-zinc-500">
+        An unexpected error occurred while loading this page.
       </p>
       <Link
         to="/"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+        className="mt-6 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
       >
         Return Home
       </Link>

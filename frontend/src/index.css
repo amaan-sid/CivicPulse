@@ -13,15 +13,15 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-zinc-50 text-zinc-900;
     font-feature-settings: "cv11", "ss01";
   }
 
   ::selection {
-    @apply bg-indigo-600 text-white;
+    @apply bg-zinc-900 text-white;
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-indigo-600;
+    @apply outline-2 outline-offset-2 outline-zinc-900;
   }
 }

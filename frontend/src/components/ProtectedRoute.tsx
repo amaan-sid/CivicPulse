@@ -13,17 +13,10 @@ interface ProtectedRouteProps {
 
 export function AuthLoadingScreen() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-pulse">
-          <Logo className="size-12" />
-        </div>
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-          <span className="size-2 animate-bounce rounded-full bg-indigo-600 [animation-delay:-0.2s]" />
-          <span className="size-2 animate-bounce rounded-full bg-indigo-600 [animation-delay:-0.1s]" />
-          <span className="size-2 animate-bounce rounded-full bg-indigo-600" />
-          <span className="ml-1">Restoring your session…</span>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4">
+      <div className="flex flex-col items-center gap-3">
+        <Logo className="size-9 opacity-90" />
+        <p className="text-xs font-medium text-zinc-500">Loading workspace…</p>
       </div>
     </div>
   );
@@ -50,17 +43,18 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-200">
-            <Icon name="lock" className="size-6" />
+        <div className="mx-auto max-w-md rounded-xl border border-zinc-200 bg-white p-8 text-center">
+          <div className="mx-auto mb-4 flex size-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-600">
+            <Icon name="lock" className="size-5" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">Access Restricted</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Your <span className="font-semibold capitalize">{user.role}</span> account doesn&apos;t have permission to view this page.
+          <h2 className="text-base font-semibold text-zinc-900">Access Restricted</h2>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Your <span className="font-medium capitalize text-zinc-800">{user.role}</span> account
+            does not have permission to view this page.
           </p>
           <Link
             to="/dashboard"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            className="mt-6 inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
           >
             Back to Dashboard
           </Link>

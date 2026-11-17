@@ -9,8 +9,8 @@ interface Props {
 function Card({ children, className = "", hover = false }: Props) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs ${
-        hover ? "transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md" : ""
+      className={`rounded-xl border border-zinc-200 bg-white p-5 ${
+        hover ? "transition-colors duration-150 hover:border-zinc-300 hover:bg-zinc-50/40" : ""
       } ${className}`}
     >
       {children}
