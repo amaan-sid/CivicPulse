@@ -6,21 +6,22 @@
 
 @layer base {
   html {
+    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-zinc-50 text-zinc-900;
+    @apply bg-slate-50 text-slate-900;
     font-feature-settings: "cv11", "ss01";
   }
 
   ::selection {
-    @apply bg-zinc-900 text-white;
+    @apply bg-indigo-600 text-white;
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-zinc-900;
+    @apply outline-2 outline-offset-2 outline-indigo-600;
   }
 }
